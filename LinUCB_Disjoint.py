@@ -4,9 +4,9 @@ from numpy.linalg import inv
 
 class LinUCB_Disjoint:
 	
-	def __init__(self):
+	def __init__(self, alpha):
 		self.d = 6
-		self.alpha = 0.4
+		self.alpha = alpha
 
 		self.A = dict()
 		self.A_i = dict()
@@ -18,8 +18,9 @@ class LinUCB_Disjoint:
 		if click == 1 :
 			self.b[selected_article] += user
 		
-
-	def select(self, user, lines, exploit):
+	def select(self, user, lines, total_impressions):
+		exploit = total_impressions > 1000
+		
 		limit = 0.0
 		selected_article = -1
 		for line in lines:
