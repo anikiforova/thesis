@@ -14,9 +14,8 @@ from AlgoFactory import AlgorithmType
 random.seed(9999)
 total_lines = 4681992.0
 alphas = np.arange(0.05, 0.3, 0.05)
-# factory = AlgoFactory()
 
-choice = AlgorithmType.LinUCB_Hybrid
+choice = AlgorithmType.EFirst
 
 today = '%d_%m'.format(datetime.date.today())
 output = open('./Results/20090501_{0}_{1}.csv'.format(choice, today), "w")

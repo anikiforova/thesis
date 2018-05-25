@@ -5,7 +5,9 @@ class EFirst:
 	
 	def __init__(self, alpha):
 		self.total_lines = 4681992.0
-		self.lines_to_explore = self.total_lines * alpha
+		# reducing the time to explore otherwise too much exploring not at all exploiting
+		# reduce by 20 for number of articles to choose from
+		self.lines_to_explore = self.total_lines * alpha / 20 
 
 		self.articles_mean = dict()
 		self.articles_clicks = dict()
@@ -17,7 +19,7 @@ class EFirst:
 		
 	def warmup(self, fo):
 		pass
-		
+
 	def select(self, user, lines, total_impressions):
 		explore_articles = list()
 
