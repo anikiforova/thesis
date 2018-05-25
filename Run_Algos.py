@@ -1,3 +1,4 @@
+import time
 import datetime
 import random
 import numpy as np
@@ -16,10 +17,8 @@ random.seed(9999)
 total_lines = 4681992.0
 alphas = np.arange(0.05, 0.3, 0.05)
 
-choice = AlgorithmType.EFirst
-
-today = '%d_%m'.format(datetime.date.today())
-output = open('./Results/20090501_{0}_{1}.csv'.format(choice, today), "w")
+choice = AlgorithmType.UCB
+output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	
 
 for alpha in alphas:
@@ -52,7 +51,7 @@ for alpha in alphas:
 		
 			if impression_count % 1000 == 0:
 				print('{:.2%} Explore {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
-				output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice))
+				output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
 				output.flush()
 	fo.close()	
 
