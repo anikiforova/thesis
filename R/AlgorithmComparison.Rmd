@@ -67,6 +67,7 @@ plot_results("LinUCB_Disjoint")
 ```
 
 ```{r linucb-hybrid, include=TRUE, echo=FALSE}
+plot_results("LinUCB_Hybrid")
 ```
 
 ```{r gpprank, include=TRUE, echo=FALSE}

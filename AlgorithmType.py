@@ -9,3 +9,4 @@ class AlgorithmType (Enum):
 	UCB = 5
 	EGreedy_Seg = 6
 	UCB_Seg = 7
+	
