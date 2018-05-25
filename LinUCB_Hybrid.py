@@ -7,10 +7,11 @@ from util import to_vector
 
 class LinUCB_Hybrid:
 	
-	def __init__(self):
+	def __init__(self, alpha):
 		self.d = 6
 		self.k = 36
-		self.alpha = 0.4
+		self.alpha = alpha
+		self.training_size = 10000
 
 		self.A0 = np.identity(self.k)
 		self.b0 = np.zeros(self.k)
@@ -23,6 +24,50 @@ class LinUCB_Hybrid:
 		self.b = dict()
 		self.articles = dict()
 		self.bad_articles = set()
+
+	def add_new_article(self, line):
+		article_id = int(line.split(" ")[0])
+			
+		if article_id in self.bad_articles:
+			return -1
+
+		if article_id not in self.A:
+			try:
+				article = to_vector(line)
+			except IndexError:
+				print("Skipping line, weird formatting.." + str(article_id))
+				self.bad_articles.add(article_id)
+				return -1
+
+			self.articles[article_id] = article
+			self.A[article_id] = np.identity(self.d)
+			self.A_i[article_id] = np.identity(self.d)
+			self.B[article_id] = np.zeros(self.d * self.k).reshape([self.d, self.k])
+			self.b[article_id] = np.zeros(self.d)
+
+		return article_id
+
+	def warmup(self, file):
+		total_impressions = 0
+		for line in file:
+			if total_impressions > self.training_size:
+				break
+
+			total_impressions += 1
+			line = line.split("|")
+			no_space_line = line[0].split(" ")
+			pre_selected_article = int(no_space_line[1])
+			click = int(no_space_line[2])
+			user = to_vector(line[1])
+
+			for article_line in line[2:]:
+				self.add_new_article(article_line)
+
+			# If preselected article is the one with bad format skip
+			if pre_selected_article in self.bad_articles:
+				continue;
+
+			self.update(user, pre_selected_article, click)
 
 	def update(self, user, selected_article, click):
 		article = self.articles[selected_article]
@@ -48,43 +93,24 @@ class LinUCB_Hybrid:
 		limit = 0.0
 		selected_article = 0
 		for line in lines:
-			article_id = int(line.split(" ")[0])
-			
-			if article_id in self.bad_articles:
-				continue;	
+			article_id = self.add_new_article(line)
+			if article_id == -1: # invalid article
+				continue
 
-			article = np.zeros([1, self.d])
-			if article_id not in self.A:
-				try:
-					article = to_vector(line)
-				except IndexError:
-					print("Skipping line, weird formatting.." + str(article_id))
-					self.bad_articles.add(article_id)
-					continue; 
-
-				self.articles[article_id] = article
-				self.A[article_id] = np.identity(self.d)
-				self.A_i[article_id] = np.identity(self.d)
-				self.B[article_id] = np.zeros(self.d * self.k).reshape([self.d, self.k])
-				self.b[article_id] = np.zeros(self.d)
-
-			z = np.outer(user, article).reshape([1, self.k])
+			article = self.articles[article_id]
 			cur_A_i = self.A_i[article_id]
 			cur_B = self.B[article_id]
 			cur_b = self.b[article_id]
+			z = np.outer(user, article).reshape([1, self.k])
+
+			cur_theta = cur_A_i.dot((cur_b - cur_B.dot(self.beta))) 	
+			pre_user_A_i = user.dot(cur_A_i) 
+			pre_zT_A0_i = z.dot(self.A0_i)
+			pre_A_i_user = cur_A_i.dot(user)
 		
-			cur_theta = cur_A_i.dot((cur_b - cur_B.dot(self.beta))) 
+			cur_s = pre_zT_A0_i.dot(z.reshape([self.k, 1])) - 2 * pre_zT_A0_i.dot(cur_B.T).dot(pre_A_i_user) + pre_user_A_i.dot(user) + pre_user_A_i.dot(cur_B).dot(self.A0_i).dot(cur_B.T).dot(pre_A_i_user)
 
-			if exploit:
-				cur_limit = z.dot(self.beta) + user.dot(cur_theta)
-			else:
-				pre_user_A_i = user.dot(cur_A_i) 
-				pre_zT_A0_i = z.dot(self.A0_i)
-				pre_A_i_user = cur_A_i.dot(user)
-			
-				cur_s = pre_zT_A0_i.dot(z.reshape([self.k, 1])) - 2 * pre_zT_A0_i.dot(cur_B.T).dot(pre_A_i_user) + pre_user_A_i.dot(user) + pre_user_A_i.dot(cur_B).dot(self.A0_i).dot(cur_B.T).dot(pre_A_i_user)
-
-				cur_limit = z.dot(self.beta) + user.dot(cur_theta) + self.alpha * math.sqrt(cur_s)
+			cur_limit = z.dot(self.beta) + user.dot(cur_theta) + self.alpha * math.sqrt(cur_s)
 
 			if(cur_limit >= limit):
 				selected_article = article_id

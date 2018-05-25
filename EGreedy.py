@@ -14,6 +14,9 @@ class EGreedy:
 		self.articles_clicks[selected_article].append(click)
 		self.articles_mean[selected_article] = np.mean(self.articles_clicks[selected_article])
 		
+	def warmup(self, fo):
+		pass
+		
 	def select(self, user, lines, total_impressions):
 		bucket = random.uniform(0, 1)
 		explore = bucket <= self.alpha

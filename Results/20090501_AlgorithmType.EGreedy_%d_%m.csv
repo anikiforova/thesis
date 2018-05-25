@@ -1,0 +1,6 @@
+Clicks, Impressions, Alpha, Method
+31,1000,0.05,AlgorithmType.EGreedy
+65,2000,0.05,AlgorithmType.EGreedy
+100,3000,0.05,AlgorithmType.EGreedy
+128,4000,0.05,AlgorithmType.EGreedy
+160,5000,0.05,AlgorithmType.EGreedy
