@@ -7,7 +7,7 @@ from LinUCB_Disjoint import LinUCB_Disjoint
 from UCB import UCB
 from Random import Random
 
-from util import to_vector
+from Util import to_vector
 
 class AlgorithmType (Enum):
 	Random = 0

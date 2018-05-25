@@ -4,10 +4,11 @@ import numpy as np
 import pandas as pd
 import statistics as stats
 import re
-from numpy.linalg import inv
 import math
 
-from util import to_vector
+from numpy.linalg import inv
+
+from Util import to_vector
 from AlgoFactory import AlgoFactory
 from AlgoFactory import AlgorithmType
 

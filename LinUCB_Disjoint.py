@@ -1,7 +1,8 @@
 import numpy as np
 import math
 from numpy.linalg import inv
-from util import to_vector
+
+from Util import to_vector
 
 class LinUCB_Disjoint:
 	

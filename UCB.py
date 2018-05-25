@@ -2,7 +2,7 @@ import numpy as np
 import math
 import random
 
-from util import to_vector
+from Util import to_vector
 
 class UCB:
 	
