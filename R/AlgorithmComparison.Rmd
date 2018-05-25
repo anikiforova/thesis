@@ -12,8 +12,6 @@ library(scales)
 library(gridExtra)
 
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/Results/"
-y_limit = 0.07
-
 plot_results <- function(algorith_name="Random") {
   
   data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
@@ -22,7 +20,7 @@ plot_results <- function(algorith_name="Random") {
 
   ggplot(data, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
-  expand_limits(y=c(0.04,0.07)) + theme_bw() + ggtitle(algorith_name)
+  expand_limits(y=c(0.04,0.075), x=c(0, 225000)) + theme_bw() + ggtitle(algorith_name)
 }
   
 
@@ -50,6 +48,13 @@ plot_results("EGreedy")
 
 plot_results("EGreedy_Seg")
 
+```
+```{r egreedy-disjoint, include=TRUE, echo=FALSE}
+plot_results("EGreedy_Disjoint")
+```
+
+```{r egreedy-hybrid, include=TRUE, echo=FALSE}
+plot_results("EGreedy_Hybrid")
 ```
 
 ```{r ucb, include=TRUE, echo=FALSE}

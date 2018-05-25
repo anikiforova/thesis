@@ -29,7 +29,7 @@ alphas = {
 		AlgorithmType.UCB_Seg:			np.arange(0.05, 0.1, 0.05) # limit to only 1 since same value for different alphas
 }
 
-choice = AlgorithmType.LinUCB_Hybrid
+choice = AlgorithmType.EGreedy_Disjoint
 
 output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	

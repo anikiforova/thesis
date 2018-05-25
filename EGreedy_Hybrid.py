@@ -1,14 +1,16 @@
 import numpy as np
 import math
+import random
 from numpy.linalg import inv
 
 from Util import to_vector
 
-class EGreedy_Hybrid
+class EGreedy_Hybrid:
 	
 	def __init__(self, alpha):
 		self.d = 6
 		self.alpha = alpha
+		self.k = 36
 		
 		self.A0 = np.identity(self.k)
 		self.b0 = np.zeros(self.k)
@@ -41,6 +43,7 @@ class EGreedy_Hybrid
 			self.A_i[article_id] = np.identity(self.d)
 			self.B[article_id] = np.zeros(self.d * self.k).reshape([self.d, self.k])
 			self.b[article_id] = np.zeros(self.d)
+		return article_id	
 
 	def update(self, user, selected_article, click):
 		article = self.articles[selected_article]
@@ -74,8 +77,9 @@ class EGreedy_Hybrid
 		
 		if explore:
 			for line in lines:
-				article_id = int(line.split(" ")[0])
-				self.add_new_article(article_id)
+				article_id = self.add_new_article(line)
+				articles.append(article_id)
+				
 			selected_article = np.random.choice(articles, 1)
 
 		else:
