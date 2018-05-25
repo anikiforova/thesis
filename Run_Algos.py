@@ -11,17 +11,28 @@ from numpy.linalg import inv
 
 from Util import to_vector
 from AlgoFactory import AlgoFactory
-from AlgoFactory import AlgorithmType
+from AlgorithmType import AlgorithmType
 
 random.seed(9999)
 total_lines = 4681992.0
-alphas = np.arange(0.05, 0.3, 0.05)
 
-choice = AlgorithmType.UCB
+alphas = {
+		AlgorithmType.Random: 			np.arange(0.05, 0.1, 0.05), # no point in different alphas
+		AlgorithmType.EFirst:			np.arange(0.05, 0.3, 0.05),
+		AlgorithmType.EGreedy:			np.arange(0.05, 0.3, 0.05),
+		AlgorithmType.LinUCB_Disjoint:	np.arange(0.05, 0.3, 0.05), # starts decreasing around at 0.25 
+		AlgorithmType.LinUCB_Hybrid:	np.arange(0.05, 0.3, 0.05),
+		AlgorithmType.UCB:				np.arange(0.05, 0.1, 0.05), # limit to only 1 since same value for different alphas
+		AlgorithmType.EGreedy_Seg:		np.arange(0.05, 0.3, 0.05),
+		AlgorithmType.UCB_Seg:			np.arange(0.05, 0.1, 0.05) # limit to only 1 since same value for different alphas
+}
+
+choice = AlgorithmType.LinUCB_Hybrid
+
 output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	
 
-for alpha in alphas:
+for alpha in alphas[choice]:
 	print('Starting evaluation of {0} with {1}'.format(choice,alpha))
 
 	algo = AlgoFactory.get_algorithm(choice, alpha)
@@ -41,9 +52,9 @@ for alpha in alphas:
 		click = int(no_space_line[2])
 		user = to_vector(line[1])
 
-		selected_article = algo.select(user, line[2:], total_impressions)
+		selected_article, warmup = algo.select(user, pre_selected_article, line[2:], total_impressions, click)
 
-		if selected_article == pre_selected_article:
+		if selected_article == pre_selected_article and not warmup:
 			# print('.', end='', flush=True)
 			algo.update(user, pre_selected_article, click)
 			click_count += click
@@ -54,6 +65,5 @@ for alpha in alphas:
 				output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
 				output.flush()
 	fo.close()	
-
 
 output.close()

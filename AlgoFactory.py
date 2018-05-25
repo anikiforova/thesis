@@ -1,21 +1,15 @@
-from enum import Enum
+
+from AlgorithmType import AlgorithmType
 
 from EFirst import EFirst
 from EGreedy import EGreedy
+from Combo_Seg import Combo_Seg
 from LinUCB_Hybrid import LinUCB_Hybrid 
 from LinUCB_Disjoint import LinUCB_Disjoint
 from UCB import UCB
 from Random import Random
 
 from Util import to_vector
-
-class AlgorithmType (Enum):
-	Random = 0
-	EFirst = 1
-	EGreedy = 2
-	LinUCB_Disjoint = 3
-	LinUCB_Hybrid = 4
-	UCB = 5
 
 class AlgoFactory:
 
@@ -32,5 +26,9 @@ class AlgoFactory:
 			return LinUCB_Hybrid(alpha)
 		elif algorithm_type == AlgorithmType.UCB:
 			return UCB(alpha)
+		elif algorithm_type == AlgorithmType.EGreedy_Seg:
+			return Combo_Seg(alpha, AlgorithmType.EGreedy)
+		elif algorithm_type == AlgorithmType.UCB_Seg:
+			return Combo_Seg(alpha, AlgorithmType.UCB)
 		else:
-			print("Non-implemented algorithm type")
+			raise NotImplementedError("Non-implemented algorithm." + algorithm_type.name)

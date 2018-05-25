@@ -12,6 +12,7 @@ class LinUCB_Hybrid:
 		self.k = 36
 		self.alpha = alpha
 		self.training_size = 10000
+		self.warmup_impressions = 0
 
 		self.A0 = np.identity(self.k)
 		self.b0 = np.zeros(self.k)
@@ -48,12 +49,12 @@ class LinUCB_Hybrid:
 		return article_id
 
 	def warmup(self, file):
-		total_impressions = 0
+		self.warmup_impressions = 0
 		for line in file:
-			if total_impressions > self.training_size:
+			if self.warmup_impressions > self.training_size:
 				break
 
-			total_impressions += 1
+			self.warmup_impressions += 1
 			line = line.split("|")
 			no_space_line = line[0].split(" ")
 			pre_selected_article = int(no_space_line[1])
@@ -89,9 +90,12 @@ class LinUCB_Hybrid:
 			self.b[selected_article] += user
 			self.b0 += z.reshape([self.k])
 
-	def select(self, user, lines, exploit):
+	def select(self, user, pre_selected_article, lines, exploit, click):
+		
+		selected_article = -1
+		warmup = False # skipping implementation of non warmup version
+
 		limit = 0.0
-		selected_article = 0
 		for line in lines:
 			article_id = self.add_new_article(line)
 			if article_id == -1: # invalid article
@@ -117,7 +121,7 @@ class LinUCB_Hybrid:
 				limit = cur_limit
 
 		# print(selected_article)
-		return selected_article
+		return selected_article, warmup
 
 
 
