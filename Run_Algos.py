@@ -21,15 +21,17 @@ alphas = {
 		AlgorithmType.EFirst:			np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.EGreedy:			np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.LinUCB_Disjoint:	np.arange(0.05, 0.3, 0.05), # starts decreasing around at 0.25 
+		AlgorithmType.LinUCB_GP:		np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.LinUCB_Hybrid:	np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.UCB:				np.arange(0.05, 0.1, 0.05), # limit to only 1 since same value for different alphas
 		AlgorithmType.EGreedy_Seg:		np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.EGreedy_Disjoint:	np.arange(0.05, 0.3, 0.05), 
 		AlgorithmType.EGreedy_Hybrid:	np.arange(0.05, 0.3, 0.05), 
 		AlgorithmType.UCB_Seg:			np.arange(0.05, 0.1, 0.05) # limit to only 1 since same value for different alphas
+
 }
 
-choice = AlgorithmType.EGreedy_Disjoint
+choice = AlgorithmType.EGreedy
 
 output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	

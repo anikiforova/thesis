@@ -23,6 +23,48 @@ plot_results <- function(algorith_name="Random") {
   expand_limits(y=c(0.04,0.075), x=c(0, 225000)) + theme_bw() + ggtitle(algorith_name)
 }
   
+```
+
+```{r all_algos, include=TRUE, echo=FALSE}
+
+data <- read.csv(file=paste0(path, paste0("LinUCB_Disjoint", ".csv")), header=TRUE, sep=",")
+data1 <- read.csv(file=paste0(path, paste0("LinUCB_Hybrid", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EFirst", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EGreedy", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EGreedy_Hybrid", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EGreedy_Disjoint", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EGreedy_Seg", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("UCB", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("UCB_Seg", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+
+data$Percent = data$Clicks / data$Impressions
+data$Factor = paste(data$Method, sep=" ")
+
+selected = data[(data$Method == "Random") 
+      | (data$Method == "EFirst" && data$Alpha == 0.1) 
+      | (data$Method == "EGreedy" & data$Alpha == 0.1) 
+      | (data$Method == "EGreedy_Seg" & data$Alpha == 0.1) 
+      | (data$Method == "EGreedy_Disjoint" & data$Alpha == 0.1) 
+      | (data$Method == "EGreedy_Hybrid" & data$Alpha == 0.15) 
+      | (data$Method == "UCB" & data$Alpha == 0.05) 
+      | (data$Method == "UCB_Seg" & data$Alpha == 0.05) 
+      | (data$Method == "LinUCB_Disjoint" & data$Alpha == 0.2) 
+      | (data$Method == "LinUCB_Hybrid" & data$Alpha == 0.15), ]
+
+ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
+  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+  expand_limits(y=c(0.04,0.075), x=c(0, 225000)) + theme_bw() + 
+  ggtitle("All algorithms with best parameters")
 
 ```
 

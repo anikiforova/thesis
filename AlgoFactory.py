@@ -6,8 +6,9 @@ from EFirst import EFirst
 from EGreedy import EGreedy
 from EGreedy_Disjoint import EGreedy_Disjoint
 from EGreedy_Hybrid import EGreedy_Hybrid
-from LinUCB_Hybrid import LinUCB_Hybrid 
 from LinUCB_Disjoint import LinUCB_Disjoint
+from LinUCB_GP import LinUCB_GP
+from LinUCB_Hybrid import LinUCB_Hybrid 
 from UCB import UCB
 from Random import Random
 
@@ -37,6 +38,9 @@ class AlgoFactory:
 		elif algorithm_type == AlgorithmType.LinUCB_Disjoint:
 			return LinUCB_Disjoint(alpha)
 
+		elif algorithm_type == AlgorithmType.LinUCB_GP:
+			return LinUCB_GP(alpha)
+		
 		elif algorithm_type == AlgorithmType.LinUCB_Hybrid:
 			return LinUCB_Hybrid(alpha)
 

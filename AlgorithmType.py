@@ -11,3 +11,4 @@ class AlgorithmType (Enum):
 	UCB_Seg = 7
 	EGreedy_Disjoint = 8
 	EGreedy_Hybrid = 9
+	LinUCB_GP = 10
