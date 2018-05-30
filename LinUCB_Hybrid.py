@@ -90,6 +90,8 @@ class LinUCB_Hybrid:
 			self.b[selected_article] += user
 			self.b0 += z.reshape([self.k])
 
+		self.beta = self.A0_i.dot(self.b0)
+
 	def select(self, user, pre_selected_article, lines, exploit, click):
 		
 		selected_article = -1

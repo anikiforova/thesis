@@ -1,7 +1,15 @@
 import numpy as np
+<<<<<<< HEAD
+import random
 import math
 from numpy.linalg import inv
 from numpy.linalg import det
+from scipy.stats import norm
+=======
+import math
+from numpy.linalg import inv
+from numpy.linalg import det
+>>>>>>> refs/remotes/origin/master
 from Util import to_vector
 
 class LinUCB_GP:
@@ -24,12 +32,12 @@ class LinUCB_GP:
 		self.bad_articles = set()
 		self.k_articles = dict()
 
-		self.selected_articles = list()
-		self.selected_users = list()
-		self.selected_clicks = list()
+		self.selected_articles = np.array([])
+		self.selected_users = np.array([])
+		self.selected_clicks = np.array([])
 
-		self.K = np.identity(self.batch_size)
-		self.K_i = np.identity(self.batch_size)
+		self.K = np.identity(self.selection_size)
+		self.K_i = np.identity(self.selection_size)
 
 	def warmup(self, file):
 		pass
@@ -48,15 +56,16 @@ class LinUCB_GP:
 			selected_article = pre_selected_article
 			warmup = True
 		else:	
-			ucb = 0.0
+			ucb = -10.0
 			for line in lines:
 				article_id = self.add_new_article(line)
 				if article_id == -1: # invalid article
 					continue
 
-				cur_ucb = self.get_article_ucb(user, article_id)
+				mu, var = self.get_article_metrics(user, article_id, self.K_i)
+				cur_ucb = mu + self.beta * var
 
-				if(cur_ucb >= ucb):
+				if cur_ucb >= ucb:
 					selected_article = article_id
 					ucb = cur_ucb
 			# print(str(selected_article) + " " + str(warmup))
@@ -64,10 +73,27 @@ class LinUCB_GP:
 
 	def update(self, user, selected_article, click):
 		if len(self.selected_articles) < self.selection_size:
-			self.selected_articles.append(selected_article)
-			self.selected_users.append(user)
-			self.selected_clicks.append(click)
+			# initially populate the kernel before reaching the selection size
+			cur_count = len(self.selected_articles)
+			# print(self.selected_articles)
+			
+			self.selected_articles = np.append(self.selected_articles, selected_article)
+			self.selected_users = np.append(self.selected_users, user).reshape([cur_count+1, self.d])
+			self.selected_clicks = np.append(self.selected_clicks, click)
+			# print(selected_article)
+			# print(self.selected_articles)
+
+			for i in range(0, cur_count):
+				self.K[i][cur_count] = self.kernel(self.selected_users[i], self.selected_articles[i], user, selected_article)
+				self.K[cur_count][i] = self.K[i][cur_count]
+
+			self.K[cur_count][cur_count] = 1
+
+			if cur_count + 1 == self.selection_size:
+				self.K_i = inv(self.K)
+				# print(self.K)
 		else:
+			# print(self.K)
 			self.articles_to_update.append(selected_article)
 			self.users_to_update.append(user)
 			self.clicks_to_update.append(click)
@@ -80,15 +106,15 @@ class LinUCB_GP:
 			worst_i = -1
 			best_j = -1
 			best_K = self.K
+
 			for i in range(0, self.selection_size):
 				for j in range(0, self.batch_size):
 					article_id = self.selected_articles[i]
 					user = self.selected_users[i]
 					click = self.selected_clicks[i]
-
 					self.selected_articles[i] = self.articles_to_update[j]
 					self.selected_users[i] = self.users_to_update[j]
-					self.selected_clicks[i] = self.clicks_to_update[j]
+					self.selected_clicks[i] = self.clicks_to_update[j]	
 
 					value, new_K = self.calculate_cur_value()
 					if value > max_value:
@@ -113,10 +139,11 @@ class LinUCB_GP:
 			self.clicks_to_update = list()
 
 	def exponential_kernel(self, a, b):
-		return np.exp(-np.sum((a-b)*(a-b))/(self.d**2))
+		return np.exp(-0.5*np.sum((a-b)*(a-b))/(self.d**2))
 
 	def kernel_users(self, user1, user2):
-		return 1
+		return self.exponential_kernel(user1, user2)
+		# return 1
 		
 	def kernel_articles(self, article_id1, article_id2):
 		return self.k_articles[article_id1][article_id2] 		
@@ -124,30 +151,33 @@ class LinUCB_GP:
 	def kernel(self, user1, article_id1, user2, article_id2):
 		return self.kernel_users(user1, user2) * self.kernel_articles(article_id1, article_id2)
 
-	def calculate_cur_value(self):
+	def calculate_cur_value(self, i):
 		# print('.', end='', flush=True)
-		var = np.zeros(self.selection_size * self.selection_size).reshape([self.selection_size, self.selection_size])
+		cov = self.K.copy()	
+		for j in range(0, self.selection_size):
+			cov[i][j] = self.kernel(self.selected_users[i], self.selected_articles[i], self.selected_users[j], self.selected_articles[j])
+			cov[j][i] = cov[i][j]
+			if cov[i][j] == 1 and i != j:
+				return 0, self.K
 
+		cov_i = inv(cov)
+		results = 0
 		for i in range(0, self.selection_size):
-			for j in range(i, self.selection_size):
-				var[i][j] = self.kernel(self.selected_users[i], self.selected_articles[i], self.selected_users[j], self.selected_articles[j])
-				var[j][i] = var[i][j]
+			mu, var = self.get_article_metrics(self.selected_users[i], self.selected_articles[i], cov_i)
+			results += mu #norm(mu, var).pdf(self.selected_clicks[i])
 
-		enthropy = det(var)
+		return results, cov
 
-		return enthropy, var
-
-	def get_article_ucb(self, user, article_id):
+	def get_article_metrics(self, user, article_id, cov_i):
 		user_kernels = 1
 		article_kernels =  np.array(list(map(lambda o: self.kernel_articles(article_id, o), self.selected_articles)))
 
 		cur_k = user_kernels * article_kernels		
-		pre_cur_k_K_i = cur_k.dot(self.K_i)
+		pre_cur_k_K_i = cur_k.dot(cov_i)
 
 		mu = pre_cur_k_K_i.dot(self.selected_clicks) 
 		var = self.kernel(user, article_id, user, article_id) - pre_cur_k_K_i.dot(cur_k.reshape(self.selection_size, 1))
-
-		return mu + self.beta * var
+		return mu, var
 
 	def add_new_article(self, line):
 		article_id = int(line.split(" ")[0])

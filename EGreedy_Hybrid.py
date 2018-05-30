@@ -60,11 +60,13 @@ class EGreedy_Hybrid:
 
 		self.A_i[selected_article] = inv(self.A[selected_article])
 		self.A0_i = inv(self.A0)
-
+		
 		if click == 1:
 			self.b[selected_article] += user
 			self.b0 += z.reshape([self.k])
-	
+
+		self.beta = self.A0_i.dot(self.b0)
+
 	def warmup(self, file):
 		pass
 

@@ -15,12 +15,12 @@ path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/Results/"
 plot_results <- function(algorith_name="Random") {
   
   data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
-  data$Percent = data$Clicks / data$Impressions
+  data$Percent = data$Clicks / data$Impressions * 100
   data$Factor = paste(data$Method, data$Alpha, sep=" ")
 
   ggplot(data, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
-  expand_limits(y=c(0.04,0.075), x=c(0, 225000)) + theme_bw() + ggtitle(algorith_name)
+  expand_limits(y=c(4,7.5), x=c(0, 225000)) + theme_bw() + ggtitle(algorith_name)
 }
   
 ```
@@ -47,23 +47,23 @@ data <- rbind(data, data1)
 data1 <- read.csv(file=paste0(path, paste0("UCB_Seg", ".csv")), header=TRUE, sep=",")
 data <- rbind(data, data1)
 
-data$Percent = data$Clicks / data$Impressions
-data$Factor = paste(data$Method, sep=" ")
+data$Percent = data$Clicks / data$Impressions * 100
+data$Factor = paste(data$Method, data$Alpha, sep=" ")
 
 selected = data[(data$Method == "Random") 
       | (data$Method == "EFirst" && data$Alpha == 0.1) 
       | (data$Method == "EGreedy" & data$Alpha == 0.1) 
       | (data$Method == "EGreedy_Seg" & data$Alpha == 0.1) 
       | (data$Method == "EGreedy_Disjoint" & data$Alpha == 0.1) 
-      | (data$Method == "EGreedy_Hybrid" & data$Alpha == 0.15) 
+      | (data$Method == "EGreedy_Hybrid" & data$Alpha == 0.1) 
       | (data$Method == "UCB" & data$Alpha == 0.05) 
       | (data$Method == "UCB_Seg" & data$Alpha == 0.05) 
       | (data$Method == "LinUCB_Disjoint" & data$Alpha == 0.2) 
-      | (data$Method == "LinUCB_Hybrid" & data$Alpha == 0.15), ]
+      | (data$Method == "LinUCB_Hybrid" & data$Alpha == 0.2), ]
 
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
-  expand_limits(y=c(0.04,0.075), x=c(0, 225000)) + theme_bw() + 
+  expand_limits(y=c(4,7.5), x=c(0, 225000)) + theme_bw() + 
   ggtitle("All algorithms with best parameters")
 
 ```

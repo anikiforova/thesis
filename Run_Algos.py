@@ -31,7 +31,11 @@ alphas = {
 
 }
 
+<<<<<<< HEAD
+choice = AlgorithmType.LinUCB_Hybrid
+=======
 choice = AlgorithmType.EGreedy
+>>>>>>> refs/remotes/origin/master
 
 output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	
@@ -57,7 +61,6 @@ for alpha in alphas[choice]:
 		user = to_vector(line[1])
 
 		selected_article, warmup = algo.select(user, pre_selected_article, line[2:], total_impressions, click)
-
 		if selected_article == pre_selected_article and not warmup:
 			# print('.', end='', flush=True)
 			algo.update(user, pre_selected_article, click)
