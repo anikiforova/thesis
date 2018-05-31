@@ -5,7 +5,7 @@ import random
 size = 100
 percentile = 95
 simulation_impressions = 10000.0
-impressions = 10000.0
+impressions = 1000000.0
 
 def get_variances():
 	return np.array(list(map(lambda i: random.uniform(0, 1), range(0, size))))

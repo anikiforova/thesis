@@ -38,28 +38,22 @@ for nclusters in range(4, 11):
 	print('Centers = {0}; FPC = {1:.3f}'.format(nclusters, score), flush=True)
 
 
-# print ("Done learning clusters. Starting updating data.")
-# output = open('./ClusteredData.csv', "w")
-# input = open('./Data.csv', "r")
-# header = input.readline() # skip header
-# output.write(header)
+print ("Done learning clusters. Starting updating data.")
+output = open('./ClusteredData.csv', "w")
+input = open('./Data.csv', "r")
+header = input.readline() # skip header
+output.write(header)
 
-mbk = MiniBatchKMeans(init='k-means++', n_clusters=nclusters, batch_size=batch_size,
+mbk = MiniBatchKMeans(init='k-means++', n_clusters=best_nclusters, batch_size=batch_size,
                       n_init=10, max_no_improvement=10, verbose=0)
 transformed_users = mbk.fit_transform(users)
-print(transformed_users[0])
-# index = 0
-# for line in input:
-# 	line_split = line.split(",")
-	
-# 	user = np.array([])
-# 	for i in range(0, best_cluster_size):
-# 		user = np.append(user, u[i][index])
-	
-# 	user_str = np.array2string(user, precision=3, separator=' ', suppress_small=True)[1:-1].replace('\n', '')
-# 	output.write('{0},{1},{2}\n'.format(user_str, line_split[1], line_split[2]))
-# 	index += 1
-	
 
-# input.close()
-# output.close()
+index = 0
+for line in input:
+	line_split = line.split(",")
+	user_str = np.array2string(transformed_users[index], precision=3, separator=' ', suppress_small=True)[1:-1].replace('\n', '')
+	output.write('{0},{1},{2}\n'.format(user_str, line_split[1], line_split[2]))
+	index += 1
+
+input.close()
+output.close()
