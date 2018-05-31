@@ -31,11 +31,7 @@ alphas = {
 
 }
 
-<<<<<<< HEAD
-choice = AlgorithmType.LinUCB_Hybrid
-=======
-choice = AlgorithmType.EGreedy
->>>>>>> refs/remotes/origin/master
+choice = AlgorithmType.EGreedy_Disjoint
 
 output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	

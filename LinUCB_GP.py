@@ -1,15 +1,9 @@
 import numpy as np
-<<<<<<< HEAD
 import random
 import math
 from numpy.linalg import inv
 from numpy.linalg import det
 from scipy.stats import norm
-=======
-import math
-from numpy.linalg import inv
-from numpy.linalg import det
->>>>>>> refs/remotes/origin/master
 from Util import to_vector
 
 class LinUCB_GP:

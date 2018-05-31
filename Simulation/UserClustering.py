@@ -24,10 +24,10 @@ users = users.transpose()
 print("Done with reading data.", flush=True)
 print("Starting clustering.", flush=True)
 
-# find the best cluster number
-# for ncenters in range(5, 10):
-# 	cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(users, ncenters, 2, error=0.005, maxiter=1000, init=None)
-# 	print('Centers = {0}; FPC = {1:.3f}'.format(ncenters, fpc), flush=True)
+find the best cluster number
+for ncenters in range(5, 10):
+	cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(users, ncenters, 2, error=0.005, maxiter=1000, init=None)
+	print('Centers = {0}; FPC = {1:.3f}'.format(ncenters, fpc), flush=True)
 
 best_cluster_size = 5
 cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(users, best_cluster_size, 2, error=0.005, maxiter=1000, init=None)
