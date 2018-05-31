@@ -75,7 +75,7 @@ for i in range(1, int(impressions)+1):
 		click = 0
 
 	user_str = np.array2string(user, precision=3, separator=' ', suppress_small=True)[1:-1].replace('\n', '')
-	output.write('{0},{1},{2}\n'.format(user_str, theta_str, click))
+	output.write('{0},{1},{2}\n'.format(user_str, 1, click))
 	if i % 1000 == 0:
 		output.flush()
 		print("Impressions done: {0}, Clicks %: {1}".format(i/impressions, click_count/i, flush=True))
