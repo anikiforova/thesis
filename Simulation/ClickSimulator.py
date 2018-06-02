@@ -1,11 +1,15 @@
 
 import numpy as np
+from sklearn.cluster import KMeans
 import random 
 
 size = 100
 percentile = 95
 simulation_impressions = 10000.0
 total_impressions = 1000000.0
+
+def get_e_distance(x, y):
+	return np.sqrt(np.dot(x, x) - 2 * np.dot(x, y) + np.dot(y, y))
 
 def get_variances():
 	return np.array(list(map(lambda i: random.uniform(0, 1), range(0, size))))
@@ -58,12 +62,27 @@ outfile_pattern = "../../1plusx/clicks_part-000{:02}-9492a20a-812b-4f35-92fa-8f8
 print("Starting estimation.")
 input = open(infile_pattern.format(0), "r")
 clicks = list()
+users = np.array([])
+user_count = 0
+user_dimension = 100
+
 for  line in input:
 	user = np.fromstring(line[1:-1], sep=",")
 	clicks.append(calculate_click(user, theta))	
-limit_value = np.percentile(clicks, percentile, axis=0)
+	users = np.append(users, user)
+	user_count += 1
+
 input.close()
+limit_value = np.percentile(clicks, percentile, axis=0)
 print("Estimation complete. Limit Value: {0}.".format(limit_value))
+users = users.reshape([user_dimension, user_count])
+
+mbk = KMeans(init='k-means++', n_clusters=100, n_init=10)
+mbk.fit(users)
+
+cluster_centers = mbk.cluster_centers_
+
+
 
 
 impressions = 0.0
@@ -84,7 +103,10 @@ for i in range(0, 12):
 			click_count+=1
 		else:
 			click = 0
-		user_str = np.array2string(user, precision=7, separator=' ', suppress_small=True)[1:-1].replace('\n', '')
+		
+		user_to_cluster = np.apply_along_axis(lambda c: get_e_distance(user, c), 1,cluster_centers)
+		user_norm = user_to_cluster / np.linalg.norm(user_to_cluster)
+		user_str = np.array2string(user_norm, precision=7, separator=' ', suppress_small=True)[1:-1].replace('\n', '')
 		output.write('{0},{1},{2}\n'.format(user_str, 1, click))
 		if impressions % 1000 == 0:
 			output.flush()
