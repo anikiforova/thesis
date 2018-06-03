@@ -9,6 +9,7 @@ import math
 import sys
 
 from numpy.linalg import inv
+from termcolor import colored
 
 # from Util import to_vector
 from AlgoFactory import AlgoFactory
@@ -16,7 +17,7 @@ from AlgorithmType import AlgorithmType
 from AlgorithmType import get_algorithm_type
 
 random.seed(9999)
-total_lines = 4681992.0
+total_lines = 635387.0 # per file - 12 files
 
 alphas = {
 		AlgorithmType.Random: 			np.arange(0.05, 0.1, 0.05), # no point in different alphas
@@ -34,52 +35,58 @@ alphas = {
 
 }
 
-choice = get_algorithm_type(sys.argv[1])
-if choice == -1:
-	print ("Error no such algorithm type.")
+
+if len(sys.argv) <= 1:
+	print (colored("No AlgorithmType selected. Please select algorithm type.", 'red'))
 	sys.exit()
 
-
-output = open('./Results/{0}.csv'.format(choice.name), "w")
-output.write("Clicks, Impressions, Alpha, Method\n")	
-
-for alpha in alphas[choice]:
-	print('Starting evaluation of {0} with {1}'.format(choice,alpha))
-
-	algo = AlgoFactory.get_algorithm(choice, alpha, 100)
-
-	fo = open("../../1plusx/clicks_part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv".format(0), "r")
-	fo.readline()
+for i in range(1, len(sys.argv)):
 	
-	total_impressions = 0.0
-	click_count = 0.0
-	impression_count = 0.0
+	choice = get_algorithm_type(sys.argv[i])
+	if choice == -1:
+		print (colored("Error. No algorithm type:{0}".format(sys.argv[i]), 'red'))
+		continue
 
-	for line in fo:
-		total_impressions += 1
-		line = line.split(",")
-		user = np.fromstring(line[0], sep=" ")
-		user = user / np.linalg.norm(user)
-		pre_selected = np.argmax(user)
-		click = int(line[2])
+	output = open('./Results/{0}.csv'.format(choice.name), "w")
+	output.write("Clicks, Impressions, Alpha, Method\n")	
 
-		# print(len(user))
-		selected, explore = algo.select(user, pre_selected, click)
-		# print(selected)
-		if selected == pre_selected:
-			# print('.', end='', flush=True)
-			click_count += click
-			algo.update(user, selected, click)
+	for alpha in alphas[choice]:
+		print('Starting evaluation of {0} with {1}'.format(choice, alpha))
 
-			impression_count += 1
+		algo = AlgoFactory.get_algorithm(choice, alpha, 100)
+
+		fo = open("../../1plusx/clicks_part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv".format(0), "r")
+		fo.readline()
 		
-			if impression_count % 10000 == 0:
-				print('{:.2%} Explore {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
-				output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
-				output.flush()
+		total_impressions = 0.0
+		click_count = 0.0
+		impression_count = 0.0
 
-	output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
-	output.flush()
-	fo.close()	
+		for line in fo:
+			total_impressions += 1
+			line = line.split(",")
+			user = np.fromstring(line[0], sep=" ")
+			user = user / np.linalg.norm(user)
+			pre_selected = np.argmax(user)
+			click = int(line[2])
 
-output.close()
+			# print(len(user))
+			selected, explore = algo.select(user, pre_selected, click)
+			# print(selected)
+			if selected == pre_selected:
+				# print('.', end='', flush=True)
+				click_count += click
+				algo.update(user, selected, click)
+
+				impression_count += 1
+			
+				if impression_count % 10000 == 0:
+					print('{:.2%} Explore {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
+					output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
+					output.flush()
+
+		output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
+		output.flush()
+		fo.close()	
+
+	output.close()

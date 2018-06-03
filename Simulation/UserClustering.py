@@ -29,22 +29,23 @@ print("Starting clustering.", flush=True)
 
 # find the best cluster number
 best_score = float('inf')
-best_nclusters = 5
+best_nclusters = 100
 
-for nclusters in range(4, 11):
-	mbk = KMeans(init='k-means++', n_clusters=nclusters, n_init=10)
-	mbk.fit(users)
-	score = - mbk.score(users)
-	if score < best_score:
-		best_score = score
-		best_nclusters = nclusters
-	print('Centers = {0}; FPC = {1:.3f}'.format(nclusters, score), flush=True)
+# for nclusters in range(4, 11):
+# 	mbk = KMeans(init='k-means++', n_clusters=nclusters, n_init=10)
+# 	mbk.fit(users)
+# 	score = - mbk.score(users)
+# 	if score < best_score:
+# 		best_score = score
+# 		best_nclusters = nclusters
+# 	print('Centers = {0}; FPC = {1:.3f}'.format(nclusters, score), flush=True)
 
 
-print ("Done learning clusters. Starting updating data.")
+# print ("Done learning clusters. Starting updating data.")
 
 output = open('./ClusteredData.csv', "w")
 input = open('./Data.csv', "r")
+
 header = input.readline() # skip header
 output.write(header)
 
