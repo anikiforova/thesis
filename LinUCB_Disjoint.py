@@ -15,6 +15,7 @@ class LinUCB_Disjoint:
 		self.A = dict()
 		self.A_i = dict()
 		self.b = dict()
+		self.L = dict()
 
 	def add_new_article(self, article_id):
 		if article_id not in self.A:

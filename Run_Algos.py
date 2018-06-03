@@ -22,8 +22,9 @@ alphas = {
 		AlgorithmType.EGreedy:			np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.LinUCB_Disjoint:	np.arange(0.05, 0.3, 0.05), # starts decreasing around at 0.25 
 		AlgorithmType.LinUCB_GP:		np.arange(0.05, 0.1, 0.05),
+		AlgorithmType.LinUCB_GP_All:	np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.LinUCB_Hybrid:	np.arange(0.05, 0.3, 0.05),
-		AlgorithmType.UCB:				np.arange(0.05, 0.1, 0.05), # limit to only 1 since same value for different alphas
+		AlgorithmType.UCB:				np.arange(0.5, 0.6, 0.05), # limit to only 1 since same value for different alphas
 		AlgorithmType.EGreedy_Seg:		np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.EGreedy_Disjoint:	np.arange(0.05, 0.3, 0.05), 
 		AlgorithmType.EGreedy_Hybrid:	np.arange(0.05, 0.3, 0.05), 
@@ -31,7 +32,7 @@ alphas = {
 
 }
 
-choice = AlgorithmType.EGreedy_Disjoint
+choice = AlgorithmType.LinUCB_GP
 
 output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	
@@ -57,8 +58,9 @@ for alpha in alphas[choice]:
 		user = to_vector(line[1])
 
 		selected_article, warmup = algo.select(user, pre_selected_article, line[2:], total_impressions, click)
+		# print(selected_article)
 		if selected_article == pre_selected_article and not warmup:
-			# print('.', end='', flush=True)
+			print('.', end='', flush=True)
 			algo.update(user, pre_selected_article, click)
 			click_count += click
 			impression_count += 1

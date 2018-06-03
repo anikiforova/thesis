@@ -46,14 +46,15 @@ class UCB:
 			selected_article = pre_selected_article
 			warmup = True
 		else:
-			best_mean = 0
+			best_ucb = 0
 			for line in lines:
 				article_id = int(line.split(" ")[0])
 				self.add_new_article(article_id)
 				cur_mean = self.articles_mean[article_id]
+				cur_var = self.articles_var[article_id]
 
-				if best_mean < cur_mean:
-					best_mean = cur_mean
+				if best_ucb < cur_mean + self.alpha * cur_var:
+					best_ucb = cur_mean + self.alpha * cur_var
 					selected_article = article_id
 
 		return selected_article, warmup

@@ -182,7 +182,7 @@ class LinUCB_GP_Old:
 			return 0, var
 		else:
 			# print(str(determinant) + " " + str(np.log2(determinant)))
-			return determinant, var
+			return log(determinant), var
 
 	def update_stream_greedy(self, selected_users, selected_articles, selected_clicks):
 		# print("Update greedy")
