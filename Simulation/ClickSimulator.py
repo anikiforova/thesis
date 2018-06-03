@@ -83,7 +83,7 @@ impressions = 0.0
 click_count = 0.0
 for i in range(0, 12):
 
-	input = open(infile_pattern.format(0), "r")
+	input = open(infile_pattern.format(i), "r")
 	clicks = list()
 
 	for  line in input:
@@ -95,8 +95,8 @@ for i in range(0, 12):
 	print("Estimation complete. Limit Value: {0}.".format(limit_value))
 	input.close()
 
-	input = open(infile_pattern.format(0), "r")
-	output = open(outfile_pattern.format(0), "w")
+	input = open(infile_pattern.format(i), "r")
+	output = open(outfile_pattern.format(i), "w")
 	output.write('User,Ad,Click\n')
 	click_count = 0.0
 

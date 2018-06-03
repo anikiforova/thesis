@@ -24,7 +24,7 @@ class EGreedy:
 		self.articles_mean[selected_article] = p
 		self.articles_var[selected_article] = p*q
 
-	def select(self, user):
+	def select(self, user, pre_selected, click):
 		bucket = random.uniform(0, 1)
 		explore = bucket <= self.alpha
 

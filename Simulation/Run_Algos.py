@@ -6,33 +6,39 @@ import pandas as pd
 import statistics as stats
 import re
 import math
+import sys
 
 from numpy.linalg import inv
 
 # from Util import to_vector
 from AlgoFactory import AlgoFactory
 from AlgorithmType import AlgorithmType
+from AlgorithmType import get_algorithm_type
 
 random.seed(9999)
 total_lines = 4681992.0
 
 alphas = {
 		AlgorithmType.Random: 			np.arange(0.05, 0.1, 0.05), # no point in different alphas
-		AlgorithmType.EFirst:			np.arange(0.05, 0.3, 0.05),
-		AlgorithmType.EGreedy:			np.arange(0.05, 0.3, 0.05),
-		AlgorithmType.LinUCB_Disjoint:	np.arange(0.05, 0.3, 0.05), # starts decreasing around at 0.25 
+		AlgorithmType.EFirst:			np.arange(0.05, 0.1, 0.05),
+		AlgorithmType.EGreedy:			np.arange(0.05, 0.1, 0.05),
+		AlgorithmType.LinUCB_Disjoint:	np.arange(0.05, 0.1, 0.05), # starts decreasing around at 0.25 
 		AlgorithmType.LinUCB_GP:		np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.LinUCB_GP_All:	np.arange(0.05, 0.1, 0.05),
-		AlgorithmType.LinUCB_Hybrid:	np.arange(0.05, 0.3, 0.05),
-		AlgorithmType.UCB:				np.arange(0.05, 0.2, 0.05), # limit to only 1 since same value for different alphas
-		AlgorithmType.EGreedy_Seg:		np.arange(0.05, 0.3, 0.05),
-		AlgorithmType.EGreedy_Disjoint:	np.arange(0.05, 0.3, 0.05), 
-		AlgorithmType.EGreedy_Hybrid:	np.arange(0.05, 0.3, 0.05), 
+		AlgorithmType.LinUCB_Hybrid:	np.arange(0.05, 0.1, 0.05),
+		AlgorithmType.UCB:				np.arange(0.05, 0.1, 0.05), # limit to only 1 since same value for different alphas
+		AlgorithmType.EGreedy_Seg:		np.arange(0.05, 0.1, 0.05),
+		AlgorithmType.EGreedy_Disjoint:	np.arange(0.05, 0.1, 0.05), 
+		AlgorithmType.EGreedy_Hybrid:	np.arange(0.05, 0.1, 0.05), 
 		AlgorithmType.UCB_Seg:			np.arange(0.05, 0.1, 0.05) # limit to only 1 since same value for different alphas
 
 }
 
-choice = AlgorithmType.UCB
+choice = get_algorithm_type(sys.argv[1])
+if choice == -1:
+	print ("Error no such algorithm type.")
+	sys.exit()
+
 
 output = open('./Results/{0}.csv'.format(choice.name), "w")
 output.write("Clicks, Impressions, Alpha, Method\n")	
@@ -42,7 +48,7 @@ for alpha in alphas[choice]:
 
 	algo = AlgoFactory.get_algorithm(choice, alpha, 100)
 
-	fo = open("./Data.csv", "r")
+	fo = open("../../1plusx/clicks_part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv".format(0), "r")
 	fo.readline()
 	
 	total_impressions = 0.0
@@ -59,16 +65,15 @@ for alpha in alphas[choice]:
 
 		# print(len(user))
 		selected, explore = algo.select(user, pre_selected, click)
-		# print( selected)
-		# print(selected_article)
+		# print(selected)
 		if selected == pre_selected:
-			print('.', end='', flush=True)
+			# print('.', end='', flush=True)
 			click_count += click
 			algo.update(user, selected, click)
 
 			impression_count += 1
 		
-			if impression_count % 1000 == 0:
+			if impression_count % 10000 == 0:
 				print('{:.2%} Explore {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
 				output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
 				output.flush()
