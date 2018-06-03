@@ -7,6 +7,8 @@ size = 100
 percentile = 95
 simulation_impressions = 10000.0
 total_impressions = 1000000.0
+leaning_size = 100000
+user_dimension = 100
 
 def get_e_distance(x, y):
 	return np.sqrt(np.dot(x, x) - 2 * np.dot(x, y) + np.dot(y, y))
@@ -59,35 +61,40 @@ theta, theta_str = get_theta()
 infile_pattern = "../../1plusx/part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv"  
 outfile_pattern = "../../1plusx/clicks_part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv"  
 
-print("Starting estimation.")
-input = open(infile_pattern.format(0), "r")
-clicks = list()
+print("Starting clustering.")
+
 users = np.array([])
 user_count = 0
-user_dimension = 100
-
+input = open(infile_pattern.format(0), "r")
 for  line in input:
 	user = np.fromstring(line[1:-1], sep=",")
-	clicks.append(calculate_click(user, theta))	
 	users = np.append(users, user)
 	user_count += 1
-
+	if user_count > leaning_size:
+		break	
 input.close()
-limit_value = np.percentile(clicks, percentile, axis=0)
-print("Estimation complete. Limit Value: {0}.".format(limit_value))
-users = users.reshape([user_dimension, user_count])
-
+users = users.reshape([user_count, user_dimension])
 mbk = KMeans(init='k-means++', n_clusters=100, n_init=10)
 mbk.fit(users)
-
 cluster_centers = mbk.cluster_centers_
-
-
-
+print("Done with clustering")
 
 impressions = 0.0
 click_count = 0.0
 for i in range(0, 12):
+
+	input = open(infile_pattern.format(0), "r")
+	clicks = list()
+
+	for  line in input:
+		user = np.fromstring(line[1:-1], sep=",")
+		clicks.append(calculate_click(user, theta))	
+
+	limit_value = np.percentile(clicks, percentile, axis=0)
+	clicks = list()
+	print("Estimation complete. Limit Value: {0}.".format(limit_value))
+	input.close()
+
 	input = open(infile_pattern.format(0), "r")
 	output = open(outfile_pattern.format(0), "w")
 	output.write('User,Ad,Click\n')
@@ -104,6 +111,8 @@ for i in range(0, 12):
 		else:
 			click = 0
 		
+		# print (user.shape)
+		# print (cluster_centers.shape)
 		user_to_cluster = np.apply_along_axis(lambda c: get_e_distance(user, c), 1,cluster_centers)
 		user_norm = user_to_cluster / np.linalg.norm(user_to_cluster)
 		user_str = np.array2string(user_norm, precision=7, separator=' ', suppress_small=True)[1:-1].replace('\n', '')
