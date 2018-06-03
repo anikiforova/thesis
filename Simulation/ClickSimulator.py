@@ -7,7 +7,7 @@ size = 100
 percentile = 95
 simulation_impressions = 10000.0
 total_impressions = 1000000.0
-leaning_size = 100000
+leaning_size = 10000
 user_dimension = 100
 
 def get_e_distance(x, y):
