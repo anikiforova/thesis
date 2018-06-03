@@ -3,13 +3,12 @@ import datetime
 import random
 import numpy as np
 import pandas as pd
-import statistics as stats
 import re
 import math
 import sys
 
 from numpy.linalg import inv
-from termcolor import colored
+# from termcolor import colored
 
 # from Util import to_vector
 from AlgoFactory import AlgoFactory
@@ -37,14 +36,16 @@ alphas = {
 
 
 if len(sys.argv) <= 1:
-	print (colored("No AlgorithmType selected. Please select algorithm type.", 'red'))
+	# print (colored("No AlgorithmType selected. Please select algorithm type.", 'red'))
+	print ("No AlgorithmType selected. Please select algorithm type.")
 	sys.exit()
 
 for i in range(1, len(sys.argv)):
 	
 	choice = get_algorithm_type(sys.argv[i])
 	if choice == -1:
-		print (colored("Error. No algorithm type:{0}".format(sys.argv[i]), 'red'))
+		# print (colored("Error. No algorithm type:{0}".format(sys.argv[i]), 'red'))
+		print ("Error. No algorithm type:{0}".format(sys.argv[i]))
 		continue
 
 	output = open('./Results/{0}.csv'.format(choice.name), "w")
