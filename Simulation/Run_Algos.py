@@ -23,7 +23,7 @@ alphas = {
 		AlgorithmType.Random: 			np.arange(0.05, 0.1, 0.05), # no point in different alphas
 		# AlgorithmType.EFirst:			np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.EGreedy:			np.arange(0.001, 0.3, 0.05),
-		# AlgorithmType.LinUCB_Disjoint:	np.arange(0.05, 0.1, 0.05), # starts decreasing around at 0.25 
+		AlgorithmType.LinUCB_Disjoint:	np.arange(0.05, 0.3, 0.05), # starts decreasing around at 0.25 
 		# AlgorithmType.LinUCB_GP:		np.arange(0.05, 0.1, 0.05),
 		# AlgorithmType.LinUCB_GP_All:	np.arange(0.05, 0.1, 0.05),
 		# AlgorithmType.LinUCB_Hybrid:	np.arange(0.05, 0.1, 0.05),
