@@ -58,14 +58,14 @@ for i in range(1, len(sys.argv)):
 
 		algo = AlgoFactory.get_algorithm(choice, alpha, 100)
 
+		total_impressions = 0.0
+		click_count = 0.0
+		impression_count = 0.0
+
 		for file_index in range(0, 12):
 			fo = open("../../1plusx/clicks_part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv".format(file_index), "r")
 			fo.readline()
 			
-			total_impressions = 0.0
-			click_count = 0.0
-			impression_count = 0.0
-
 			for line in fo:
 				total_impressions += 1
 				line = line.split(",")
