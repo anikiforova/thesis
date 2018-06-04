@@ -76,7 +76,7 @@ cluster_centers = cluster_centers.reshape([cluster_count, user_dimension])
 
 impressions = 0.0
 click_count = 0.0
-for i in range(0, 12):
+for i in range(9, 12):
 
 	input = open(infile_pattern.format(i), "r")
 	clicks = list()
