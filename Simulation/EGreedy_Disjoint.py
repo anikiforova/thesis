@@ -37,7 +37,7 @@ class EGreedy_Disjoint:
 	def warmup(self, file):
 		pass
 
-	def select(self, user, pre_selected, click)
+	def select(self, user, pre_selected, click):
 		bucket = random.uniform(0, 1)
 		explore = bucket <= self.alpha
 		
