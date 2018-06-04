@@ -37,7 +37,7 @@ class UCB:
 			selected_article = pre_selected
 			warmup = True
 		else:
-			selected_article = np.argmax(list(map(lambda i: self.articles_mean[i] + self.alpha * self.articles_var[i], range(0, self.clusters))))
-		
+			selected_article = np.argmax(list(map(lambda i: self.articles_mean[i]  + self.alpha * self.articles_var[i], range(0, self.clusters))))
+			
 		return selected_article, warmup
 

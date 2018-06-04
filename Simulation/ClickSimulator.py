@@ -3,21 +3,19 @@ import numpy as np
 from sklearn.cluster import KMeans
 import random 
 
-size = 100
 percentile = 95
 simulation_impressions = 10000.0
 total_impressions = 1000000.0
-leaning_size = 100000
 user_dimension = 100
 
 def get_e_distance(x, y):
 	return np.sqrt(np.dot(x, x) - 2 * np.dot(x, y) + np.dot(y, y))
 
 def get_variances():
-	return np.array(list(map(lambda i: random.uniform(0, 1), range(0, size))))
+	return np.array(list(map(lambda i: random.uniform(0, 1), range(0, user_dimension))))
 
 def get_means():
-	return np.array(list(map(lambda i: random.uniform(-1, 1), range(0, size))))
+	return np.array(list(map(lambda i: random.uniform(-1, 1), range(0, user_dimension))))
 
 def get_random_within_range(var, mean):
 	num = -2
@@ -27,7 +25,7 @@ def get_random_within_range(var, mean):
 	return num
 
 def get_embedding(vars, means):
-	return np.array(list(map(lambda i: get_random_within_range(vars[i], means[i]), range(0, size))))
+	return np.array(list(map(lambda i: get_random_within_range(vars[i], means[i]), range(0, user_dimension))))
 	
 def get_theta():	
 	theta = get_means()
@@ -61,23 +59,20 @@ theta, theta_str = get_theta()
 infile_pattern = "../../1plusx/part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv"  
 outfile_pattern = "../../1plusx/clicks_part-000{:02}-9492a20a-812b-4f35-92fa-8f8d9aca22e4-c000.csv"  
 
-print("Starting clustering.")
+clusters_input = open("../../1plusx/Clusters.csv", "r")
 
-users = np.array([])
-user_count = 0
-input = open(infile_pattern.format(0), "r")
-for  line in input:
-	user = np.fromstring(line[1:-1], sep=",")
-	users = np.append(users, user)
-	user_count += 1
-	if user_count > leaning_size:
-		break	
-input.close()
-users = users.reshape([user_count, user_dimension])
-mbk = KMeans(init='k-means++', n_clusters=100, n_init=10)
-mbk.fit(users)
-cluster_centers = mbk.cluster_centers_
-print("Done with clustering")
+cluster_centers = np.array([])
+cluster_count = 0
+center = []
+for line in clusters_input:
+
+	center = np.fromstring(line[1:-1], sep=" ")
+	
+	cluster_centers = np.append(cluster_centers, center)
+	cluster_count += 1
+
+clusters_input.close()
+cluster_centers = cluster_centers.reshape([cluster_count, user_dimension])
 
 impressions = 0.0
 click_count = 0.0

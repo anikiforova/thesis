@@ -32,7 +32,8 @@ class EGreedy:
 			selected_article = randint(0, self.clusters)
 		else:
 			# print(np.argmax(user))
-			selected_article = np.argmax(user)
+			selected_article = np.argmax(list(map(lambda i: self.articles_mean[i], range(0, self.clusters))))
+			# selected_article = np.argmax(user)
 
 		return selected_article, not explore
 
