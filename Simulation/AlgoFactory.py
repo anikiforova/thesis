@@ -20,31 +20,31 @@ class AlgoFactory:
 			return Random(alpha, clusters)
 
 		# elif algorithm_type == AlgorithmType.EFirst:
-		# 	return EFirst(alpha)
+		# 	return EFirst(alpha, clusters)
 
 		elif algorithm_type == AlgorithmType.EGreedy:
 			return EGreedy(alpha, clusters) 
 
 		elif algorithm_type == AlgorithmType.EGreedy_Disjoint:
-			return EGreedy_Disjoint(alpha)
+			return EGreedy_Disjoint(alpha, clusters)
 
 		# elif algorithm_type == AlgorithmType.EGreedy_Hybrid:
-		# 	return EGreedy_Hybrid(alpha)
+		# 	return EGreedy_Hybrid(alpha, clusters)
 
 		# elif algorithm_type == AlgorithmType.EGreedy_Seg:
 		# 	return Combo_Seg(alpha, AlgorithmType.EGreedy)
 
 		# elif algorithm_type == AlgorithmType.LinUCB_Disjoint:
-		# 	return LinUCB_Disjoint(alpha)
+		# 	return LinUCB_Disjoint(alpha, clusters)
 
 		# elif algorithm_type == AlgorithmType.LinUCB_GP:
-		# 	return LinUCB_GP(alpha)
+		# 	return LinUCB_GP(alpha, clusters)
 
 		elif algorithm_type == AlgorithmType.LinUCB_GP_All:
 			return LinUCB_GP_All(alpha, clusters)
 		
 		# elif algorithm_type == AlgorithmType.LinUCB_Hybrid:
-			# return LinUCB_Hybrid(alpha)
+			# return LinUCB_Hybrid(alpha, clusters)
 
 		elif algorithm_type == AlgorithmType.UCB:
 			return UCB(alpha, clusters)

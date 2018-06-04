@@ -2,6 +2,7 @@ import numpy as np
 import math
 import random
 from numpy.linalg import inv
+from random import randint
 
 class EGreedy_Disjoint:
 	
@@ -10,23 +11,14 @@ class EGreedy_Disjoint:
 		self.alpha = alpha
 		self.cluster_count = cluster_count
 		
-		self.A = self.get_clusters()
-		self.A_i = np.zeros(self.cluster_count)
-		self.b = np.zeros(self.cluster_count)
+		self.A = dict()
+		self.A_i = dict()
+		self.b = dict()
 
-	def get_clusters(self):
-		clusters_input = open("../../1plusx/Clusters.csv", "r")
-		cluster_centers = np.array([])
-		cluster_count = 0
-
-		for line in clusters_input:
-			center = np.fromstring(line[1:-1], sep=" ")
-			cluster_centers = np.append(cluster_centers, center)
-			cluster_count += 1
-		cluster_centers = cluster_centers.reshape([cluster_count, self.d])
-		clusters_input.close()
-
-		return cluster_centers
+		for c in range(0, self.cluster_count):
+			self.A[c] = np.identity(self.d)
+			self.A_i[c] = np.identity(self.d)
+			self.b[c] = np.zeros(self.d)
 
 	def update(self, user, selected_article, click):
 		self.A[selected_article] += user.reshape([self.d, 1]).dot(user.reshape([1, self.d]))
@@ -44,13 +36,13 @@ class EGreedy_Disjoint:
 		selected_article = -1
 		
 		if explore:
-			selected_article = randint(0, self.clusters-1)
+			selected_article = randint(0, self.cluster_count-1)
 		else:
 			limit = 0.0
-			for c in self.clusters:
+			for c in range(0, self.cluster_count):
 				cur_limit = user.dot(self.A_i[c].dot(self.b[c]))
 				if cur_limit > limit:
-					selected_article = article_id
+					selected_article = c
 					limit = cur_limit
 
 		return selected_article, False

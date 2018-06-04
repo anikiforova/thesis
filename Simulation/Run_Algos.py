@@ -29,7 +29,7 @@ alphas = {
 		# AlgorithmType.LinUCB_Hybrid:	np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.UCB:				np.arange(0.001, 0.3, 0.05), # limit to only 1 since same value for different alphas
 		# AlgorithmType.EGreedy_Seg:		np.arange(0.05, 0.1, 0.05),
-		AlgorithmType.EGreedy_Disjoint:	np.arange(0.001, 0.3, 0.05), 
+		AlgorithmType.EGreedy_Disjoint:	np.arange(0.05, 0.3, 0.05), 
 		# AlgorithmType.EGreedy_Hybrid:	np.arange(0.05, 0.1, 0.05), 
 		# AlgorithmType.UCB_Seg:			np.arange(0.05, 0.1, 0.05) # limit to only 1 since same value for different alphas
 
@@ -82,7 +82,7 @@ for i in range(1, len(sys.argv)):
 				
 				if selected == pre_selected:
 					# print(str(pre_selected) + " " + str(selected))
-					# print('.', end='', flush=True)
+					print('.', end='', flush=True)
 					click_count += click
 					algo.update(user, selected, click)
 
