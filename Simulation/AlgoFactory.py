@@ -4,7 +4,7 @@ from AlgorithmType import AlgorithmType
 # from Combo_Seg import Combo_Seg
 # from EFirst import EFirst
 from EGreedy import EGreedy
-# from EGreedy_Disjoint import EGreedy_Disjoint
+from EGreedy_Disjoint import EGreedy_Disjoint
 # from EGreedy_Hybrid import EGreedy_Hybrid
 # from LinUCB_Disjoint import LinUCB_Disjoint
 # from LinUCB_GP import LinUCB_GP
@@ -25,8 +25,8 @@ class AlgoFactory:
 		elif algorithm_type == AlgorithmType.EGreedy:
 			return EGreedy(alpha, clusters) 
 
-		# elif algorithm_type == AlgorithmType.EGreedy_Disjoint:
-		# 	return EGreedy_Disjoint(alpha)
+		elif algorithm_type == AlgorithmType.EGreedy_Disjoint:
+			return EGreedy_Disjoint(alpha)
 
 		# elif algorithm_type == AlgorithmType.EGreedy_Hybrid:
 		# 	return EGreedy_Hybrid(alpha)
