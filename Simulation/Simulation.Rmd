@@ -25,81 +25,56 @@ plot_results <- function(algorith_name="Random") {
   
 ```
 
-```{r all_algos, include=TRUE, echo=FALSE}
-
-data <- read.csv(file=paste0(path, paste0("EGreedy_Disjoint", ".csv")), header=TRUE, sep=",")
-#data1 <- read.csv(file=paste0(path, paste0("EGreedy_Disjoint", ".csv")), header=TRUE, sep=",")
-#data <- rbind(data, data1)
-data1 <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
-data <- rbind(data, data1)
-data1 <- read.csv(file=paste0(path, paste0("EGreedy", ".csv")), header=TRUE, sep=",")
-data <- rbind(data, data1)
-data1 <- read.csv(file=paste0(path, paste0("UCB", ".csv")), header=TRUE, sep=",")
-data <- rbind(data, data1)
-
-data$Percent = data$Clicks / data$Impressions * 100
-data$Factor = paste(data$Method, data$Alpha, sep=" ")
-
-selected = data[(data$Method == "Random") 
-      | (data$Method == "EGreedy" & data$Alpha == 0.1)
-      | (data$Method == "EGreedy_Disjoint" & data$Alpha == 0.15)
-      | (data$Method == "UCB" & data$Alpha == 0.1) , ]
-
-ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
-  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
-  expand_limits(y=c(4,7.5), x=c(0, 75000)) + theme_bw() + 
-  ggtitle("All algorithms with best parameters")
-
-```
-
-```{r random, include=TRUE, echo=FALSE}
-
-plot_results("Random")
-
-```
-
-```{r e-first, include=TRUE, echo=FALSE}
-
-plot_results("EFirst")
-
-```
-
-```{r e-greedy, include=TRUE, echo=FALSE}
-
-plot_results("EGreedy")
-
-```
-
-```{r e-greedy_Seg, include=TRUE, echo=FALSE}
-
-plot_results("EGreedy_Seg")
-
-```
-```{r egreedy-disjoint, include=TRUE, echo=FALSE}
-plot_results("EGreedy_Disjoint")
-```
-
-```{r egreedy-hybrid, include=TRUE, echo=FALSE}
-plot_results("EGreedy_Hybrid")
-```
-
-```{r ucb, include=TRUE, echo=FALSE}
-
-plot_results("UCB")
-```
-
-```{r ucb_seg, include=TRUE, echo=FALSE}
-
-plot_results("UCB_Seg")
-```
-
-```{r linucb-disjoint, include=TRUE, echo=FALSE}
-plot_results("LinUCB_Disjoint")
-```
 
 ```{r linucb-hybrid, include=TRUE, echo=FALSE}
-plot_results("LinUCB_Hybrid")
+algorith_name="Simulation_Results"
+data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
+data$Percent = data$X7 / data$X100 * 100
+data$Factor = paste(data$SRandom, data$X0.00, sep=" ")
+
+ggplot(data, aes(x=X100, y=Percent, colour=Factor)) + 
+geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+expand_limits(y=c(0,100), x=c(0, 20000)) + theme_bw() + ggtitle(algorith_name)
+  
 ```
 
 ```{r gpprank, include=TRUE, echo=FALSE}
+algorith_name="Simulation_Results_Poly"
+data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
+data$Percent = data$X4 / data$X100 * 100
+data$Factor = paste(data$SRandom, data$X0.00, sep=" ")
+
+ggplot(data, aes(x=X100, y=Percent, colour=Factor)) + 
+geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+expand_limits(y=c(0,100), x=c(0, 10000)) + theme_bw() + ggtitle(algorith_name)
+```
+```{r Poly_Sigmoid, include=TRUE, echo=FALSE}
+algorith_name="Poly_Sigmoid"
+data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
+
+data = aggregate(x=data[c("ClickCount")], by=data[c("Impressions", "AlgoName", "Alpha", "OverallCTR", "Randomized")], mean)
+
+data$Percent = data$ClickCount / data$Impressions * 100
+data$Factor = paste(data$AlgoName, " CTR ", data$OverallCTR, sep=" ")
+
+#data = data[data$Randomized=="False",]
+data = data[data$OverallCTR ==0.05,]
+ggplot(data, aes(x=Impressions, y=Percent, colour=Factor)) + 
+geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+expand_limits(y=c(0,100), x=c(0, 1000)) + theme_bw() + ggtitle(algorith_name)
+```
+```{r Poly_Sigmoid, include=TRUE, echo=FALSE}
+algorith_name="Poly_Sigmoid"
+data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
+
+data = aggregate(x=data[c("ClickCount")], by=data[c("Impressions", "AlgoName", "Alpha", "OverallCTR", "Randomized")], mean)
+
+data$Percent = data$ClickCount / data$Impressions * 100
+data$Factor = paste(data$AlgoName, " CTR ", data$OverallCTR, sep=" ")
+
+#data = data[data$Randomized=="False",]
+#data = data[data$OverallCTR ==0.005,]
+ggplot(data, aes(x=Impressions, y=Percent, colour=Factor)) + 
+geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+expand_limits(y=c(0,100), x=c(0, 1000)) + theme_bw() + ggtitle(algorith_name)
 ```
