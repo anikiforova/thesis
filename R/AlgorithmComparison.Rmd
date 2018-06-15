@@ -36,15 +36,30 @@ data1 <- read.csv(file=paste0(path, paste0("EFirst", ".csv")), header=TRUE, sep=
 data <- rbind(data, data1)
 data1 <- read.csv(file=paste0(path, paste0("EGreedy", ".csv")), header=TRUE, sep=",")
 data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EGreedy_Lin", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+#data1 <- read.csv(file=paste0(path, paste0("EGreedy_Seg_Lin", ".csv")), header=TRUE, sep=",")
+#data <- rbind(data, data1)
 data1 <- read.csv(file=paste0(path, paste0("EGreedy_Hybrid", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EGreedy_Disjoint", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("EGreedy_Seg", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("UCB", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
+data1 <- read.csv(file=paste0(path, paste0("UCB_Seg", ".csv")), header=TRUE, sep=",")
+data <- rbind(data, data1)
 
 data$Percent = data$Clicks / data$Impressions * 100
 data$Factor = paste(data$Method, data$Alpha, sep=" ")
 
 selected = data[(data$Method == "Random") 
       | (data$Method == "EFirst" && data$Alpha == 0.1) 
-      | (data$Method == "EGreedy" & data$Alpha == 0.1) 
+      | (data$Method == "EGreedy" & data$Alpha == 0.1)
+      | (data$Method == "EGreedy_Lin" & data$Alpha == 0.05)
       | (data$Method == "EGreedy_Seg" & data$Alpha == 0.1) 
+      | (data$Method == "EGreedy_Seg_Lin" & data$Alpha == 0.0) 
       | (data$Method == "EGreedy_Disjoint" & data$Alpha == 0.1) 
       | (data$Method == "EGreedy_Hybrid" & data$Alpha == 0.1) 
       | (data$Method == "UCB" & data$Alpha == 0.05) 
@@ -79,6 +94,18 @@ plot_results("EGreedy")
 
 ```{r e-greedy_Seg, include=TRUE, echo=FALSE}
 
+plot_results("EGreedy_Lin")
+
+```
+
+```{r e-greedy_Seg, include=TRUE, echo=FALSE}
+
+plot_results("EGreedy_Seg_Lin")
+
+```
+
+```{r e-greedy_Seg, include=TRUE, echo=FALSE}
+
 plot_results("EGreedy_Seg")
 
 ```
@@ -108,5 +135,21 @@ plot_results("LinUCB_Disjoint")
 plot_results("LinUCB_Hybrid")
 ```
 
-```{r gpprank, include=TRUE, echo=FALSE}
+```{r all_algos, include=TRUE, echo=FALSE}
+
+data <- read.csv(file=paste0(path, paste0("EGreedy_Lin", ".csv")), header=TRUE, sep=",")
+data1 <- read.csv(file=paste0(path, paste0("EGreedy_Lin_Hybrid_1", ".csv")), header=TRUE, sep=",")
+
+data <- rbind(data, data1)
+
+data$Percent = data$Clicks / data$Impressions * 100
+data$Factor = paste(data$Method, data$Alpha, sep=" ")
+
+selected = data[(data$Method == "EGreedy_Lin" & data$Alpha == 0.01)
+      | (data$Method == "EGreedy_Lin_Hybrid_1" ), ]
+
+ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
+  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+  expand_limits(y=c(4,7.5), x=c(0, 225000)) + theme_bw() + 
+  ggtitle("All algorithms with best parameters")
 ```

@@ -3,6 +3,7 @@ import math
 import random
 
 from EGreedy import EGreedy
+from EGreedy_Lin import EGreedy_Lin
 from UCB import UCB
 
 from AlgorithmType import AlgorithmType
@@ -27,6 +28,8 @@ class Combo_Seg:
 				self.segments.append(UCB(self.alpha, scale_training_size))
 			elif algorithm_type == AlgorithmType.EGreedy:
 				self.segments.append(EGreedy(self.alpha))
+			elif algorithm_type == AlgorithmType.EGreedy_Lin:
+				self.segments.append(EGreedy_Lin(self.alpha))
 			else :
 				raise NotImplementedError("Non-implemented algorithm." + algorithm_type.name)
 

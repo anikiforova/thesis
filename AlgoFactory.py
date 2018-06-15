@@ -6,9 +6,12 @@ from EFirst import EFirst
 from EGreedy import EGreedy
 from EGreedy_Disjoint import EGreedy_Disjoint
 from EGreedy_Hybrid import EGreedy_Hybrid
+from EGreedy_Lin import EGreedy_Lin
+from EGreedy_Lin_Hybrid import EGreedy_Lin_Hybrid
 from LinUCB_Disjoint import LinUCB_Disjoint
 from LinUCB_GP import LinUCB_GP
 from LinUCB_GP_All import LinUCB_GP_All
+from LinUCB_SGP import LinUCB_SGP
 from LinUCB_Hybrid import LinUCB_Hybrid 
 from UCB import UCB
 from Random import Random
@@ -53,6 +56,18 @@ class AlgoFactory:
 
 		elif algorithm_type == AlgorithmType.UCB_Seg:
 			return Combo_Seg(alpha, AlgorithmType.UCB)
+
+		elif algorithm_type == AlgorithmType.LinUCB_SGP:
+			return LinUCB_SGP(alpha)
+
+		elif algorithm_type == AlgorithmType.EGreedy_Lin:
+			return EGreedy_Lin(alpha)
+
+		elif algorithm_type == AlgorithmType.EGreedy_Seg_Lin:
+			return Combo_Seg(alpha, AlgorithmType.EGreedy_Lin)
+
+		elif algorithm_type == AlgorithmType.EGreedy_Lin_Hybrid:
+			return EGreedy_Lin_Hybrid(alpha)
 			
 		else:
 			raise NotImplementedError("Non-implemented algorithm." + algorithm_type.name)
