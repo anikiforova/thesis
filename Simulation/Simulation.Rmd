@@ -26,6 +26,10 @@ plot_results <- function(algorith_name="Random") {
   
 ```
 
+Simulation using real embeddings from 1plusX with simulated clicks.
+Used randomly generated theta for evaluating the click value.
+The click result = user.dot(theta) + error.
+Clearly linear correlation and therefore very good results with linear regression. 
 
 ```{r linucb-hybrid, include=TRUE, echo=FALSE}
 algorith_name="Simulation_Results"
@@ -38,7 +42,10 @@ geom_line() + xlab("Impressions") + ylab("% of Clicks") +
 expand_limits(y=c(0,100), x=c(0, 20000)) + theme_bw()  + ggtitle("Linear - CTR: 5% - No added randomization")
   
 ```
-
+Using a more complicated click function =sigma( A.dot(user^2) + B(user) + C ) + error
+However clearly this is still not very sophisticated function. Still very good results with using a simple regression model.
+CTR - 5% 
+Using SEGreedy with a different exploration percentage. Interestingly the larger exploration the worse results. 
 ```{r gpprank, include=TRUE, echo=FALSE}
 algorith_name="Simulation_Results_Poly"
 data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
@@ -49,6 +56,14 @@ ggplot(data, aes(x=X100, y=Percent, colour=Factor)) +
 geom_line() + xlab("Impressions") + ylab("% of Clicks") +
 expand_limits(y=c(0,100), x=c(0, 10000)) + theme_bw() + ggtitle("Polynomial + Sigmoid - CTR: 5% - No added randomization")
 ```
+Similarly to above, but adding more substantial error. 
+The error takes random 5% of the generated clicks and flips them ot no click and takes same amount of no-clicks and makes them clicks. 
+
+Also reducing the size of the CTR so that we can see more real world CTR for ads. 
+The number of impressions this is equal to 70% of the total clicks. If an user is selected then he could not be chosen again, so we know that past 100% of clicks the ctr would fall drastically and no need to test that.
+
+Clearly the lower CTR affects learning rate and results in a lower CTR, however it still performs quite well. 
+
 ```{r Poly_Sigmoid, include=TRUE, echo=FALSE, fig.height = 4, fig.width = 12 }
 algorith_name<-"Poly_Sigmoid"
 data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
@@ -98,7 +113,8 @@ grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
 
 ```
 
-
+Exploring using an iterative algorithm instead of learning from scratch with linear regression. 
+Using SGDRegressor. The results are worse, but not that drastically. Could be used in a long term evaluation for a large amount of data.
 ```{r Poly_Sigmoid_CGD, include=TRUE, echo=FALSE, fig.height = 4, fig.width = 12 }
 algorith_name<-"Poly_Sigmoid_SGD"
 data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
