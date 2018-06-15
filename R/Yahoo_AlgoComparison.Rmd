@@ -11,7 +11,7 @@ library(ggplot2)
 library(scales)
 library(gridExtra)
 
-path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/Results/"
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/Yahoo/Results/"
 plot_results <- function(algorith_name="Random") {
   
   data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
@@ -138,15 +138,11 @@ plot_results("LinUCB_Hybrid")
 ```{r all_algos, include=TRUE, echo=FALSE}
 
 data <- read.csv(file=paste0(path, paste0("EGreedy_Lin", ".csv")), header=TRUE, sep=",")
-data1 <- read.csv(file=paste0(path, paste0("EGreedy_Lin_Hybrid_1", ".csv")), header=TRUE, sep=",")
-
-data <- rbind(data, data1)
 
 data$Percent = data$Clicks / data$Impressions * 100
 data$Factor = paste(data$Method, data$Alpha, sep=" ")
 
-selected = data[(data$Method == "EGreedy_Lin" & data$Alpha == 0.01)
-      | (data$Method == "EGreedy_Lin_Hybrid_1" ), ]
+selected = data
 
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
