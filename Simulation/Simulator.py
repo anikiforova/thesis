@@ -1,6 +1,7 @@
 import numpy as np
 import random 
 import math
+import time
 from pandas import read_csv
 from pandas import DataFrame
 
@@ -16,8 +17,8 @@ update_theta = False #True
 update_limit = False
 
 poly = 3
-file_count = 6
 
+file_count = 6
 def get_means():
 	return np.array(list(map(lambda i: random.uniform(-1, 1), range(0, user_dimension))))
 
@@ -128,24 +129,25 @@ def run_algo(algo, output, thetas, clicks, overall_ctr, repetition):
 		# print('.', end='', flush=True)
 		if impression % 100 == 0:
 			output.write('{:d},{:d},{},{:.2f},{},{},{}\n'.format(int(click_count), int(impression), algo_name, algo.get_alpha(), overall_ctr, repetition, to_random))
-			print('Done with: {:.1%} CTR: {:.3%}'.format(impression/simulation_impressions, click_count/impression))
+			print('Done with: {:.1%} CTR: {:.3%} C: {} I:{}'.format(impression/simulation_impressions, click_count/impression, click_count, impression))
 			output.flush()
 
 # evaluation_functions = {}
 # alphas = {}
 # error_functions = {}
 # algorithms = {}
-overall_ctr = [0.005, 0.01, 0.02, 0.05] 
-repetitions = 10
+overall_ctr = [0.01]  #, 0.01, 0.02, 0.05
+repetitions = 5
 to_randomize_clicks = [True] # , False
-regressor = Regressor.LinearRegression
+regressor = Regressor.SGDClassifier
+# regressor = Regressor.LinearRegression
 
 print("Reading the data...")
 
 users, thetas = get_data(file_count)
 
-output = open("./Results/Poly_Sigmoid.csv", "a")
-output.write("ClickCount,Impressions,AlgoName,Alpha,OverallCTR,Repetition,Randomized\n")
+output = open("./Results/Poly_Sigmoid_SGD.csv", "a")
+# output.write("ClickCount,Impressions,AlgoName,Alpha,OverallCTR,Repetition,Randomized\n")
 print("Starting the simulation...")
 for ctr in overall_ctr:
 	percentile = 100 - ctr * 100
@@ -156,11 +158,16 @@ for ctr in overall_ctr:
 		run_algo(algo_random, output, thetas, clicks, ctr, 0)
 		simulation_impressions = len(clicks) * ctr * 0.7
 		for rep in range(0, repetitions):
+			start = time.time()
 			algo_egreedy = SEGreedy(0.05, users, regressor, simulation_impressions)
 			run_algo(algo_egreedy, output, thetas, clicks, ctr, rep)
-
+			end1 = time.time()
+			
 			algo_efirst = SEFirst(0.05, users, regressor, simulation_impressions)
 			run_algo(algo_efirst, output, thetas, clicks, ctr, rep)
+			end2 = time.time()
+
+			print("Elapsed for EGreedy: {0} EFirst {1}".format(end1 - start, end2 - end1))
 
 
 output.close()

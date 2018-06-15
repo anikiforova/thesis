@@ -5,7 +5,7 @@ from random import randint
 from sklearn import linear_model
 from enum import Enum
 
-class Regressor(enum):
+class Regressor(Enum):
 	LinearRegression = 0
 	SGDClassifier = 1
 	NoRegressor = 2
@@ -17,7 +17,7 @@ class SBase:
 		self.users = users
 		self.user_count = len(self.users)
 
-		self.bucket_size = bucket_size
+		self.bucket_size = 100
 
 		self.new_users = np.array([], dtype=np.uint32)
 		self.new_clicks = np.array([], dtype=np.uint32)
@@ -45,21 +45,27 @@ class SBase:
 	def update(self, user_id, click):
 		self.new_users = np.append(self.new_users, user_id)
 		self.new_clicks = np.append(self.new_clicks, click)
+		# self.o_users = np.append(self.o_users, user_id)
+		# self.o_clicks = np.append(self.o_clicks, click)
 
-		if len(self.o_users) % self.bucket_size == 0:
-
+		if len(self.new_users) % self.bucket_size == 0:
+			# print(self.regressor)
 			if self.regressor == Regressor.LinearRegression:
 				self.o_users = np.append(self.o_users, self.new_users)
 				self.o_clicks = np.append(self.o_clicks, self.new_clicks)
+				# print(len(self.o_clicks))
 				cur_users = self.users[self.o_users]
-			
+				
+				self.model = linear_model.LinearRegression()
 				self.model.fit(cur_users, self.o_clicks)
 
 			else:
 				cur_users = self.users[self.new_users]
-				self.model.partial_fit(cur_users, self.new_clicks)
+				# cur_users = self.users[self.o_users]
+
+				self.model = self.model.partial_fit(cur_users, self.new_clicks, [0, 1])
 				
-			self.predition = model.predict(self.users)
+			self.predition = self.model.predict(self.users)
 
 			self.new_users = np.array([], dtype=np.uint32)
 			self.new_clicks = np.array([], dtype=np.uint32)	
