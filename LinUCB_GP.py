@@ -1,6 +1,9 @@
 import numpy as np
 from random import randint
 from math import log
+from math import pi
+from math import log
+from math import e
 from numpy.linalg import inv
 from numpy.linalg import det
 from scipy.stats import norm
@@ -14,17 +17,18 @@ class LinUCB_GP:
 		self.beta = 0.05
 		self.training_size = 1000
 		self.warmup_impressions = 0
-		self.selection_size = 70	
+		self.selection_size = 200	
+		self.error = 0.01
 
 		# number of lines that will be used to be updated together
-		self.batch_size = 1000
+		self.batch_size = 200
 
 		self.articles_to_update = list()
 		self.users_to_update = list()
 		self.clicks_to_update = list()
 
 		self.articles = dict()
-		self.bad_articles = set()
+		self.bad_artiocles = set()
 		self.k_articles = dict()
 
 		self.selected_articles = np.array([])
@@ -82,7 +86,7 @@ class LinUCB_GP:
 				self.K[i][cur_count] = self.kernel(self.selected_users[i], self.selected_articles[i], user, selected_article)
 				self.K[cur_count][i] = self.K[i][cur_count]
 
-			self.K[cur_count][cur_count] = 1
+			self.K[cur_count][cur_count] = 1 + self.error
 
 			if cur_count + 1 == self.selection_size:
 				# self.K_i = inv(self.K)
@@ -98,13 +102,13 @@ class LinUCB_GP:
 	def update_batch(self):
 		if len(self.articles_to_update) >= self.batch_size:
 			# print("Updating batch...")
+			
+			cur_entropy = self.entropy(det(self.K))
 			max_value = float("-inf")
+			limit = 0.1
 			worst_i = -1
 			best_j = -1
-			# best_K = self.K
-
-			# best_j = randint(0, self.batch_size)
-			# best_K = np.random.uniform(0, self.batch_size)
+			found_better = False
 			print("Starting update")
 			for i in range(0, self.selection_size):
 				for j in range(0, self.batch_size):
@@ -116,11 +120,12 @@ class LinUCB_GP:
 					self.selected_clicks[i] = self.clicks_to_update[j]	
 
 					value, new_K = self.calculate_cur_value(i)
-					if value > max_value:
+					if max_value < value:
 						max_value = value
 						worst_i = i
 						best_j = j
 						best_K = new_K
+						found_better = True
 
 					self.selected_articles[i] = article_id
 					self.selected_users[i] = user
@@ -129,17 +134,13 @@ class LinUCB_GP:
 			# print("\nBest " + str(best_j) + " worst " + str(worst_i))
 			print("Completed update")
 
-			self.selected_articles[worst_i] = self.articles_to_update[best_j]
-			self.selected_users[worst_i] = self.users_to_update[best_j]
-			self.selected_clicks[worst_i] = self.clicks_to_update[best_j]
-			self.K = best_K
-
-			# for j in range(0, self.selection_size):
-			# 	self.K[worst_i][j] = self.kernel(self.selected_users[worst_i], self.selected_articles[worst_i], self.selected_users[j], self.selected_articles[j])
-			# 	self.K[j][worst_i] = self.K[worst_i][j]
-
-			self.L = scipy.linalg.cholesky(self.K, lower=True)
-			self.A = scipy.linalg.solve_triangular( self.L.transpose(), scipy.linalg.solve_triangular( self.L, self.selected_clicks))
+			if found_better and cur_entropy + limit < max_value:
+				self.selected_articles[worst_i] = self.articles_to_update[best_j]
+				self.selected_users[worst_i] = self.users_to_update[best_j]
+				self.selected_clicks[worst_i] = self.clicks_to_update[best_j]
+				self.K = best_K
+				self.L = scipy.linalg.cholesky(self.K, lower=True)
+				self.A = scipy.linalg.solve_triangular( self.L.transpose(), scipy.linalg.solve_triangular( self.L, self.selected_clicks))
 
 			self.articles_to_update = list()
 			self.users_to_update = list()
@@ -149,8 +150,16 @@ class LinUCB_GP:
 		return np.exp(-0.5*np.sum((a-b)*(a-b))/(self.d**2))
 
 	def kernel_users(self, user1, user2):
-		return self.exponential_kernel(user1, user2)
-		# return 1
+		# return self.exponential_kernel(user1, user2)
+		return 1
+
+	def entropy(self, determinant):
+		# if determinant == 0:
+		# 	print ("*")
+		# 	return 0
+
+		# return 1/2 * log(2 * pi * determinant * e)
+		return determinant
 		
 	def kernel_articles(self, article_id1, article_id2):
 		return self.k_articles[article_id1][article_id2] 		
@@ -164,12 +173,11 @@ class LinUCB_GP:
 		for j in range(0, self.selection_size):
 			cov[i][j] = self.kernel(self.selected_users[i], self.selected_articles[i], self.selected_users[j], self.selected_articles[j])
 			cov[j][i] = cov[i][j]
-			if cov[i][j] == 1 and i != j:
-				return 0, self.K
-		# print(cov)
+			
+		cov[i][i] += self.error
+
 		d = det(cov)
-		# print(d)
-		return d, cov
+		return self.entropy(d), cov
 
 	def get_article_metrics_cholesky(self, user, article_id):
 		user_kernels = 1 #np.array(list(map(lambda o: self.kernel_users(user, o), self.selected_users)))
