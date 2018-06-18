@@ -64,7 +64,7 @@ The number of impressions this is equal to 70% of the total clicks. If an user i
 
 Clearly the lower CTR affects learning rate and results in a lower CTR, however it still performs quite well. 
 
-```{r Poly_Sigmoid, include=TRUE, echo=FALSE, fig.height = 4, fig.width = 12 }
+```{r Poly_Sigmoid, include=TRUE, echo=FALSE , fig.width = 4}
 algorith_name<-"Poly_Sigmoid"
 data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
 
@@ -77,19 +77,19 @@ groupedData <- summarySE(data_non_random,
             groupvars=c("Impressions", "AlgoName", "Alpha", "OverallCTR", "Algorithm"))
 
 p1 = ggplot(groupedData[groupedData$OverallCTR ==0.005,], aes(Impressions, y=mean, colour=Algorithm)) + 
-  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA), alpha=.3) +
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
   expand_limits(y=c(0,100)) +
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
  theme_bw() + ggtitle("CTR: 0.5%")+ theme(legend.position="bottom",legend.direction="horizontal")
 
 p2 = ggplot(groupedData[groupedData$OverallCTR ==0.01,], aes(Impressions, y=mean, colour=Algorithm)) + 
-  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA), alpha=.3) +
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
   expand_limits(y=c(0,100)) +
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
  theme_bw() + ggtitle("CTR: 1%") 
 
 p3 = ggplot(groupedData[groupedData$OverallCTR ==0.02,], aes(Impressions, y=mean, colour=Algorithm)) + 
-  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA), alpha=.3) +
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
   expand_limits(y=c(0,100)) +
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
  theme_bw() + ggtitle("CTR: 2%")  + theme(legend.position="bottom",legend.direction="horizontal")
@@ -105,8 +105,8 @@ mylegend <- g_legend2(p1)
 grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
                          p2 + theme(legend.position="none"),
                          p3 + theme(legend.position="none"),
-                        nrow=1, ncol=3, widths=unit(c(9, 9, 9), "cm"), heights=unit(9, "cm")),
-                   mylegend, nrow=2, widths=unit(27, "cm"), heights=unit(c(9, 1), "cm"))
+                        nrow=1, ncol=3, widths=unit(c(6.5,6.5,6.5), "cm"), heights=unit(6.5, "cm")),
+                   mylegend, nrow=2, widths=unit(6.5*3, "cm"), heights=unit(c(9, 1), "cm"))
 
 
 #ggsave(paste(imageLocation,"Experiment4Write.png", sep=""), plot=p4, width = 20, height = 10, units = "cm")
@@ -115,7 +115,7 @@ grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
 
 Exploring using an iterative algorithm instead of learning from scratch with linear regression. 
 Using SGDRegressor. The results are worse, but not that drastically. Could be used in a long term evaluation for a large amount of data.
-```{r Poly_Sigmoid_CGD, include=TRUE, echo=FALSE, fig.height = 4, fig.width = 12 }
+```{r Poly_Sigmoid_CGD, include=TRUE, echo=FALSE, fig.width = 4 }
 algorith_name<-"Poly_Sigmoid_SGD"
 data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
 
@@ -128,20 +128,20 @@ groupedData <- summarySE(data_non_random,
             groupvars=c("Impressions", "AlgoName", "Alpha", "OverallCTR", "Algorithm"))
 
 p1 = ggplot(groupedData[groupedData$OverallCTR ==0.005,], aes(Impressions, y=mean, colour=Algorithm)) + 
-  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA), alpha=.3) +
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
   expand_limits(y=c(0,100)) +
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
  theme_bw() + ggtitle("CTR: 0.5%")+ theme(legend.position="bottom",legend.direction="horizontal")
 
 
 p2 = ggplot(groupedData[groupedData$OverallCTR ==0.01,], aes(Impressions, y=mean, colour=Algorithm)) + 
-  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA), alpha=.3) +
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
   expand_limits(y=c(0,100)) +
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
  theme_bw() + ggtitle("CTR: 1%") 
 
 p3 = ggplot(groupedData[groupedData$OverallCTR ==0.02,], aes(Impressions, y=mean, colour=Algorithm)) + 
-  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA), alpha=.3) +
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
   expand_limits(y=c(0,100)) +
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
  theme_bw() + ggtitle("CTR: 2%")  + theme(legend.position="bottom",legend.direction="horizontal")
@@ -158,11 +158,55 @@ mylegend <- g_legend2(p1)
 grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
                          p2 + theme(legend.position="none"),
                          p3 + theme(legend.position="none"),
-                        nrow=1, ncol=3, widths=unit(c(9, 9, 9), "cm"), heights=unit(9, "cm")),
-                   mylegend, nrow=2, widths=unit(27, "cm"), heights=unit(c(9, 1), "cm"))
+                        nrow=1, ncol=3, widths=unit(c(6.5,6.5,6.5), "cm"), heights=unit(6.5, "cm")),
+                   mylegend, nrow=2, widths=unit(6.5*3, "cm"), heights=unit(c(9, 1), "cm"))
 
 
 #ggsave(paste(imageLocation,"Experiment4Write.png", sep=""), plot=p4, width = 20, height = 10, units = "cm")
 
 ```
 
+
+```{r Poly_Sigmoid_alphas, include=TRUE, echo=FALSE}
+algorith_name<-"Poly_Sigmoid_Alpha"
+data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
+
+data$Percent = data$ClickCount / data$Impressions * 100
+data$Algorithm = paste(data$Alpha)
+data_non_random = data[data$AlgoName != "SRandom",]
+
+groupedData <- summarySE(data_non_random, 
+            measurevar=c("Percent"),
+            groupvars=c("Impressions", "AlgoName", "Alpha", "OverallCTR", "Algorithm"))
+
+p1 = ggplot(groupedData[groupedData$OverallCTR ==0.005,], aes(Impressions, y=mean, colour=Algorithm)) + 
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
+  expand_limits(y=c(0,100)) +
+  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+ theme_bw() + ggtitle("CTR: 0.5%")+ theme(legend.position="bottom",legend.direction="horizontal")
+
+
+p2 = ggplot(groupedData[groupedData$OverallCTR ==0.02 & groupedData$Impressions < 15000,], aes(Impressions, y=mean, colour=Algorithm)) + 
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
+  expand_limits(y=c(0,100), x=c(0, 15000)) +
+  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+ theme_bw() + ggtitle("CTR: 2%")  + theme(legend.position="bottom",legend.direction="horizontal")
+
+g_legend2<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+  }
+
+
+mylegend <- g_legend2(p1)
+grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
+                         p2 + theme(legend.position="none"),
+                        nrow=1, ncol=2, widths=unit(c(9, 9), "cm"), heights=unit(9, "cm")),
+                   mylegend, nrow=2, widths=unit(18, "cm"), heights=unit(c(9, 1), "cm"))
+
+
+#ggsave(paste(imageLocation,"Experiment4Write.png", sep=""), plot=p4, width = 20, height = 10, units = "cm")
+
+```
