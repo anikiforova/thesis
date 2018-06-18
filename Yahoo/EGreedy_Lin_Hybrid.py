@@ -1,8 +1,8 @@
+
 import numpy as np
 import math
 import random
 
-from Util import to_vector 
 from sklearn import linear_model
 
 class EGreedy_Lin_Hybrid:
@@ -10,49 +10,42 @@ class EGreedy_Lin_Hybrid:
 	def __init__(self, alpha):
 		self.alpha = alpha
 		self.learning_rate = 100
-		self.dimentions = 36	
 
-		self.pairs = np.array([])
-		self.clicks = np.array([])
-		self.articles = dict()
-		self.bad_articles = set()
-		# self.model = linear_model.LinearRegression()
-		self.model = linear_model.SGDClassifier(loss='hinge', penalty='l2')
-		self.is_fitted = False 
-		
-	def kernel(self, user, article_id):
-		return user.dot(self.articles[article_id]).reshape([1, self.dimentions])
-		# return np.append(user, self.articles[article_id])
-		# return user
+		self.a_users = dict()
+		self.a_clicks = dict()
+		self.a_models = dict()
+		self.a_fit = dict()
 
-	def add_new_article(self, line):
-		article_id = int(line.split(" ")[0])
-			
-		if (article_id not in self.articles) and (article_id not in self.bad_articles):
-			try:
-				article = to_vector(line)
-			except IndexError:
-				#	print("Skipping line, weird formatting.." + str(article_id))
-				self.bad_articles.add(article_id)
-				return -1
+		self.all_users = np.array([])
+		self.all_clicks = np.array([])
+		self.model = linear_model.LinearRegression()
+		self.fit = False
 
-			self.articles[article_id] = article.reshape([1, 6])
-		
-		if article_id in self.bad_articles:
-			return -1
-		return article_id
-			
+	def add_new_article(self, article_id):
+		if article_id not in self.a_clicks.keys():
+			self.a_users[article_id] =  np.array([])
+			self.a_clicks[article_id] = np.array([])
+			self.a_models[article_id] = linear_model.LinearRegression()
+			self.a_fit[article_id] = False
+
 	def update(self, user, selected_article, click):
-		pair = self.kernel(user.reshape([6, 1]), selected_article)
-		self.pairs = np.append(self.pairs, pair)
-		self.clicks = np.append(self.clicks, click)
+		self.a_users[selected_article] = np.append(self.a_users[selected_article], user)
+		self.a_clicks[selected_article] = np.append(self.a_clicks[selected_article], click)
+
+		self.all_users = np.append(self.all_users, user)
+		self.all_clicks = np.append(self.all_clicks, click)
 		
-		cur_len = len(self.clicks)
-		if cur_len % self.learning_rate == 0 and cur_len > 0:
-			self.pairs = self.pairs.reshape([cur_len, self.dimentions])
-			self.model = self.model.partial_fit(self.pairs, self.clicks, [0, 1])
-			# self.model.fit(self.pairs, self.clicks)
-			self.is_fitted = True
+		cur_len = len(self.a_clicks[selected_article])
+		if  cur_len % self.learning_rate == 0 and cur_len > 0:
+			self.a_users[selected_article] = self.a_users[selected_article].reshape([cur_len, 6 ])
+			self.a_models[selected_article].fit(self.a_users[selected_article], self.a_clicks[selected_article])
+			self.a_fit[selected_article] = True
+
+		total_len = len(self.all_clicks)
+		if total_len % self.learning_rate == 0 and total_len > 0:
+			self.all_users = all_users.reshape([total_len, 6 ])
+			self.model.fit(self.all_users, self.all_clicks)
+			self.fit = True			
 
 	def warmup(self, fo):
 		pass
@@ -61,23 +54,31 @@ class EGreedy_Lin_Hybrid:
 		bucket = random.uniform(0, 1)
 		explore = bucket <= self.alpha
 
-		cur_articles = list()
-		best_value = -1000000
+		articles = list()
+		best_value = 0
 		selected_article = -1
 
-		same_values = list()
-		user = user.reshape([6, 1])
-		for line in lines:
-			article_id = self.add_new_article(line)	
-			
-			if article_id == -1: continue
-
-			cur_articles.append(article_id)		
-			if self.is_fitted: 
-				pair = self.kernel(user, article_id)
-
-				cur_value = self.model.predict(pair.reshape(1, self.dimentions))
+		if explore:
+			selected_article = np.random.choice(articles, 1)
+		else:
+			same_values = list()
+			for line in lines:
+				article_id = int(line.split(" ")[0])
+				articles.append(article_id)
 				
+				self.add_new_article(article_id)			
+				
+				cur_value_by_article_model = 0
+				if self.fit:
+					cur_value_by_overall_model = self.model.predict([user])
+				
+				# necessary in case the article_id model is not trained yet
+				cur_value_by_overall_model = cur_value_by_overall_model
+				if self.a_fit[article_id]:
+					cur_value_by_article_model = self.a_models[article_id].predict([user])
+
+				cur_value = cur_value_by_overall_model + cur_value_by_article_model
+
 				if best_value < cur_value:
 					best_value = cur_value
 					selected_article = article_id
@@ -86,13 +87,6 @@ class EGreedy_Lin_Hybrid:
 				elif best_value == cur_value:
 					same_values.append(article_id)
 
-			else:
-				same_values.append(article_id)
-
-		selected_article = np.random.choice(same_values, 1)
+			selected_article = np.random.choice(same_values, 1)
 			
-		if explore:
-			selected_article = np.random.choice(cur_articles, 1)
-
 		return selected_article, False
-

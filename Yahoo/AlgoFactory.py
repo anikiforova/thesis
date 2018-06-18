@@ -11,8 +11,11 @@ from EGreedy_Lin_Hybrid import EGreedy_Lin_Hybrid
 from LinUCB_Disjoint import LinUCB_Disjoint
 from LinUCB_GP import LinUCB_GP
 from LinUCB_GP_All import LinUCB_GP_All
-from LinUCB_SGP import LinUCB_SGP
 from LinUCB_Hybrid import LinUCB_Hybrid 
+from TS import TS
+from TS_Lin import TS_Lin
+from TS_Disjoint import TS_Disjoint
+from TS_Hybrid import TS_Hybrid
 from UCB import UCB
 from Random import Random
 
@@ -57,9 +60,6 @@ class AlgoFactory:
 		elif algorithm_type == AlgorithmType.UCB_Seg:
 			return Combo_Seg(alpha, AlgorithmType.UCB)
 
-		elif algorithm_type == AlgorithmType.LinUCB_SGP:
-			return LinUCB_SGP(alpha)
-
 		elif algorithm_type == AlgorithmType.EGreedy_Lin:
 			return EGreedy_Lin(alpha)
 
@@ -68,6 +68,21 @@ class AlgoFactory:
 
 		elif algorithm_type == AlgorithmType.EGreedy_Lin_Hybrid:
 			return EGreedy_Lin_Hybrid(alpha)
+
+		elif algorithm_type == AlgorithmType.TS:
+			return TS(alpha)
+
+		elif algorithm_type == AlgorithmType.TS_Lin:
+			return TS_Lin(alpha)
+
+		elif algorithm_type == AlgorithmType.TS_Seg:
+			return Combo_Seg(alpha, AlgorithmType.TS)
+
+		elif algorithm_type == AlgorithmType.TS_Disjoint:
+			return TS_Disjoint(alpha)
+
+		elif algorithm_type == AlgorithmType.TS_Hybrid:
+			return TS_Hybrid(alpha)
 			
 		else:
 			raise NotImplementedError("Non-implemented algorithm." + algorithm_type.name)

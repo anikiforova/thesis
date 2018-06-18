@@ -24,7 +24,7 @@ alphas = {
 		AlgorithmType.EGreedy:				np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.LinUCB_Disjoint:		np.arange(0.05, 0.3, 0.05), # starts decreasing around at 0.25 
 		AlgorithmType.LinUCB_GP:			np.arange(0.05, 0.1, 0.05),
-		AlgorithmType.LinUCB_SGP:			np.arange(0.05, 0.1, 0.05),
+		# AlgorithmType.LinUCB_SGP:			np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.LinUCB_GP_All:		np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.LinUCB_Hybrid:		np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.UCB:					np.arange(0.5,  0.6, 0.05), # limit to only 1 since same value for different alphas	
@@ -34,7 +34,12 @@ alphas = {
 		AlgorithmType.EGreedy_Seg_Lin:		np.arange(0.01, 0.05, 0.05),
 		AlgorithmType.EGreedy_Disjoint:		np.arange(0.05, 0.3, 0.05), 
 		AlgorithmType.EGreedy_Hybrid:		np.arange(0.05, 0.3, 0.05), 
-		AlgorithmType.UCB_Seg:				np.arange(0.05, 0.1, 0.05) # limit to only 1 since same value for different alphas
+		AlgorithmType.UCB_Seg:				np.arange(0.05, 0.1, 0.05), # limit to only 1 since same value for different alphas
+		AlgorithmType.TS:					[0],#np.arange(0.05, 0.2, 0.05)
+		AlgorithmType.TS_Lin:				[0],#np.arange(0.05, 0.2, 0.05) 
+		AlgorithmType.TS_Seg:				[0],#np.arange(0.05, 0.2, 0.05) 
+		AlgorithmType.TS_Disjoint:			np.arrange(0.95, 1.05, 0.05),#np.arange(0.05, 0.2, 0.05) 
+		AlgorithmType.TS_Hybrid:			np.arrange(0.95, 1.05, 0.05)
 
 }
 
@@ -52,7 +57,7 @@ for i in range(1, len(sys.argv)):
 		print ("Error. No algorithm type:{0}".format(sys.argv[i]))
 		continue
 
-	output = open('./Results/{0}_1.csv'.format(choice.name), "w")
+	output = open('./Results/{0}.csv'.format(choice.name), "w")
 	output.write("Clicks, Impressions, Alpha, Method\n")	
 
 	for alpha in alphas[choice]:
@@ -60,7 +65,7 @@ for i in range(1, len(sys.argv)):
 
 		algo = AlgoFactory.get_algorithm(choice, alpha)
 
-		fo = open("..//R6//ydata-fp-td-clicks-v1_0.20090501", "r")
+		fo = open("..//..//R6//ydata-fp-td-clicks-v1_0.20090501", "r")
 		algo.warmup(fo)
 		
 		total_impressions = 0.0
@@ -85,7 +90,7 @@ for i in range(1, len(sys.argv)):
 				impression_count += 1
 			
 				if impression_count % 1000 == 0:
-					print('{:.2%} Explore {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
+					print('{:.2%} Cumulative CTR: {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
 					output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
 					output.flush()
 		fo.close()	

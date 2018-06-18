@@ -13,10 +13,15 @@ class AlgorithmType (Enum):
 	EGreedy_Hybrid = 9
 	LinUCB_GP = 10
 	LinUCB_GP_All = 11
-	LinUCB_SGP = 12
+	#LinUCB_SGP = 12
 	EGreedy_Lin = 13
 	EGreedy_Seg_Lin = 14
 	EGreedy_Lin_Hybrid = 15
+	TS = 16
+	TS_Lin = 17
+	TS_Seg = 18
+	TS_Disjoint = 19
+	TS_Hybrid = 20
 
 def get_algorithm_type(algorithm_type_string):
 	for name, member in AlgorithmType.__members__.items():
