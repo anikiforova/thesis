@@ -13,6 +13,7 @@ from LinUCB_GP import LinUCB_GP
 from LinUCB_GP_All import LinUCB_GP_All
 from LinUCB_Hybrid import LinUCB_Hybrid 
 from TS import TS
+from TS_Bootstrap import TS_Bootstrap
 from TS_Lin import TS_Lin
 from TS_Disjoint import TS_Disjoint
 from TS_Hybrid import TS_Hybrid
@@ -72,6 +73,9 @@ class AlgoFactory:
 		elif algorithm_type == AlgorithmType.TS:
 			return TS(alpha)
 
+		elif algorithm_type == AlgorithmType.TS_Bootstrap:
+			return TS_Bootstrap(alpha)
+				
 		elif algorithm_type == AlgorithmType.TS_Lin:
 			return TS_Lin(alpha)
 

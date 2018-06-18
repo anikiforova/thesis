@@ -43,7 +43,7 @@ class EGreedy_Lin_Hybrid:
 
 		total_len = len(self.all_clicks)
 		if total_len % self.learning_rate == 0 and total_len > 0:
-			self.all_users = all_users.reshape([total_len, 6 ])
+			self.all_users = self.all_users.reshape([total_len, 6 ])
 			self.model.fit(self.all_users, self.all_clicks)
 			self.fit = True			
 
@@ -55,7 +55,7 @@ class EGreedy_Lin_Hybrid:
 		explore = bucket <= self.alpha
 
 		articles = list()
-		best_value = 0
+		best_value = -1000
 		selected_article = -1
 
 		if explore:
@@ -68,12 +68,12 @@ class EGreedy_Lin_Hybrid:
 				
 				self.add_new_article(article_id)			
 				
-				cur_value_by_article_model = 0
+				cur_value_by_overall_model = 0
 				if self.fit:
 					cur_value_by_overall_model = self.model.predict([user])
 				
 				# necessary in case the article_id model is not trained yet
-				cur_value_by_overall_model = cur_value_by_overall_model
+				cur_value_by_article_model = cur_value_by_overall_model
 				if self.a_fit[article_id]:
 					cur_value_by_article_model = self.a_models[article_id].predict([user])
 

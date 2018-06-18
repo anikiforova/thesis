@@ -29,17 +29,18 @@ alphas = {
 		AlgorithmType.LinUCB_Hybrid:		np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.UCB:					np.arange(0.5,  0.6, 0.05), # limit to only 1 since same value for different alphas	
 		AlgorithmType.EGreedy_Seg:			np.arange(0.05, 0.3, 0.05),
-		AlgorithmType.EGreedy_Lin:			np.arange(0.01, 0.05, 0.05),
-		AlgorithmType.EGreedy_Lin_Hybrid:	np.arange(0.01, 0.05, 0.05),
+		AlgorithmType.EGreedy_Lin:			[0], #np.arange(0.01, 0.05, 0.05),
+		AlgorithmType.EGreedy_Lin_Hybrid:	[0], #np.arange(0.01, 0.05, 0.05),
 		AlgorithmType.EGreedy_Seg_Lin:		np.arange(0.01, 0.05, 0.05),
 		AlgorithmType.EGreedy_Disjoint:		np.arange(0.05, 0.3, 0.05), 
 		AlgorithmType.EGreedy_Hybrid:		np.arange(0.05, 0.3, 0.05), 
 		AlgorithmType.UCB_Seg:				np.arange(0.05, 0.1, 0.05), # limit to only 1 since same value for different alphas
 		AlgorithmType.TS:					[0],#np.arange(0.05, 0.2, 0.05)
+		AlgorithmType.TS_Bootstrap:			[0],#np.arange(0.05, 0.2, 0.05)
 		AlgorithmType.TS_Lin:				[0],#np.arange(0.05, 0.2, 0.05) 
 		AlgorithmType.TS_Seg:				[0],#np.arange(0.05, 0.2, 0.05) 
-		AlgorithmType.TS_Disjoint:			np.arrange(0.95, 1.05, 0.05),#np.arange(0.05, 0.2, 0.05) 
-		AlgorithmType.TS_Hybrid:			np.arrange(0.95, 1.05, 0.05)
+		AlgorithmType.TS_Disjoint:			np.arange(0.95, 1.05, 0.05),#np.arange(0.05, 0.2, 0.05) 
+		AlgorithmType.TS_Hybrid:			np.arange(0.95, 1.05, 0.05)
 
 }
 
