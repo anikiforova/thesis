@@ -1,0 +1,97 @@
+---
+title: "Algorithm comparison"
+author: "Ana Dimitrova"
+output: pdf_document
+
+---
+ 
+
+```{r setup, include=TRUE, echo=FALSE}
+library(ggplot2)
+library(scales)
+library(gridExtra)
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/Yahoo/Results/CTR/"
+plot_results <- function(algorith_name="Random") {
+  
+  data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
+  data$Percent = data$Clicks / data$Impressions * 100
+  data$Factor = paste(data$Method, data$Alpha, sep=" ")
+
+  ggplot(data, aes(x=CumImpressions, y=Percent, colour=Factor)) + 
+    stat_smooth(aes(x = CumImpressions, y = Percent), method = "lm",
+                formula = y ~ poly(x, 10), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    #expand_limits(y=c(4,7.5), x=c(0, 225000)) + 
+    theme_bw() + ggtitle(algorith_name)
+}
+  
+```
+
+```{r all_algos, include=TRUE, echo=FALSE}
+
+files = c("LinUCB_Disjoint", "LinUCB_Hybrid", "EFirst", "EGreedy_Hybrid", "EGreedy_Disjoint", "EGreedy", "EGreedy_Seg", "UCB", "UCB_Seg", "TS", "TS_Seg", "TS_Disjoint", "TS_Hybrid", "EGreedy_Lin_Hybrid")
+data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
+for (name in files){
+  data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
+  data <- rbind(data, data1)  
+}
+
+data$Percent = data$Clicks / data$Impressions * 100
+data$Factor = paste(data$Method, data$Alpha, sep=" ")
+
+selected = data[(data$Method == "Random") 
+      #| (data$Method == "EFirst" && data$Alpha == 0.1) 
+     # | (data$Method == "EGreedy" & data$Alpha == 0.1)
+      | (data$Method == "EGreedy_Lin" ) #& data$Alpha == 0.05
+     # | (data$Method == "EGreedy_Lin_Hybrid" )
+      | (data$Method == "EGreedy_Seg" & data$Alpha == 0.1) 
+      #| (data$Method == "EGreedy_Seg_Lin" & data$Alpha == 0.0) 
+      | (data$Method == "EGreedy_Disjoint" & data$Alpha == 0.1) 
+     # | (data$Method == "EGreedy_Hybrid" & data$Alpha == 0.1) 
+    #  | (data$Method == "UCB" & data$Alpha == 0.05) 
+      | (data$Method == "UCB_Seg" & data$Alpha == 0.05) 
+      | (data$Method == "LinUCB_Disjoint" & data$Alpha == 0.2) 
+    #  | (data$Method == "LinUCB_Hybrid" & data$Alpha == 0.25)
+     # | (data$Method == "TS" )#& data$Alpha == 0.1
+      | (data$Method == "TS_Seg" )
+      | (data$Method == "TS_Disjoint" & data$Alpha == 1)
+      | (data$Method == "TS_Hybrid" & data$Alpha == 0.95),]#& data$Alpha == 0.1
+
+ggplot(selected, aes(x=CumImpressions, y=Percent, colour=Factor)) + 
+    stat_smooth(aes(x = CumImpressions, y = Percent), method = "lm",
+                formula = y ~ poly(x, 6), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    #expand_limits(y=c(4,7.5), x=c(0, 225000)) + 
+    theme_bw() + ggtitle(algorith_name)
+```
+```{r all_algos, include=TRUE, echo=FALSE}
+files = c("EGreedy", "EGreedy_Seg", "UCB", "UCB_Seg", "TS", "TS_Seg", "TS_Disjoint", "TS_Hybrid", "TS_Bootstrap")
+data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
+for (name in files){
+  data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
+  data <- rbind(data, data1)  
+}
+data$Percent = data$Clicks / data$Impressions * 100
+data$Factor = paste(data$Method, data$Alpha, sep=" ")
+
+selected = data[(data$Method == "Random") 
+      | (data$Method == "TS" )#& data$Alpha == 0.1
+      | (data$Method == "TS_Seg" )
+      | (data$Method == "TS_Disjoint" & data$Alpha == 1 )
+      | (data$Method == "TS_Bootstrap" )
+      | (data$Method == "TS_Hybrid" ),]#& data$Alpha == 0.1
+
+ggplot(selected, aes(x=CumImpressions, y=Percent, colour=Factor)) + 
+    stat_smooth(aes(x = CumImpressions, y = Percent), method = "lm",
+                formula = y ~ poly(x, 21), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    #expand_limits(y=c(4,7.5), x=c(0, 225000)) + 
+    theme_bw() + ggtitle(algorith_name)
+
+```
+```{r random, include=TRUE, echo=FALSE}
+
+plot_results("TS_Hybrid")
+
+```
