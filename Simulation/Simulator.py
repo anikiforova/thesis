@@ -136,38 +136,40 @@ def run_algo(algo, output, thetas, clicks, overall_ctr, repetition):
 # alphas = {}
 # error_functions = {}
 # algorithms = {}
-overall_ctr = [0.01]  #, 0.01, 0.02, 0.05
-repetitions = 5
+overall_ctr = [0.02,0.005]
+repetitions = 10
 to_randomize_clicks = [True] # , False
-regressor = Regressor.SGDClassifier
-# regressor = Regressor.LinearRegression
+alphas = np.arange(0.0, 0.2, 0.05)
+# regressor = Regressor.SGDClassifier
+regressor = Regressor.LinearRegression
 
 print("Reading the data...")
 
 users, thetas = get_data(file_count)
 
-output = open("./Results/Poly_Sigmoid_SGD.csv", "a")
-# output.write("ClickCount,Impressions,AlgoName,Alpha,OverallCTR,Repetition,Randomized\n")
+output = open("./Results/Poly_Sigmoid_Alpha.csv", "a")
+output.write("ClickCount,Impressions,AlgoName,Alpha,OverallCTR,Repetition,Randomized\n")
 print("Starting the simulation...")
 for ctr in overall_ctr:
 	percentile = 100 - ctr * 100
 	for to_random in to_randomize_clicks:
 		clicks = get_clicks(users, thetas, percentile, to_random)
 
-		algo_random = SRandom(0.05, users)
-		run_algo(algo_random, output, thetas, clicks, ctr, 0)
+		# algo_random = SRandom(0.05, users)
+		# run_algo(algo_random, output, thetas, clicks, ctr, 0)
 		simulation_impressions = len(clicks) * ctr * 0.7
 		for rep in range(0, repetitions):
-			start = time.time()
-			algo_egreedy = SEGreedy(0.05, users, regressor, simulation_impressions)
-			run_algo(algo_egreedy, output, thetas, clicks, ctr, rep)
-			end1 = time.time()
-			
-			algo_efirst = SEFirst(0.05, users, regressor, simulation_impressions)
-			run_algo(algo_efirst, output, thetas, clicks, ctr, rep)
-			end2 = time.time()
+			for alpha in alphas:
+				start = time.time()
+				algo_egreedy = SEGreedy(alpha, users, regressor, simulation_impressions)
+				run_algo(algo_egreedy, output, thetas, clicks, ctr, rep)
+				end1 = time.time()
+				
+				# algo_efirst = SEFirst(0.05, users, regressor, simulation_impressions)
+				# run_algo(algo_efirst, output, thetas, clicks, ctr, rep)
+				end2 = time.time()
 
-			print("Elapsed for EGreedy: {0} EFirst {1}".format(end1 - start, end2 - end1))
+				print("Elapsed for EGreedy: {0} EFirst {1}".format(end1 - start, end2 - end1))
 
 
 output.close()
