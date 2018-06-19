@@ -10,6 +10,8 @@ class EGreedy_Lin_Hybrid:
 	def __init__(self, alpha):
 		self.alpha = alpha
 		self.learning_rate = 100
+		# self.training_size = 10000
+		# self.warmup_impressions = 0
 
 		self.a_users = dict()
 		self.a_clicks = dict()
@@ -52,12 +54,19 @@ class EGreedy_Lin_Hybrid:
 
 	def select(self, user, pre_selected_article, lines, total_impressions, click):
 		bucket = random.uniform(0, 1)
+		warmup = False
 		explore = bucket <= self.alpha
 
 		articles = list()
 		best_value = -1000
 		selected_article = -1
 
+		# if len(self.all_users) < self.training_size:
+		# 	self.warmup_impressions += 1
+		# 	self.add_new_article(pre_selected_article)
+		# 	self.update(user, pre_selected_article, click)
+		# 	selected_article = pre_selected_article
+		# 	warmup = True
 		if explore:
 			selected_article = np.random.choice(articles, 1)
 		else:
@@ -89,4 +98,4 @@ class EGreedy_Lin_Hybrid:
 
 			selected_article = np.random.choice(same_values, 1)
 			
-		return selected_article, False
+		return selected_article, warmup
