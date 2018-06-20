@@ -28,7 +28,7 @@ plot_results <- function(algorith_name="Random") {
 
 ```{r all_algos, include=TRUE, echo=FALSE}
 
-files = c("LinUCB_Disjoint", "LinUCB_Hybrid", "EFirst", "EGreedy_Hybrid", "EGreedy_Disjoint", "EGreedy", "EGreedy_Seg", "UCB", "UCB_Seg", "TS", "TS_Seg", "TS_Disjoint", "TS_Hybrid", "EGreedy_Lin_Hybrid")
+files = c("LinUCB_Disjoint", "LinUCB_Hybrid", "EFirst", "EGreedy_Hybrid", "EGreedy_Disjoint", "EGreedy", "EGreedy_Seg", "UCB", "UCB_Seg", "TS", "TS_Seg", "TS_Disjoint", "TS_Hybrid", "EGreedy_Lin_Hybrid", "TS_Lin")
 data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
 for (name in files){
   data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
@@ -52,7 +52,9 @@ selected = data[(data$Method == "Random")
       | (data$Method == "LinUCB_Disjoint" & data$Alpha == 0.2) 
       | (data$Method == "LinUCB_Hybrid" & data$Alpha == 0.2)
       | (data$Method == "TS" )#& data$Alpha == 0.1
+      | (data$Method == "TS_Truncated" )#& data$Alpha == 0.1
       | (data$Method == "TS_Seg" )
+      | (data$Method == "TS_Lin" )
       | (data$Method == "TS_Disjoint" & data$Alpha == 1)
       | (data$Method == "TS_Hybrid" & data$Alpha == 0.95),]#& data$Alpha == 0.1
 
@@ -63,7 +65,7 @@ ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) +
 
 ```
 ```{r all_algos, include=TRUE, echo=FALSE}
-files = c("EGreedy", "EGreedy_Seg", "UCB", "UCB_Seg", "TS", "TS_Seg", "TS_Disjoint", "TS_Hybrid", "TS_Bootstrap")
+files = c("EGreedy", "EGreedy_Seg", "UCB", "UCB_Seg", "TS", "TS_Seg", "TS_Disjoint", "TS_Hybrid", "TS_Bootstrap", "TS_Truncated_1")
 data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
 for (name in files){
   data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
@@ -77,6 +79,7 @@ selected = data[(data$Method == "Random")
       | (data$Method == "TS_Seg" )
       | (data$Method == "TS_Disjoint" & data$Alpha == 1 )
       | (data$Method == "TS_Bootstrap" )
+      | (data$Method == "TS_Truncated" )#& data$Alpha == 0.1
       | (data$Method == "TS_Hybrid" ),]#& data$Alpha == 0.1
 
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
@@ -87,7 +90,7 @@ ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) +
 ```
 ```{r random, include=TRUE, echo=FALSE}
 
-plot_results("LinUCB_Disjoint_CTR")
+plot_results("TS_Lin")
 
 ```
 
@@ -117,6 +120,29 @@ selected = data[(data$Method == "Random")
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
   expand_limits(y=c(4,7.5), x=c(0, 225000)) + theme_bw() + 
+  ggtitle("Egreedy Comparison")
+
+```
+```{r all_algos, include=TRUE, echo=FALSE}
+
+files = c("TS", "TS_Laplace")
+data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
+for (name in files){
+  data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
+  data <- rbind(data, data1)  
+}
+
+data$Percent = data$Clicks / data$Impressions * 100
+data$Factor = paste(data$Method, data$Alpha, sep=" ")
+
+selected = data[(data$Method == "Random") 
+      | (data$Method == "TS")# & data$Alpha == 0.2) 
+      | (data$Method == "TS_Laplace")
+      ,]#& data$Alpha == 0.1
+
+ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
+  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+  expand_limits(y=c(4,6.5), x=c(0, 225000)) + theme_bw() + 
   ggtitle("Egreedy Comparison")
 
 ```

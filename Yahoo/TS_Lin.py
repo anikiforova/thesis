@@ -11,7 +11,7 @@ class TS_Lin:
 		self.k = 6
 		self.alpha = alpha
 		self.training_size = 10000
-		self.impressions = 0
+		self.impressions = 1
 
 		self.B = np.identity(self.d)
 		self.B_i = np.identity(self.d)
@@ -27,8 +27,8 @@ class TS_Lin:
 		self.articles_d_1 = dict()
 		self.bad_articles = set()
 
-	def get_v_2():
-		return  ((self.R **2) * 24 * self.d / math.ln(self.impressions))*ln(1/0.95)
+	def get_v_2(self):
+		return  ((self.R **2) * 24 * self.d / math.log(self.impressions, 2))*math.log(1/(1-self.alpha), 2)
 
 	def add_new_article(self, line):
 		article_id = int(line.split(" ")[0])
@@ -56,8 +56,8 @@ class TS_Lin:
 		self.B = self.B + self.articles_d_1[selected_article].dot(self.articles_1_d[selected_article])
 		# self.B = self.B + pair.reshape([self.k, 1]).dot(pair.reshape([1, self.k]))
 		if click:
-			# self.f = self.f + self.articles_1_d[selected_article]
-			self.f = self.f + pair
+			self.f = self.f + self.articles_1_d[selected_article]
+			# self.f = self.f + pair
 
 		# see if updating every time will make a difference
 		# if self.impressions % 100 == 0:

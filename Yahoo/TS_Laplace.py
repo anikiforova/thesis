@@ -2,7 +2,7 @@ import numpy as np
 import math
 import random
 
-class TS_Bootstrap:
+class TS_Laplace:
 	
 	def __init__(self, alpha):
 		self.alpha = alpha
@@ -47,9 +47,12 @@ class TS_Bootstrap:
 				if total_tries == 0:
 					cur_value = np.random.beta(1, 1)
 				else:
-					prob_success = self.articles_success[article_id] / total_tries
-					cur_value = np.random.binomial(total_tries, prob_success) / total_tries
-
+					a = self.articles_success[article_id] + 1e-6 - 1
+					b = self.articles_fail[article_id] + 1e-6 - 1
+					mode = a / ( a + b)
+					hessian = a / mode + b / (1-mode)
+					cur_value = mode + np.sqrt(1 / hessian) * np.random.randn(1)
+					
 				if best_value < cur_value:
 					best_value = cur_value
 					best_value_articles = list([article_id])

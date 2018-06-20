@@ -37,11 +37,14 @@ alphas = {
 		AlgorithmType.UCB_Seg:				np.arange(0.05, 0.1, 0.05), # limit to only 1 since same value for different alphas
 		AlgorithmType.TS:					[0],#np.arange(0.05, 0.2, 0.05)
 		AlgorithmType.TS_Bootstrap:			[0],#np.arange(0.05, 0.2, 0.05)
-		AlgorithmType.TS_Lin:				[0],#np.arange(0.05, 0.2, 0.05) 
+		AlgorithmType.TS_Lin:				np.arange(-0.005, 0.005, 0.005),#np.arange(0.05, 0.2, 0.05) 
 		AlgorithmType.TS_Seg:				[0],#np.arange(0.05, 0.2, 0.05) 
 		AlgorithmType.TS_Disjoint:			np.arange(0.95, 1.05, 0.05),#np.arange(0.05, 0.2, 0.05) 
-		AlgorithmType.TS_Hybrid:			np.arange(0.95, 1.05, 0.05)
-
+		AlgorithmType.TS_Hybrid:			np.arange(0.95, 1.05, 0.05),
+		AlgorithmType.TS_Truncated:			[0],
+		AlgorithmType.TS_Gibbs:				[0],
+		AlgorithmType.TS_Laplace:			[0],
+		AlgorithmType.EGreedy_TS:			np.arange(0.1, 0.5, 0.1),
 }
 
 if len(sys.argv) <= 1:

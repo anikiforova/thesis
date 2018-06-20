@@ -8,6 +8,7 @@ from EGreedy_Disjoint import EGreedy_Disjoint
 from EGreedy_Hybrid import EGreedy_Hybrid
 from EGreedy_Lin import EGreedy_Lin
 from EGreedy_Lin_Hybrid import EGreedy_Lin_Hybrid
+from EGreedy_TS import EGreedy_TS
 from LinUCB_Disjoint import LinUCB_Disjoint
 from LinUCB_GP import LinUCB_GP
 from LinUCB_GP_All import LinUCB_GP_All
@@ -17,6 +18,9 @@ from TS_Bootstrap import TS_Bootstrap
 from TS_Lin import TS_Lin
 from TS_Disjoint import TS_Disjoint
 from TS_Hybrid import TS_Hybrid
+from TS_Laplace import TS_Laplace
+from TS_Truncated import TS_Truncated
+from TS_Gibbs import TS_Gibbs
 from UCB import UCB
 from Random import Random
 
@@ -87,6 +91,18 @@ class AlgoFactory:
 
 		elif algorithm_type == AlgorithmType.TS_Hybrid:
 			return TS_Hybrid(alpha)
+
+		elif algorithm_type == AlgorithmType.TS_Truncated:
+			return TS_Truncated(alpha)
+
+		elif algorithm_type == AlgorithmType.EGreedy_TS:
+			return EGreedy_TS(alpha)
+
+		elif algorithm_type == AlgorithmType.TS_Gibbs:
+			return TS_Gibbs(alpha)
 			
+		elif algorithm_type == AlgorithmType.TS_Laplace:
+			return TS_Laplace(alpha)
+		
 		else:
 			raise NotImplementedError("Non-implemented algorithm." + algorithm_type.name)

@@ -23,6 +23,10 @@ class AlgorithmType (Enum):
 	TS_Disjoint = 19
 	TS_Hybrid = 20
 	TS_Bootstrap = 21
+	TS_Truncated = 22
+	EGreedy_TS = 23
+	TS_Gibbs = 24
+	TS_Laplace = 25
 
 def get_algorithm_type(algorithm_type_string):
 	for name, member in AlgorithmType.__members__.items():
