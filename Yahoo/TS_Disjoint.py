@@ -24,10 +24,11 @@ class TS_Disjoint:
 			self.b[article_id] = np.zeros(self.d)
 
 	def update(self, user, selected_article, click):
-		self.A[selected_article] += user.reshape([self.d, 1]).dot(user.reshape([1, self.d]))
-		self.A_i[selected_article] = inv(self.A[selected_article])
-		if click == 1 :
-			self.b[selected_article] += user
+		if selected_article in self.A:
+			self.A[selected_article] += user.reshape([self.d, 1]).dot(user.reshape([1, self.d]))
+			self.A_i[selected_article] = inv(self.A[selected_article])
+			if click == 1 :
+				self.b[selected_article] += user
 	
 	def warmup(self, file):
 		pass

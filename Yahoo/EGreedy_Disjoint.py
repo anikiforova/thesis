@@ -26,10 +26,11 @@ class EGreedy_Disjoint:
 		return article_id
 
 	def update(self, user, selected_article, click):
-		self.A[selected_article] += user.reshape([self.d, 1]).dot(user.reshape([1, self.d]))
-		self.A_i[selected_article] = inv(self.A[selected_article])
-		if click == 1 :
-			self.b[selected_article] += user
+		if selected_article in self.A:
+			self.A[selected_article] += user.reshape([self.d, 1]).dot(user.reshape([1, self.d]))
+			self.A_i[selected_article] = inv(self.A[selected_article])
+			if click == 1 :
+				self.b[selected_article] += user
 	
 	def warmup(self, file):
 		pass
@@ -50,6 +51,7 @@ class EGreedy_Disjoint:
 			limit = 0.0
 			for line in lines:
 				article_id = self.add_new_article(line)
+				if article_id == -1: continue
 
 				cur_limit = user.dot(self.A_i[article_id].dot(self.b[article_id]))
 				if cur_limit > limit:

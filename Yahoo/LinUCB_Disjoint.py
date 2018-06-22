@@ -24,10 +24,11 @@ class LinUCB_Disjoint:
 			self.b[article_id] = np.zeros(self.d)
 
 	def update(self, user, selected_article, click):
-		self.A[selected_article] += user.reshape([self.d, 1]).dot(user.reshape([1, self.d]))
-		self.A_i[selected_article] = inv(self.A[selected_article])
-		if click == 1 :
-			self.b[selected_article] += user
+		if selected_article in self.A:
+			self.A[selected_article] += user.reshape([self.d, 1]).dot(user.reshape([1, self.d]))
+			self.A_i[selected_article] = inv(self.A[selected_article])
+			if click == 1 :
+				self.b[selected_article] += user
 	
 	def warmup(self, file):
 		pass
@@ -47,6 +48,8 @@ class LinUCB_Disjoint:
 			for line in lines:
 				article_id = int(line.split(" ")[0])
 				self.add_new_article(article_id)
+				if article_id == -1: continue
+
 				cur_A_i = self.A_i[article_id]
 				cur_b = self.b[article_id]
 

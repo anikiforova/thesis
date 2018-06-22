@@ -4,6 +4,7 @@ from AlgorithmType import AlgorithmType
 from Combo_Seg import Combo_Seg
 from EFirst import EFirst
 from EGreedy import EGreedy
+from EGreedy_Annealing import EGreedy_Annealing
 from EGreedy_Disjoint import EGreedy_Disjoint
 from EGreedy_Hybrid import EGreedy_Hybrid
 from EGreedy_Lin import EGreedy_Lin
@@ -13,6 +14,7 @@ from LinUCB_Disjoint import LinUCB_Disjoint
 from LinUCB_GP import LinUCB_GP
 from LinUCB_GP_All import LinUCB_GP_All
 from LinUCB_Hybrid import LinUCB_Hybrid 
+from NN import NN
 from TS import TS
 from TS_Bootstrap import TS_Bootstrap
 from TS_Lin import TS_Lin
@@ -23,6 +25,7 @@ from TS_Truncated import TS_Truncated
 from TS_Gibbs import TS_Gibbs
 from UCB import UCB
 from Random import Random
+from Ensemble import Ensemble
 
 from Util import to_vector
 
@@ -103,6 +106,15 @@ class AlgoFactory:
 			
 		elif algorithm_type == AlgorithmType.TS_Laplace:
 			return TS_Laplace(alpha)
+
+		elif algorithm_type == AlgorithmType.EGreedy_Annealing:
+			return EGreedy_Annealing(alpha)
+
+		elif algorithm_type == AlgorithmType.NN:
+			return NN(alpha)
+
+		elif algorithm_type == AlgorithmType.Ensemble:
+			return Ensemble(alpha)
 		
 		else:
 			raise NotImplementedError("Non-implemented algorithm." + algorithm_type.name)

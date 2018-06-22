@@ -35,24 +35,35 @@ class EGreedy:
 	def select(self, user, pre_selected_article, lines, total_impressions, click):
 		bucket = random.uniform(0, 1)
 		explore = bucket <= self.alpha
-
+		# print(EGreedy.alpha)
 		articles = list()
 		best_mean = 0
 		selected_article = -1
+		best_articles = list()
 
-		for line in lines:
-			article_id = int(line.split(" ")[0])
-			articles.append(article_id)
-			
-			self.add_new_article(article_id)			
-			
-			cur_mean = self.articles_mean[article_id]
-			if best_mean < cur_mean:
-				best_mean = cur_mean
-				selected_article = article_id
-			
 		if explore:
+			for line in lines:
+				article_id = int(line.split(" ")[0])
+				articles.append(article_id)
+				
+				self.add_new_article(article_id)	
+
 			selected_article = np.random.choice(articles, 1)
 
+		else:
+			for line in lines:
+				article_id = int(line.split(" ")[0])
+				self.add_new_article(article_id)			
+				
+				cur_mean = self.articles_mean[article_id]
+				if best_mean < cur_mean:
+					best_mean = cur_mean
+					best_articles = list([article_id])
+
+				elif best_mean == cur_mean:
+					best_articles.append(article_id)
+			
+			selected_article = np.random.choice(best_articles, 1)
+			
 		return selected_article, False
 

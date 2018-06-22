@@ -27,6 +27,9 @@ class AlgorithmType (Enum):
 	EGreedy_TS = 23
 	TS_Gibbs = 24
 	TS_Laplace = 25
+	EGreedy_Annealing = 26
+	NN = 27
+	Ensemble = 28
 
 def get_algorithm_type(algorithm_type_string):
 	for name, member in AlgorithmType.__members__.items():

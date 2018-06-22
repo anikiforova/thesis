@@ -28,6 +28,7 @@ alphas = {
 		AlgorithmType.LinUCB_GP_All:		np.arange(0.05, 0.1, 0.05),
 		AlgorithmType.LinUCB_Hybrid:		np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.UCB:					np.arange(0.5,  0.6, 0.05), # limit to only 1 since same value for different alphas	
+		AlgorithmType.EGreedy_Annealing:	np.arange(500, 501, 1),
 		AlgorithmType.EGreedy_Seg:			np.arange(0.05, 0.3, 0.05),
 		AlgorithmType.EGreedy_Lin:			[0], #np.arange(0.01, 0.05, 0.05),
 		AlgorithmType.EGreedy_Lin_Hybrid:	[0], #np.arange(0.01, 0.05, 0.05),
@@ -45,6 +46,9 @@ alphas = {
 		AlgorithmType.TS_Gibbs:				[0],
 		AlgorithmType.TS_Laplace:			[0],
 		AlgorithmType.EGreedy_TS:			np.arange(0.1, 0.5, 0.1),
+		AlgorithmType.NN:					[0.1],
+		AlgorithmType.Ensemble:				[0]
+
 }
 
 if len(sys.argv) <= 1:
@@ -62,6 +66,7 @@ for i in range(1, len(sys.argv)):
 		continue
 
 	output = open('./Results/{0}.csv'.format(choice.name), "w")
+	# output.write("Clicks, Impressions, Alpha, Method, Repetition\n")	
 	output.write("Clicks, Impressions, Alpha, Method\n")	
 
 	for alpha in alphas[choice]:
@@ -69,34 +74,39 @@ for i in range(1, len(sys.argv)):
 
 		algo = AlgoFactory.get_algorithm(choice, alpha)
 
-		fo = open("..//..//R6//ydata-fp-td-clicks-v1_0.20090501", "r")
-		algo.warmup(fo)
-		
-		total_impressions = 0.0
-		click_count = 0.0
-		impression_count = 0.0
 
-		for line in fo:
-			total_impressions += 1
-			line = line.split("|")
-			no_space_line = line[0].split(" ")
-			pre_selected_article = int(no_space_line[1])
-			click = int(no_space_line[2])
-			user = to_vector(line[1])
+		repetitions = 1
+		for rep in range(0, repetitions):
+			fo = open("..//..//R6//ydata-fp-td-clicks-v1_0.20090501", "r")
+			algo.warmup(fo)
 
-			selected_article, warmup = algo.select(user, pre_selected_article, line[2:], total_impressions, click)
-			# print(selected_article)
-			if selected_article == pre_selected_article and not warmup:
-				# print('.', end='', flush=True)
-				algo.update(user, pre_selected_article, click)
-		
-				click_count += click
-				impression_count += 1
+			print("Starting repetition {0}".format(rep))
+			total_impressions = 0.0
+			click_count = 0.0
+			impression_count = 0.0
+
+			for line in fo:
+				total_impressions += 1
+				line = line.split("|")
+				no_space_line = line[0].split(" ")
+				pre_selected_article = int(no_space_line[1])
+				click = int(no_space_line[2])
+				user = to_vector(line[1])
+
+				selected_article, warmup = algo.select(user, pre_selected_article, line[2:], total_impressions, click)
+				# print(selected_article)
+				if selected_article == pre_selected_article and not warmup:
+					# print('.', end='', flush=True)
+					algo.update(user, pre_selected_article, click)
 			
-				if impression_count % 1000 == 0:
-					print('{:.2%} Cumulative CTR: {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
-					output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
-					output.flush()
+					click_count += click
+					impression_count += 1
+				
+					if impression_count % 1000 == 0:
+						print('{:.2%} Cumulative CTR: {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
+						# output.write('{:d},{:d},{:.2f},{},{}\n'.format(int(click_count), int(impression_count),alpha, choice.name, rep))
+						output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
+						output.flush()
 		fo.close()	
 
 	output.close()
