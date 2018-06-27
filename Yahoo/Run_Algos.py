@@ -47,8 +47,8 @@ alphas = {
 		AlgorithmType.TS_Laplace:			[0],
 		AlgorithmType.EGreedy_TS:			np.arange(0.1, 0.5, 0.1),
 		AlgorithmType.NN:					[0.1],
-		AlgorithmType.Ensemble:				[0]
-
+		AlgorithmType.Ensemble:				[0],
+		AlgorithmType.TS_RLR:				[0.5*0.5]
 }
 
 if len(sys.argv) <= 1:
@@ -84,7 +84,7 @@ for i in range(1, len(sys.argv)):
 			total_impressions = 0.0
 			click_count = 0.0
 			impression_count = 0.0
-
+			local_clicks = 0.0
 			for line in fo:
 				total_impressions += 1
 				line = line.split("|")
@@ -102,11 +102,15 @@ for i in range(1, len(sys.argv)):
 					click_count += click
 					impression_count += 1
 				
-					if impression_count % 1000 == 0:
-						print('{:.2%} Cumulative CTR: {:.3%}'.format(total_impressions/total_lines, click_count/impression_count))
+					batch_size = 1000.0
+					local_clicks+=click
+					if impression_count % batch_size == 0:
+
+						print('{:.2%} Cumulative CTR: {:.3%} CTR:{:.3%}'.format(total_impressions/total_lines, click_count/impression_count, local_clicks/batch_size) )
 						# output.write('{:d},{:d},{:.2f},{},{}\n'.format(int(click_count), int(impression_count),alpha, choice.name, rep))
 						output.write('{:d},{:d},{:.2f},{}\n'.format(int(click_count), int(impression_count), alpha, choice.name))
 						output.flush()
+						local_clicks = 0.0
 		fo.close()	
 
 	output.close()

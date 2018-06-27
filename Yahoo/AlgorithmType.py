@@ -30,6 +30,7 @@ class AlgorithmType (Enum):
 	EGreedy_Annealing = 26
 	NN = 27
 	Ensemble = 28
+	TS_RLR = 29
 
 def get_algorithm_type(algorithm_type_string):
 	for name, member in AlgorithmType.__members__.items():

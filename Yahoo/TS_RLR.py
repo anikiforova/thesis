@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import random
 from numpy.linalg import inv
 from scipy.optimize import minimize
 
@@ -12,21 +13,23 @@ class TS_RLR:
 		self.k = 6
 
 		self.alpha = alpha
-		self.batch_size = 100
-		# self.training_size = 10000
-		# self.impressions = 1
+		self.batch_size = 1000
+		self.training_size = 1000
+		self.impressions = 0
 		self.batch_ids = list([])
-		self.batch_clicks = list([])
+		self.batch_clicks = np.array([])
 
-		self.articles_1_d = list([])
-		self.articles_d_1 = list([])
+		self.articles_1_d = np.array([])
 		self.article_ids = dict()
 		self.bad_articles = set()
 
-		self.mu = list([])
-		self.q = list([])
+		self.mu = np.zeros(self.d)
+		self.q = self.alpha * np.ones(self.d)
+		
+	def sigmoid(self, x):
+		# print(x)
+		return 1.0 / (1.0 + math.exp(-x))
 
-	
 	def add_new_article(self, line):
 		article_id = int(line.split(" ")[0])
 			
@@ -37,36 +40,38 @@ class TS_RLR:
 			try:
 				article = to_vector(line)
 			except IndexError:
-				# print("Skipping line, weird formatting.." + str(article_id))
 				self.bad_articles.add(article_id)
 				return -1
-
+			
 			self.article_ids[article_id] = len(self.article_ids)
-			self.articles_1_d.append(article.reshape([1, self.d]))
-			self.articles_d_1.append(article.reshape([self.d, 1]))
-			self.mu.append(0)
-			self.q.append(self.alpha)
-
+			self.articles_1_d = np.append(self.articles_1_d, article).reshape([len(self.article_ids), self.d])
+			
 		return article_id
 
-	def to_minimize(w):
-		part1 = 1/2 * sum (self.q * (w - self.m) * (self.w - self.m)) 
-		self.batch_articles = self.articles_d_1[self.batch_ids]
-		part2 = 0
-		for article, click in self.batch_articles, self.batch_clicks:
-			part2 += math.log(1+math.exp(-click * w.dot(article))) 
-		
-		return part1 + part2
+	def to_minimize(self, w):
+		return 1/2 * sum (self.q * (w - self.mu) * (w - self.mu)) + sum(np.log(1+np.exp(-self.batch_clicks * w.dot(self.batch_articles))))
+	
 
 	def update(self, user, selected_article, click):
 		self.impressions += 1
 		self.batch_ids.append(self.article_ids[selected_article])
-		self.batch_clicks.append(click)
+		self.batch_clicks = np.append(self.batch_clicks, click)
 
 		if self.impressions % self.batch_size == 0:
-			w = np.random.normal(self.d)
-			res = minimize(self.to_minimize, w, method='Newton-CG', options={'xtol': 1e-8, 'disp': True})
-		
+			w = np.random.normal(0, 1, self.d)
+			self.batch_articles = self.articles_1_d[self.batch_ids].reshape([self.d, self.batch_size])
+
+			res = minimize(self.to_minimize, w, method='nelder-mead', options={'xtol': 1e-8, 'disp': False})
+			self.m = res.x
+			
+			p = 1/(1 + np.exp(- self.m.dot(self.batch_articles)))
+
+			for i in np.arange(0, self.d):
+					self.q[i] += sum(self.batch_articles[i] * self.batch_articles[i] * p[i] * (1-p[i]))
+				
+			self.batch_ids = list([])
+			self.batch_clicks = np.array([])
+
 	
 	def warmup(self, file):
 		pass
@@ -84,20 +89,28 @@ class TS_RLR:
 			warmup = True
 		
 		else:
-			value = 0.0
-			sample_mu = np.random.multivariate_normal(self.mu, self.cov)
+			best_value = 0
+			best_value_articles = list()
 
+			sample_w = np.random.multivariate_normal(self.mu, np.diag(1/self.q))
 			for line in lines:
 				article_id = self.add_new_article(line)
 				if article_id == -1 : 
 					continue
 				
-				list_article_id = self.article_ids[article_id]
-				cur_value = np.random.normal(self.mu[list_article_id], 1 / self.q[list_article_id])
+				a_id = self.article_ids[article_id]
+				article = self.articles_1_d[a_id]
+				
+				cur_value = self.sigmoid(sample_w.dot(article))
 		
-				if cur_value > value:
-					selected_article = article_id
-					value = cur_value
+				if cur_value > best_value:
+					best_value_articles = list([article_id])
+					best_value = cur_value
+				elif cur_value == best_value:
+					best_value_articles.append(article_id)
+
+			index = random.randint(0, len(best_value_articles)-1)	
+			selected_article = best_value_articles[index]
 
 		return selected_article, warmup
 

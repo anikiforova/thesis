@@ -36,11 +36,12 @@ for (name in files){
 }
 
 data$Percent = data$Clicks / data$Impressions * 100
-data$Factor = paste(data$Method, data$Alpha, sep=" ")
+data$Factor = paste(data$Method, sep=" ")
 
 selected = data[(data$Method == "Random") 
-      | (data$Method == "EFirst" && data$Alpha == 0.1) 
+    #  | (data$Method == "EFirst" && data$Alpha == 0.1) 
       | (data$Method == "EGreedy" & data$Alpha == 0.1)
+     # | (data$Method == "EGreedy_Annealing")# & data$Alpha == 0.1)
       | (data$Method == "EGreedy_Lin" & data$Alpha == 0.05)
       | (data$Method == "EGreedy_Lin_Hybrid" )
       | (data$Method == "EGreedy_Seg" & data$Alpha == 0.1) 
@@ -54,9 +55,10 @@ selected = data[(data$Method == "Random")
       | (data$Method == "TS" )#& data$Alpha == 0.1
       | (data$Method == "TS_Truncated" )#& data$Alpha == 0.1
       | (data$Method == "TS_Seg" )
-      | (data$Method == "TS_Lin" )
+      | (data$Method == "TS_Lin" & data$Alpha == 1)
       | (data$Method == "TS_Disjoint" & data$Alpha == 1)
-      | (data$Method == "TS_Hybrid" & data$Alpha == 0.95),]#& data$Alpha == 0.1
+      | (data$Method == "TS_Hybrid" & data$Alpha == 0.95)
+      ,]#& data$Alpha == 0.1
 
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
@@ -90,13 +92,13 @@ ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) +
 ```
 ```{r random, include=TRUE, echo=FALSE}
 
-plot_results("TS_Lin")
+plot_results("NN")
 
 ```
 
 ```{r all_algos, include=TRUE, echo=FALSE}
 
-files = c("LinUCB_Disjoint", "EGreedy", "EGreedy_Hybrid", "EGreedy_Disjoint", "EGreedy_Seg", "EGreedy_Lin", "EGreedy_Lin_Hybrid")
+files = c("TS", "TS_Seg", "TS_Hybrid", "TS_Disjoint", "TS_Bootstrap", "TS_Gibbs", "TS_Laplace", "TS_Lin")
 data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
 for (name in files){
   data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
@@ -107,26 +109,27 @@ data$Percent = data$Clicks / data$Impressions * 100
 data$Factor = paste(data$Method, data$Alpha, sep=" ")
 
 selected = data[(data$Method == "Random") 
-  #    | (data$Method == "EGreedy" & data$Alpha == 0.1)
-      | (data$Method == "EGreedy_Lin" & data$Alpha == 0.05)
-     | (data$Method == "EGreedy_Lin_Hybrid")# & data$Alpha == 0.05)
-   #   | (data$Method == "EGreedy_Seg" & data$Alpha == 0.1) 
-    #  | (data$Method == "EGreedy_Seg_Lin" & data$Alpha == 0.0) 
-      | (data$Method == "EGreedy_Disjoint" & data$Alpha == 0.1) 
-      | (data$Method == "EGreedy_Hybrid" & data$Alpha == 0.1) 
-      | (data$Method == "LinUCB_Disjoint" & data$Alpha == 0.2) 
+      | (data$Method == "TS" )#& data$Alpha == 0.05)
+      | (data$Method == "TS_Seg")# & data$Alpha == 0.05)
+      | (data$Method == "TS_Hybrid" & data$Alpha == 1) 
+      | (data$Method == "TS_Disjoint" & data$Alpha == 1) 
+      | (data$Method == "TS_Bootstrap")# & data$Alpha == 0.2) 
+      | (data$Method == "TS_Gibbs")# & data$Alpha == 0.2) 
+      | (data$Method == "TS_Laplace")# & data$Alpha == 0.2) 
+      | (data$Method == "TS_Lin" & data$Alpha == 0.05) 
+      
       ,]#& data$Alpha == 0.1
 
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
   expand_limits(y=c(4,7.5), x=c(0, 225000)) + theme_bw() + 
-  ggtitle("Egreedy Comparison")
+  ggtitle("TS Comparison")
 
 ```
 ```{r all_algos, include=TRUE, echo=FALSE}
 
-files = c("TS", "TS_Laplace")
-data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
+files = c("EGreedy", "UCB", "Ensemble", "TS", "TS_RLR")
+data <- read.csv(file=paste0(path, paste0("Random.csv")), header=TRUE, sep=",")
 for (name in files){
   data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
   data <- rbind(data, data1)  
@@ -136,13 +139,41 @@ data$Percent = data$Clicks / data$Impressions * 100
 data$Factor = paste(data$Method, data$Alpha, sep=" ")
 
 selected = data[(data$Method == "Random") 
-      | (data$Method == "TS")# & data$Alpha == 0.2) 
-      | (data$Method == "TS_Laplace")
-      ,]#& data$Alpha == 0.1
+      | (data$Method == "UCB" & data$Alpha == 0.1) 
+      | (data$Method == "TS" )
+       | (data$Method == "TS_RLR" )
+      | (data$Method == "Ensemble")
+      | (data$Method == "EGreedy" & data$Alpha == 0.1)
+      ,]
 
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
-  expand_limits(y=c(4,6.5), x=c(0, 225000)) + theme_bw() + 
+  expand_limits(y=c(4,7), x=c(0, 225000)) + theme_bw() + 
+  ggtitle("Egreedy Comparison")
+
+```
+
+```{r all_algos, include=TRUE, echo=FALSE}
+
+files = c("EGreedy_Lin", "NN", "UCB")
+data <- read.csv(file=paste0(path, paste0("Random.csv")), header=TRUE, sep=",")
+for (name in files){
+  data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
+  data <- rbind(data, data1)  
+}
+
+data$Percent = data$Clicks / data$Impressions * 100
+data$Factor = paste(data$Method, data$Alpha, sep=" ")
+
+selected = data[(data$Method == "Random") 
+      | (data$Method == "UCB" & data$Alpha == 0.1) 
+      | (data$Method == "EGreedy_Lin" )
+       | (data$Method == "NN" )
+      ,]
+
+ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
+  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+  expand_limits(y=c(4,7), x=c(0, 225000)) + theme_bw() + 
   ggtitle("Egreedy Comparison")
 
 ```

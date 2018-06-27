@@ -8,21 +8,19 @@ class TS_Bootstrap:
 		self.alpha = alpha
 		self.training_size = 1000
 		self.warmup_impressions = 0
+		self.bootstrap_sample = 1000
 
-		self.articles_success = dict()
+		self.articles_clicks = dict()
 		self.articles_fail = dict()
 
 	def add_new_article(self, article_id):
-		if article_id not in self.articles_success:
-			self.articles_success[article_id] = 0.0
-			self.articles_fail[article_id] = 0.0
-
+		if article_id not in self.articles_clicks:
+			self.articles_clicks[article_id] = list()
 		return article_id
 
 	def update(self, user, selected_article, click):
-		self.articles_success[selected_article] += click
-		self.articles_fail[selected_article] += 1 - click
-
+		self.articles_clicks[selected_article].append(click)
+		
 	def warmup(self, fo):
 		pass
 
@@ -43,12 +41,13 @@ class TS_Bootstrap:
 				article_id = int(line.split(" ")[0])
 				self.add_new_article(article_id)			
 
-				total_tries = self.articles_success[article_id] + self.articles_fail[article_id]	
-				if total_tries == 0:
-					cur_value = np.random.beta(1, 1)
+				clicks = sum(self.articles_clicks[article_id])
+				impressions = len(self.articles_clicks[article_id])
+				if  impressions < self.bootstrap_sample:
+					cur_value = np.random.beta(clicks + 1, impressions - clicks + 1)
 				else:
-					prob_success = self.articles_success[article_id] / total_tries
-					cur_value = np.random.binomial(total_tries, prob_success) / total_tries
+					sample = np.random.choice(self.articles_clicks[article_id], self.bootstrap_sample, True)	
+					cur_value = sum(sample) / len(sample)
 
 				if best_value < cur_value:
 					best_value = cur_value

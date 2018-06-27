@@ -17,9 +17,11 @@ class NN:
 		self.epoch = 0
 		self.display_step    =  50
 
-		self.mini_batch_size = 100
-		self.batch_data = np.array([])
+		self.mini_batch_size = 1000
+		self.batch_a_clicks = np.array([])
 		self.batch_clicks = np.array([])
+		self.batch_a_no_clicks = np.array([])
+		self.batch_no_clicks = np.array([])
 
 		self.articles = dict()
 		self.bad_articles = set()
@@ -59,7 +61,7 @@ class NN:
 		self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
 
 		# Initializing the variables
-		self.init = tf.initialize_all_variables()
+		self.init = tf.global_variables_initializer()
 		self.session = tf.Session()
 		self.session.run(self.init)
 
@@ -82,21 +84,38 @@ class NN:
 
 	def update(self, user, selected_article, click):
 		pair = user.reshape([6,1]).dot(self.articles[selected_article])
-		self.batch_data = np.append(self.batch_data, pair)
-		self.batch_clicks = np.append(self.batch_clicks, click)
+		if click :
+			self.batch_a_clicks = np.append(self.batch_a_clicks, pair)
+			self.batch_clicks = np.append(self.batch_clicks, click)
+		else: 
+			self.batch_a_no_clicks = np.append(self.batch_a_no_clicks, pair)
+			self.batch_no_clicks = np.append(self.batch_no_clicks, click)
 
-		if len(self.batch_clicks) == self.mini_batch_size:	
-			self.batch_data = self.batch_data.reshape([self.mini_batch_size, self.d])
-			self.batch_clicks = self.batch_clicks.reshape([self.mini_batch_size, 1]) 
-			_, c = self.session.run([self.optimizer, self.cost], feed_dict={self.x: self.batch_data, self.y: self.batch_clicks})
+		click_count = len(self.batch_clicks)
+		no_click_count = len(self.batch_no_clicks)	
+		# print(str(click_count) + " " + str(no_click_count) + " " + str(click_count +no_click_count))
+		if (click_count + no_click_count) % self.mini_batch_size == 0 and click_count > 0:	
+			# print("Trainging 	")
+			click_sample_size = int(no_click_count * 0.2)
+			sample_size = no_click_count + click_sample_size
+			sample = np.random.choice(np.arange(0, click_count), click_sample_size, True)
+			self.batch_a_clicks = self.batch_a_clicks.reshape([click_count, self.d])[sample]
+			self.batch_clicks = self.batch_clicks[sample]
+
+			articles = np.append(self.batch_a_clicks, self.batch_a_no_clicks).reshape([sample_size, self.d])
+			clicks = np.append(self.batch_clicks, self.batch_no_clicks).reshape([sample_size, 1])
 			
-			self.batch_data = np.array([])
+			_, c = self.session.run([self.optimizer, self.cost], feed_dict={self.x: articles, self.y: clicks})
+
+			self.batch_a_clicks = np.array([])
 			self.batch_clicks = np.array([])
+			self.batch_a_no_clicks = np.array([])
+			self.batch_no_clicks = np.array([])
 
 			# Display logs per epoch
-			if self.epoch % self.display_step == 0:
-				avg_cost = c / (self.mini_batch_size)
-				print("Epoch:", '%05d' % self.epoch, "Training error=", "{:.9f}".format(avg_cost))
+			# if self.epoch % self.display_step == 0:
+			avg_cost = c / (2 * click_count)
+			print("Epoch:", '%05d' % self.epoch, "Training error=", "{:.9f}".format(avg_cost))
 			self.epoch += 1
 
 	def warmup(self, fo):

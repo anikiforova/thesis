@@ -23,6 +23,7 @@ from TS_Hybrid import TS_Hybrid
 from TS_Laplace import TS_Laplace
 from TS_Truncated import TS_Truncated
 from TS_Gibbs import TS_Gibbs
+from TS_RLR import TS_RLR
 from UCB import UCB
 from Random import Random
 from Ensemble import Ensemble
@@ -115,6 +116,9 @@ class AlgoFactory:
 
 		elif algorithm_type == AlgorithmType.Ensemble:
 			return Ensemble(alpha)
+
+		elif algorithm_type == AlgorithmType.TS_RLR:
+			return TS_RLR(alpha)
 		
 		else:
 			raise NotImplementedError("Non-implemented algorithm." + algorithm_type.name)

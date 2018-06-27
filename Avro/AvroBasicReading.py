@@ -8,7 +8,7 @@ file = open(filename, 'rb')
 datum_reader = DatumReader()
 file_reader = DataFileReader(file, datum_reader)
  
-print(file_reader .meta)
+print(file_reader.meta)
 
 file_reader = DataFileReader(file, datum_reader)
 for datum in file_reader:
