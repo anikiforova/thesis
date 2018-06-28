@@ -7,9 +7,9 @@ from pandas import DataFrame
 from numpy import genfromtxt
 
 from Regression import Regression
-from SRandom import SRandom
+# from Random import Random
 
-total_lines = 1439208
+total_lines = 7196037
 repetitions = 10
 
 impressions_between_update = 100
@@ -21,9 +21,9 @@ warmup_impression_count = 1000
 output = open("./Results/{0}.csv".format(algoName), "w")
 output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize\n")
 
-name = "809153_0"
+name = "809153"
 path = "..//..//RawData//Campaigns"
-users = read_csv("{0}//{1}_users.csv".format(path, name), header=0)#, index_col=1)
+users = read_csv("{0}//{1}//Processed//all_users.csv".format(path, name), header=0)#, index_col=1)
 user_ids = np.array(users["UserHash"])
 user_embeddings = np.array(users["UserEmbedding"])
 user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([len(user_ids), 100])
@@ -44,7 +44,7 @@ for part in user_recommendation_part:
 	user_recommendation_size = int(len(user_ids) * part)
 
 	print("Starting evaluation of {0} with recommendation of size: {1} in count: {2}".format(algoName, part, user_recommendation_size))
-	input = open("{0}//{1}_impressions.csv".format(path, name), "r")
+	input = open("{0}//{1}//Processed//impressions.csv".format(path, name), "r")
 	input.readline() # get rid of header
 
 	algo = Regression(alpha, user_embeddings, user_ids)

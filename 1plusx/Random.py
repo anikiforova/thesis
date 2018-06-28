@@ -5,7 +5,7 @@ from random import randint
 
 # from SBase import Regressor
 
-class SRandom:
+class Random:
 	
 	def __init__(self, alpha, user_embeddings, user_ids):#, regressor = Regressor.NoRegressor):
 		np.random.seed(seed=3432)
