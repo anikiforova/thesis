@@ -2,7 +2,8 @@ import pandas as pd
 import os 
 import glob
 import numpy as np
-from pandas import read_csv 
+from pandas import read_csv
+from pandas import DataFrame
 import pyarrow.parquet as pq
 
 campaign_id = "809153"

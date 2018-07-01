@@ -18,7 +18,7 @@ impressions_between_update = 100
 alpha = 0.0
 algoName = "Regression"
 
-output = open("./Results/{0}.csv".format(algoName), "w")
+output = open("./Results/{0}_4h.csv".format(algoName), "w")
 output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize\n")
 
 name = "809153"
@@ -30,8 +30,8 @@ user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings])
 
 # regressor = Regressor.LinearRegression
 
-user_recommendation_part = np.arange(0.1, 0.2, 0.1)
-time_between_updates_in_seconds = 60 * 60 # 1 hour
+user_recommendation_part = np.arange(0.01, 0.11, 0.02)
+time_between_updates_in_seconds = 60 * 60 *4 # 1 hour
 
 for part in user_recommendation_part:
 	impression_count = 1.0
@@ -66,7 +66,8 @@ for part in user_recommendation_part:
 
 		if (timestamp - hour_begin_timestamp).seconds >= time_between_updates_in_seconds:
 			recommended_users = algo.get_recommendations(user_recommendation_size)
-			algo.update(users_to_update, clicks_to_update)
+			if len(clicks_to_update) != 0:
+				algo.update(users_to_update, clicks_to_update)
 			users_to_update = list()
 			clicks_to_update = list()
 			hour_begin_timestamp = timestamp
