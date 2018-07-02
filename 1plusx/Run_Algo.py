@@ -8,6 +8,7 @@ from pandas import DataFrame
 from numpy import genfromtxt
 
 from Regression import Regression
+from LinUCB_Disjoint import LinUCB_Disjoint
 # from Random import Random
 
 total_lines = 14392074
@@ -16,22 +17,24 @@ repetitions = 10
 impressions_between_update = 100
 
 alpha = 0.0
-algoName = "Regression"
+algoName = "LinUCB_Disjoint"
 
-output = open("./Results/{0}_4h.csv".format(algoName), "w")
-output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize\n")
+output = open("./Results/{0}_4h_clustered.csv".format(algoName), "w")
+output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize,Timestamp\n")
 
 name = "809153"
 path = "..//..//RawData//Campaigns"
-users = read_csv("{0}//{1}//Processed//all_users.csv".format(path, name), header=0)#, index_col=1)
+users = read_csv("{0}//{1}//Processed//all_users_clustered.csv".format(path, name), header=0)#, index_col=1)
 user_ids = np.array(users["UserHash"])
 user_embeddings = np.array(users["UserEmbedding"])
+# print(user_embeddings.ilot(0))
+
 user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([len(user_ids), 100])
 
 # regressor = Regressor.LinearRegression
 
-user_recommendation_part = np.arange(0.01, 0.11, 0.02)
-time_between_updates_in_seconds = 60 * 60 *4 # 1 hour
+user_recommendation_part = [0.01, 0.02, 0.04, 0.08, 0.1, 0.2]
+time_between_updates_in_seconds = 60 * 60 * 4 # 1 hour
 
 for part in user_recommendation_part:
 	impression_count = 1.0
@@ -57,7 +60,8 @@ for part in user_recommendation_part:
 		parts = line.split(",")
 		user_id = int(parts[0])
 		click = int(parts[1])
-		timestamp = datetime.datetime.fromtimestamp(int(parts[2])/1000	)
+		timestamp_raw = int(parts[2])/1000
+		timestamp = datetime.datetime.fromtimestamp(timestamp_raw)
 
 		if warmup and (timestamp - hour_begin_timestamp).seconds < time_between_updates_in_seconds: 
 			users_to_update.append(user_id)
@@ -87,7 +91,7 @@ for part in user_recommendation_part:
 			print('{:.2%} Cumulative CTR: {:.3%} CTR:{:.3%}'.format(total_impressions/total_lines, click_count/impression_count, local_clicks/local_count) )
 			local_clicks = 0.0	
 			local_count = 1.0
-			output.write("{0},{1},{2},{3},{4},{5}\n".format(click_count, impression_count, total_impressions, algoName, part, user_recommendation_size))
+			output.write("{0},{1},{2},{3},{4},{5},{6}\n".format(click_count, impression_count, total_impressions, algoName, part, user_recommendation_size, timestamp_raw))
 			output.flush()
 	input.close()
 			
