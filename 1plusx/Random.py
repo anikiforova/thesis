@@ -24,7 +24,7 @@ class Random:
 
 	def get_recommendations(self, count):
 		choice = np.random.choice(self.indexes, count, replace=False)
-		return self.user_ids[choice]
+		return set(self.user_ids[choice])
 
 
 

@@ -12,7 +12,7 @@ class Regressor(Enum):
 
 class Regression:
 	
-	def __init__(self, alpha, user_embeddings, user_ids, regressor = Regressor.LinearRegression):
+	def __init__(self, alpha, user_embeddings, user_ids, regressor = Regressor.LinearRegression, filter_clickers = false):
 		self.alpha = alpha
 		# users['UserEmbedding']
 		self.user_hast_to_id = dict(zip(user_ids, range(0, len(user_ids))))
@@ -27,17 +27,21 @@ class Regression:
 
 		self.predition = np.ones(self.user_count) * 0.02
 
-		self.mask = np.array(np.ones(self.user_count), dtype=bool)
-	
 		self.regressor = regressor
 		if self.regressor == Regressor.LinearRegression:
 			self.model = linear_model.LinearRegression()
 		else:	
 			self.model = linear_model.SGDClassifier(loss='hinge', penalty='l2')
 
+		self.clickers = set()
+
 	def update(self, users, clicks):
-		# print('Update', end='', flush=True)	
+		print("Starting Update.. ", end='', flush=True)
 		new_users = [ self.user_hast_to_id[x] for x in users ]
+
+		new_click_users = new_users[clicks == 1]
+		for user in new_click_users: self.clickers.add(user)
+
 		self.o_users = np.append(self.o_users, new_users)
 		self.o_clicks = np.append(self.o_clicks, clicks)
 		cur_users = self.user_embeddings[self.o_users]
@@ -45,11 +49,17 @@ class Regression:
 		self.model = linear_model.LinearRegression()
 		self.model.fit(cur_users, self.o_clicks)
 	
-		self.predition = self.model.predict(self.user_embeddings)
+		if filter_clickers:
+			user_index_to_use = [index for index in self.indexes if index not in self.clickers] 
+			embeddings_to_use = self.user_embeddings[user_index_to_use]
+			self.predition = self.model.predict(embeddings_to_use)
+		else:
+			self.predition = self.model.predict(self.user_embeddings)
+		print(" Done.")
 
 	def get_recommendations(self, count):
 		recommendation_ids = self.predition.argsort()[-count:][::-1]
 		recommendation_hashes = [ self.user_id_to_hash[x] for x in recommendation_ids ]
 
-		return np.array(recommendation_hashes)
+		return set(recommendation_hashes)
 
