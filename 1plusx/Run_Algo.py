@@ -9,6 +9,7 @@ from numpy import genfromtxt
 
 from Regression import Regression
 from LinUCB_Disjoint import LinUCB_Disjoint
+from TS_Lin import TS_Lin
 # from Random import Random
 
 def normalize_dimension(dimension):
@@ -18,15 +19,16 @@ def normalize_dimension(dimension):
 
 total_lines = 14392074
 
-alphas = [0.001, 0.005, 0.01, 0.02, 0.05]
+alphas = [0.01] #[0.001, 0.005, 0.01, 0.02, 0.05]
 
 user_recommendation_part = [0.02]
 hours = 1
-soft_click = True
+soft_click = False
 time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
 filter_clickers = False
+clusters = "_clustered_10"
 algoName = "LinUCB_Disjoint"
-algo_path = "{}_{}h_alpha{}_soft{}_filter{}".format(algoName, hours, alpha, soft_click, filter_clickers)
+algo_path = "{}_{}h_soft{}_filter{}{}".format(algoName, hours, soft_click, filter_clickers, clusters)
 output = open("./Results/{0}.csv".format(algoName), "a")
 #output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize,Timestamp,Alpha\n")
 
@@ -34,7 +36,7 @@ name = "809153"
 path = "..//..//RawData//Campaigns"
 
 print("Reading users.. ", end='', flush=True)	
-users = read_csv("{0}//{1}//Processed//all_users.csv".format(path, name), header=0)#, index_col=1)
+users = read_csv("{0}//{1}//Processed//all_users{2}.csv".format(path, name, clusters), header=0)#, index_col=1)
 print(" Done.")
 
 print("Parsing users.. ", end='', flush=True)	

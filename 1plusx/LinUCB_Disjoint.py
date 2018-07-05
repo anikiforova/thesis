@@ -25,7 +25,6 @@ class LinUCB_Disjoint(AlgoBase):
 			if click == 1 :
 				self.b += embedding
 
-
 		self.A_i = inv(self.A)
 		theta = self.A_i.dot(self.b) # [self.d, self.d] x [self.d, 1] = [self.d, 1]
 
@@ -34,7 +33,7 @@ class LinUCB_Disjoint(AlgoBase):
 			self.predition[index] = embedding.dot(theta) + self.alpha * math.sqrt(embedding.reshape([1, self.d]).dot(self.A_i).dot(embedding))
 			index += 1
 
-		super(LinUCB_Disjoint, self).predictionPosprocessing()		
+		super(LinUCB_Disjoint, self).predictionPosprocessing(users, clicks)		
 		print(" Done.")
 
 	def get_recommendations(self, count):

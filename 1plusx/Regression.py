@@ -19,7 +19,7 @@ class Regression(AlgoBase):
 
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
-		users, clicks = super(Regression, self).prepareClicks(self, users, clicks)
+		users, clicks = super(Regression, self).prepareClicks(users, clicks)
 
 		self.o_users = np.append(self.o_users, users)
 		self.o_clicks = np.append(self.o_clicks, clicks)
@@ -29,7 +29,7 @@ class Regression(AlgoBase):
 		self.model.fit(cur_users, self.o_clicks)
 		self.predition = self.model.predict(self.user_embeddings)
 
-		super(Regression, self).predictionPosprocessing(self)			
+		super(Regression, self).predictionPosprocessing(users, clicks)	
 		print(" Done.")
 
 	def get_recommendations(self, count):

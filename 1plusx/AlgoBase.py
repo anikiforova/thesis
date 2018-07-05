@@ -32,12 +32,12 @@ class AlgoBase:
 
 		return new_users, scaled_clicks
 
-	def predictionPosprocessing(self):
+	def predictionPosprocessing(self, users, clicks):
 		if self.filter_clickers:
-			new_users = np.array(new_users)
+			users = np.array(users)
 			clicks = np.array(clicks)
 
-			new_click_users = new_users[clicks == 1]
+			new_click_users = users[clicks == 1]
 			for user in new_click_users: 
 				self.clickers.add(user)
 
