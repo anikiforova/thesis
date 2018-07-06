@@ -7,7 +7,7 @@ from random import randint
 
 class Random:
 	
-	def __init__(self, alpha, user_embeddings, user_ids):#, regressor = Regressor.NoRegressor):
+	def __init__(self, alpha, user_embeddings, user_ids, dimensions, filter_clickers = False, soft_click = False):
 		np.random.seed(seed=3432)
 		self.alpha = alpha
 		self.user_ids = user_ids

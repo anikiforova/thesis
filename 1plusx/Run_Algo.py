@@ -22,12 +22,12 @@ total_lines = 14392074
 alphas = [0.001, 0.01, 0.02] #[0.001, 0.005, 0.01, 0.02, 0.05]
 
 user_recommendation_part = [0.02]
-dimensions = 10
+dimensions = 20
 hours = 1
 soft_click = False
 time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
 filter_clickers = True
-clusters = "_svd_10"
+clusters = "_svd_" + str(dimensions)
 algoName = "LinUCB_Disjoint"
 algo_path = "{}_{}h_soft{}_filter{}{}".format(algoName, hours, soft_click, filter_clickers, clusters)
 output = open("./Results/{0}.csv".format(algoName), "a")
@@ -76,7 +76,7 @@ for alpha in alphas:
 		warmup = True
 		
 		# algo = Regression(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
-		algo = LinUCB_Disjoint(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
+		algo = LinUCB_Disjoint(alpha, user_embeddings, user_ids, dimensions, filter_clickers, soft_click)
 		recommended_users = list()
 		for line in input:
 			total_impressions += 1

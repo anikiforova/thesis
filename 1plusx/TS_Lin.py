@@ -6,9 +6,9 @@ from AlgoBase import AlgoBase
 
 class TS_Lin(AlgoBase):
 	
-	def __init__(self, alpha, user_embeddings, user_ids, filter_clickers = False, soft_click = False):
+	def __init__(self, alpha, user_embeddings, user_ids, dimensions, filter_clickers = False, soft_click = False):
 		super(TS_Lin, self).__init__(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
-		self.d = 10
+		self.d = dimensions
 
 		self.impressions = 100
 
