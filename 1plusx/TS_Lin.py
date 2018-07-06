@@ -8,7 +8,7 @@ class TS_Lin(AlgoBase):
 	
 	def __init__(self, alpha, user_embeddings, user_ids, filter_clickers = False, soft_click = False):
 		super(TS_Lin, self).__init__(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
-		self.d = 100
+		self.d = 10
 
 		self.impressions = 100
 

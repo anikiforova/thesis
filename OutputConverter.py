@@ -32,6 +32,5 @@ for name in glob.glob("./Yahoo/Results/*.csv"):
 			prev_impressions = int(data[1])
 			output.write("{0},{1},{2},{3},{4}".format(prev_clicks, prev_impressions, prev_impressions, data[2], data[3]))
 
-
 	input.close()
 	output.close()

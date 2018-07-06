@@ -25,30 +25,135 @@ plot_results <- function(algorith_name="Random") {
     #expand_limits(y=c(4,7.5), x=c(0, 225000)) + 
     theme_bw() + ggtitle(algorith_name)
 }
+
+formatterM <- function(){
+  function(x) paste(x/1000000, "M")
+}
+
+formatterPretty <- function(){
+  function(x) ifelse(x==10, paste(x, "% (Random)"), paste(x, "%"))
+}
+
+selectNecessaryColumns <- function(df, columns) {
+  for (column in columns) {
+    if(!(column %in% colnames(df))){
+      df[column] = NA
+    } 
+  }
+  df[,columns]
+}
+
+prepData <- function(files) {
+  data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
+  columns = c("Clicks", "Impressions", "RecommendationSizePercent","TotalImpressions","Method", "Alpha")
+  data = selectNecessaryColumns(data, columns)
+  for (name in files){
+    data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
+    data1 = selectNecessaryColumns(data1, columns)
+    data <- rbind(data, data1)  
+  }
   
+  data$Percent = data$Clicks / data$Impressions * 100
+  data$Factor = factor(paste(data$Method, data$Alpha, data$RecommendationSizePercent * 100))
+  data$UserPercentage = factor(data$RecommendationSizePercent * 100)
+  data
+}
+  
+```
+
+```{r best, include=TRUE, echo=FALSE}
+
+files = c("Regression", "LinUCB_Disjoint", "TS_Lin","LinUCB_Disjoint_clustered_10")
+data = prepData(files)
+
+data = data[(data$Method == "Regression" & data$RecommendationSizePercent == "0.021" ) |
+              (data$Method == "LinUCB_Disjoint" & data$RecommendationSizePercent == 0.02 & data$Alpha == 0.02) |
+              (data$Method == "TS_Lin" & data$RecommendationSizePercent == 0.02 & data$Alpha == 0.0001) |
+              (data$Method == "Random") | 
+              (data$Method == "LinUCB_Disjoint_clustered_10"),]
+
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
+    stat_smooth(aes(x=TotalImpressions, y=Percent), method = "lm",
+                formula = y ~ poly(x, 21), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    expand_limits(y=c(0,1.2)) + 
+    scale_x_continuous(labels=formatterM())+
+    theme_bw() + ggtitle("All") +
+    scale_color_discrete(name="User Percentage", labels=formatterPretty())
+```
+
+```{r Regression, include=TRUE, echo=FALSE}
+
+files = c("Regression")
+data = prepData(files)
+
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=UserPercentage)) + 
+    stat_smooth(aes(x=TotalImpressions, y=Percent), method = "lm",
+                formula = y ~ poly(x, 21), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    expand_limits(y=c(0,1.2)) + 
+    scale_x_continuous(labels=formatterM())+
+    theme_bw() + ggtitle("Regression") +
+    scale_color_discrete(name="User Percentage", labels=formatterPretty())
 ```
 
 ```{r all_algos, include=TRUE, echo=FALSE}
 
-files = c("Regression")
-
-data <- read.csv(file=paste0(path, paste0("Random", ".csv")), header=TRUE, sep=",")
-for (name in files){
-  data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
-  data <- rbind(data, data1)  
-}
-
-data$Percent = data$Clicks / data$Impressions * 100
-data$Factor = paste(data$Method, sep=" ")
-
-selected = data[(data$Method == "Random") 
-      | (data$Method == "Regression") 
-      ,]
-
-ggplot(selected, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
+files = c("Regression_4h")
+data = prepData(files)
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=UserPercentage)) + 
     stat_smooth(aes(x=TotalImpressions, y=Percent), method = "lm",
-                formula = y ~ poly(x, 10), se = FALSE) +
+                formula = y ~ poly(x, 21), se = FALSE) +
     xlab("Impressions") + ylab("% of Clicks") +
-    #expand_limits(y=c(4,7.5), x=c(0, 225000)) + 
-    theme_bw() + ggtitle("All")
+    expand_limits(y=c(0,1.2)) + 
+    scale_x_continuous(labels=formatterM())+
+    theme_bw() + ggtitle("All") +
+    scale_color_discrete(name="User Percentage", labels=formatterPretty())
+
+
+```
+
+```{r all_algos, include=TRUE, echo=FALSE}
+
+files = c("Regression_clustered")
+data = prepData(files)
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=UserPercentage)) + 
+    stat_smooth(aes(x=TotalImpressions, y=Percent), method = "lm",
+                formula = y ~ poly(x, 21), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    expand_limits(y=c(0,1.2)) + 
+    scale_x_continuous(labels=formatterM())+
+    theme_bw() + ggtitle("Regression_clustered") +
+    scale_color_discrete(name="User Percentage", labels=formatterPretty())
+```
+
+```{r LinUCB_Disjoint, include=TRUE, echo=FALSE}
+
+files = c("LinUCB_Disjoint")
+data = prepData(files)
+
+data$Factor = factor(paste(data$Method, data$Alpha* 100))
+
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
+    stat_smooth(aes(x=TotalImpressions, y=Percent), method = "lm",
+                formula = y ~ poly(x, 21), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    expand_limits(y=c(0,1.2)) + 
+    scale_x_continuous(labels=formatterM()) + theme_bw() + ggtitle("LinUCB_Disjoint") +
+    scale_color_discrete(name="Algo/Alpha", labels=formatterPretty())
+```
+
+```{r LinUCB_Disjoint, include=TRUE, echo=FALSE}
+
+files = c("TS_Lin")
+data = prepData(files)
+
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
+    stat_smooth(aes(x=TotalImpressions, y=Percent), method = "lm",
+                formula = y ~ poly(x, 21), se = FALSE) +
+    xlab("Impressions") + ylab("% of Clicks") +
+    expand_limits(y=c(0,1.2)) + 
+    scale_x_continuous(labels=formatterM())+
+    theme_bw() + ggtitle("All") +
+    scale_color_discrete(name="TS_Lin", labels=formatterPretty())
 ```

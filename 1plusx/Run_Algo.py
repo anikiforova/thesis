@@ -19,18 +19,20 @@ def normalize_dimension(dimension):
 
 total_lines = 14392074
 
-alphas = [0.01] #[0.001, 0.005, 0.01, 0.02, 0.05]
+alphas = [0.001, 0.01, 0.02] #[0.001, 0.005, 0.01, 0.02, 0.05]
 
 user_recommendation_part = [0.02]
+dimensions = 10
 hours = 1
 soft_click = False
 time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
-filter_clickers = False
-clusters = "_clustered_10"
+filter_clickers = True
+clusters = "_svd_10"
 algoName = "LinUCB_Disjoint"
 algo_path = "{}_{}h_soft{}_filter{}{}".format(algoName, hours, soft_click, filter_clickers, clusters)
 output = open("./Results/{0}.csv".format(algoName), "a")
 #output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize,Timestamp,Alpha\n")
+algoName += clusters + "_f" + str(filter_clickers)
 
 name = "809153"
 path = "..//..//RawData//Campaigns"
@@ -42,7 +44,7 @@ print(" Done.")
 print("Parsing users.. ", end='', flush=True)	
 user_ids = np.array(users["UserHash"])
 user_embeddings = np.array(users["UserEmbedding"])
-user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([len(user_ids), 100])
+user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([len(user_ids), dimensions])
 print(" Done.")
 
 print("Normalizing users.. ", end='', flush=True)	

@@ -8,7 +8,7 @@ class LinUCB_Disjoint(AlgoBase):
 	
 	def __init__(self, alpha, user_embeddings, user_ids, filter_clickers = False, soft_click = False):
 		super(LinUCB_Disjoint, self).__init__(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
-		self.d = 100
+		self.d = 10
 		
 		self.A = np.identity(self.d)
 		self.A_i =  np.identity(self.d)
