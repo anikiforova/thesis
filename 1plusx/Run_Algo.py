@@ -26,6 +26,7 @@ user_recommendation_part = [0.10]
 dimensions = 100
 hours = 1
 soft_click = False
+number_of_clusters = 10
 time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
 filter_clickers = False
 clusters = "" # "_svd_" + str(dimensions)
@@ -48,8 +49,17 @@ user_embeddings = np.array(users["UserEmbedding"])
 user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([len(user_ids), dimensions])
 print(" Done.")
 
-print("Normalizing users.. ", end='', flush=True)	
-user_embeddings = np.apply_along_axis(lambda dimension: normalize_dimension(dimension), 0, user_embeddings)
+print("Reading clusters.. ", end='', flush=True)
+
+clusters = read_csv("{0}//{1}//Processed//all_users_clusters_{2}.csv".format(path, name, number_of_clusters), header=0)
+cluster_embeddings = np.array(clusters["Cluster"])
+cluster_embeddings = np.array([np.fromstring(x, sep=" ") for x in cluster_embeddings]).reshape([len(number_of_clusters), dimensions])
+
+print(" Done.")
+
+print("Normalizing users and embeddings .. ", end='', flush=True)	
+user_embeddings 	= np.apply_along_axis(lambda dimension: normalize_dimension(dimension), 0, user_embeddings)
+cluster_embeddings 	= np.apply_along_axis(lambda dimension: normalize_dimension(dimension), 0, cluster_embeddings)
 print(" Done.")
 
 # regressor = Regressor.LinearRegression
@@ -76,8 +86,8 @@ for alpha in alphas:
 		hour_begin_timestamp = datetime.datetime.fromtimestamp(int(line.split(",")[2])/1000)
 		warmup = True
 		
-		# algo = Regression(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
-		algo = Random(alpha, user_embeddings, user_ids, dimensions, filter_clickers, soft_click)
+		# algo = Regression(alpha, user_embeddings, user_ids, cluster_embeddings, filter_clickers, soft_click)
+		algo = Random(alpha, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers, soft_click)
 		recommended_users = list()
 		for line in input:
 			total_impressions += 1

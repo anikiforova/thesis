@@ -6,7 +6,7 @@ from AlgoBase import AlgoBase
 
 class LinUCB_Disjoint(AlgoBase):
 	
-	def __init__(self, alpha, user_embeddings, user_ids, dimensions, filter_clickers = False, soft_click = False):
+	def __init__(self, alpha, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
 		super(LinUCB_Disjoint, self).__init__(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
 		self.d = dimensions
 		
