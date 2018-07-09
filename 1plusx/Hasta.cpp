@@ -176,6 +176,7 @@ int betaType;
 
 double centroid[10][6] = {0.0};
 
+// 10 predefined centroids for the articles (the articles are clustered in advance???)
 mat centroidsArma = zeros<mat>(10,6);
 
 vector<double> showsIdeal;
@@ -199,6 +200,7 @@ vector<double> clicksLinUcb;
 vector<double> showsLinRelUcb;
 vector<double> clicksLinRelUcb;
 
+// Position weights - will check what the positioning is for.
 vector<double> posWeight;
 
 sparse_hash_map<long int, struct artFeat*, hash<long int>, eqhash> artHash1;
@@ -206,7 +208,9 @@ sparse_hash_map<long int, struct artFeat*, hash<long int>, eqhash>::iterator it;
 
 sparse_hash_map<long int, long int, hash<long int>, eqhash> articleBirth;
 
+// this is <article , list<ctr> > where list is order of clusters and cluster/article ctr
 sparse_hash_map<long int, vector<double>, hash<long int>, eqhash> idealCtr;
+// same as above but ucb instead of ideal ctr
 sparse_hash_map<long int, vector<double>, hash<long int>, eqhash> currentUcb;
 
 vector<struct idealArt*> sortedCtr[10];
@@ -300,6 +304,7 @@ unsigned int findNearestCentroid(vector<double> user)
     double min_val = distances.min(index);
     return index;
 }
+
 
 struct line* extractFromLogLine(struct line* currLine, const string logLineStr)
 {
@@ -431,7 +436,7 @@ void initialize()
     }
     ctrFile.close();
 
-    /* Reading position weights. Unclear position of what. */
+    /* Reading position weights. This is based on the position where the article is shown. */
     ifstream posFile;
     posFile.open("posWeights", fstream::in);
     int pos = 0;
@@ -461,7 +466,6 @@ void initialize()
     //GP initialize
     numElem = gpOrder.size();
 
-    /* This is interesting. Why are the numbers not simply set to 1 vs 0.05 and 2. */
     means = 0.05 * ones<mat>(numElem, 10);
     numPulls = 2 * ones<mat>(numElem, 10);
     fb =    0.05 * ones<mat>(numElem, 10);
@@ -658,7 +662,7 @@ void bucbSelect(struct line* line1, vector<long int>& selected, int flag)
     vector<long int>::iterator idIter;
 
     unsigned int clusterId = line1->clusterId;
-    artAgeBucb = artAgeBucb + ones<vec>(numElem); // unnecessary line
+    artAgeBucb = artAgeBucb + ones<vec>(numElem); 
 
     if(flag == 1)
     {
@@ -882,17 +886,17 @@ void updateBucb(vector<long int>& selected, vector<double>& showsVec, vector<dou
     }
     else
     {
-        mat kernel1 = kernel(indicesBucb,indicesBucb);
-        mat prec1 = precBucb(indicesBucb,indicesBucb);
+        mat kernel1 = kernel(indicesBucb, indicesBucb);
+        mat prec1 = precBucb(indicesBucb, indicesBucb);
 
         vec fb1 = fbBucb(indicesBucb,id);
         vec beta1 = beta.elem(indicesBucb);
 
         mat cd = chol(kernel1+prec1*noiseVar);
 
-        mat tempDiv1 = solve(cd,kernel1.t());
-        mat tempDiv2 = solve(cd.t(),tempDiv1);
-        mat temp3 = kernel1 - kernel1*tempDiv2;
+        mat tempDiv1 = solve(cd, kernel1.t());
+        mat tempDiv2 = solve(cd.t(), tempDiv1);
+        mat temp3 = kernel1 - kernel1 * tempDiv2;
         vec sigma2 = temp3.diag();
         sigma2 = abs(sigma2);
 
@@ -914,10 +918,8 @@ void updateBucb(vector<long int>& selected, vector<double>& showsVec, vector<dou
     
 void updateGp(vector<long int>& selected, vector<double>& showsVec, vector<double>& clicksVec, struct line* line1, int flag)
 {
-
     vector<unsigned int> posVec;
-
-    for(vector<long int>::iterator it= selected.begin();it!=selected.end();it++)
+    for(vector<long int>::iterator it = selected.begin(); it != selected.end(); it++)
     {
         unsigned int currPos = std::find(gpOrder.begin(), gpOrder.end(), *it) - gpOrder.begin();
         posVec.push_back(currPos);
@@ -927,20 +929,19 @@ void updateGp(vector<long int>& selected, vector<double>& showsVec, vector<doubl
     vec shows = conv_to<vec>::from(showsVec);
     vec clicks = conv_to<vec>::from(clicksVec);
     vec booster = conv_to<vec>::from(posWeight);
-    booster = 1/booster;
-    booster = booster.subvec(0,batchSize-1);
-    clicks = clicks%booster;
+    booster = 1 / booster;
+    booster = booster.subvec(0, batchSize-1);
+    clicks = clicks % booster;
 
     unsigned int clusterId = line1->clusterId;
 
     uvec id = zeros<uvec>(1);
     id = clusterId;
 
-
-    numPulls(pos,id)=numPulls(pos,id)+shows;
-    fb(pos,id) = ((fb(pos,id)%(numPulls(pos,id)-shows))+clicks)/numPulls(pos,id);
+    numPulls(pos, id) = numPulls(pos,id) + shows;
+    fb(pos, id) = ((fb(pos,id) % (numPulls(pos,id) - shows)) + clicks) / numPulls(pos,id);
     //prec precision metrix 
-    mat prec = diagmat(1/numPulls.col(clusterId));
+    mat prec = diagmat(1 / numPulls.col(clusterId));
     artAge = artAge+ones<vec>(numElem);
 
     beta = setBeta(artAge);
@@ -957,19 +958,19 @@ void updateGp(vector<long int>& selected, vector<double>& showsVec, vector<doubl
         }
         beta = setBeta(artAge);
 
-        indices = conv_to< uvec >::from(positionVector);
+        indices = conv_to<uvec>::from(positionVector);
 
         mat cd = chol(kernel + prec*noiseVar);
 
-        mat tempDiv1 = solve(cd,kernel.t());
-        mat tempDiv2 = solve(cd.t(),tempDiv1);
-        mat temp3 = kernel - kernel*tempDiv2;
+        mat tempDiv1 = solve(cd, kernel.t());
+        mat tempDiv2 = solve(cd.t(), tempDiv1);
+        mat temp3 = kernel - kernel * tempDiv2;
         vec sigma2 = temp3.diag();
         sigma2 = abs(sigma2);
 
-        mat tempDiv3 = solve(cd,fb.col(clusterId));
-        mat tempDiv4 = solve(cd.t(),tempDiv3);
-        means.col(clusterId) = kernel*tempDiv4;
+        mat tempDiv3 = solve(cd, fb.col(clusterId));
+        mat tempDiv4 = solve(cd.t(), tempDiv3);
+        means.col(clusterId) = kernel * tempDiv4;
 
         sigma2 = abs(sigma2);
 
@@ -977,14 +978,13 @@ void updateGp(vector<long int>& selected, vector<double>& showsVec, vector<doubl
     }
     else
     {
-        mat kernel1 = kernel(indices,indices);
+        mat kernel1 = kernel(indices, indices);
+        mat prec1 = prec(indices, indices);
 
-        mat prec1 = prec(indices,indices);
-
-        vec fb1 = fb(indices,id);
+        vec fb1 = fb(indices, id);
         vec beta1 = beta.elem(indices);
 
-        mat cd = chol(kernel1+prec1*noiseVar);
+        mat cd = chol(kernel1 + prec1 * noiseVar);
 
         mat tempDiv1 = solve(cd,kernel1.t());
         mat tempDiv2 = solve(cd.t(),tempDiv1);
@@ -992,13 +992,11 @@ void updateGp(vector<long int>& selected, vector<double>& showsVec, vector<doubl
         vec sigma2 = temp3.diag();
         sigma2 = abs(sigma2);
 
-
-
         mat tempDiv3 = solve(cd,fb1);
         mat tempDiv4 = solve(cd.t(),tempDiv3);
         means(indices,id) = kernel1*tempDiv4;
 
-        ucbScore(indices,id) = means(indices,id)+beta1%sqrt(sigma2);
+        ucbScore(indices,id) = means(indices,id) + beta1 % sqrt(sigma2);
 
     }
 
@@ -1166,6 +1164,7 @@ void simulator()
                 extractFromLogLine(line1,logLine);
                 if(line1->click == 1)
                     numClicksTotal++;
+                // initialize articles if a new one is observed
                 for(int artIter = 0 ; artIter < line1->numArts ; artIter++)
                 {
                     if(artHash1.find(line1->artId[artIter]) == artHash1.end())
@@ -1186,6 +1185,7 @@ void simulator()
                     }
                 }
 
+                // Clean up the selected articles
                 idealSelected.clear();
                 vector<long int>().swap(idealSelected);
                 ucbSelected.clear();
@@ -1203,6 +1203,7 @@ void simulator()
                 linRelUcbSelected.clear();
                 vector<long int>().swap(linRelUcbSelected);
 
+                // Select for each one of the types of algos the recommendation
                 idealSelect     (line1, idealSelected,flag);
                 ucbSelect       (line1, ucbSelected);
                 gpSelect        (line1, gpSelected);
@@ -1262,12 +1263,11 @@ void simulator()
                     {
                         (((struct artFeat *)(artHash1[(long int)*it]))->showsGP)++;
                             //double clickIncrement = updateFeedback(idealSelected,line1->dispArt);
-                        double tempClicks = 1?(line1->click==1):0;
-                        numClicksGP+=tempClicks;
+                        double tempClicks = line1->click;
+                        numClicksGP += tempClicks;
                         (((struct artFeat *)(artHash1[(long int)*it]))->clicksGP)+=(tempClicks/posWeight[pos]);
                         lineShowsGP.push_back(1.0);
                         lineClicksGP.push_back(tempClicks);
-
                     }
 
                     updateGp(gpSelected, lineShowsGP,lineClicksGP, line1,flagGP);
@@ -1357,16 +1357,13 @@ void simulator()
 
                 if(randomSelected[0]==line1->dispArt)
                 {
-
-                numShowsRandom+=batchSize;
-
-                for(it = randomSelected.begin(),pos=0;it!=randomSelected.end();pos++,it++)
-                {
-                            //double clickIncrement = updateFeedback(idealSelected,line1->dispArt);
+                    numShowsRandom+=batchSize;
+                    for(it = randomSelected.begin(),pos=0;it!=randomSelected.end();pos++,it++)
+                    {
+                                //double clickIncrement = updateFeedback(idealSelected,line1->dispArt);
                         double tempClicks = 1?(line1->click==1):0;;
                         numClicksRandom+=tempClicks;
-
-                }
+                    }
                 }
 
 
@@ -1387,8 +1384,6 @@ void simulator()
                     struct outStatsLine* randomLine = new struct outStatsLine();
                     struct outStatsLine* linUcbLine = new struct outStatsLine();
                     struct outStatsLine* linRelUcbLine = new struct outStatsLine();
-
-
 
                     idealLine->shows = numShowsIdeal;
                     idealLine->clicks = numClicksIdeal;
@@ -1418,8 +1413,6 @@ void simulator()
                     linRelUcbLine->clicks = numClicksLinRelUcb;
                     linRelUcbLine->ctr = (double)numClicksLinRelUcb/numShowsLinRelUcb;
 
-
-
                     idealStats.push_back(idealLine);
                     ucbStats.push_back(ucbLine);
                     gpStats.push_back(gpLine);
@@ -1427,10 +1420,7 @@ void simulator()
                     randomStats.push_back(randomLine);
                     linUcbStats.push_back(linUcbLine);
                     linRelUcbStats.push_back(linRelUcbLine);
-
-
                 }
-
 
                 if(linesDone%100000==0)
                 {

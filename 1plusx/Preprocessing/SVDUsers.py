@@ -5,7 +5,7 @@ from pandas import DataFrame
 
 leaning_size = 100000
 user_dimension = 100
-new_user_dimension = 20
+new_user_dimension = 100
 total_user_count = 2916809
 
 campaign_id = "809153"
