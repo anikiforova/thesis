@@ -9,9 +9,11 @@ from AlgoBase import AlgoBase
 
 class Regression(AlgoBase):
 	
-	def __init__(self, alpha, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
-		super(Regression, self).__init__(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
+	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
+		super(Regression, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
 
+	def setup(self, alpha):
+		super(Regression, self).setup(alpha)
 		self.o_users = np.array([], dtype=np.uint32)
 		self.o_clicks = np.array([], dtype=np.uint32)
 

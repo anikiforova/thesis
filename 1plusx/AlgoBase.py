@@ -7,8 +7,7 @@ from enum import Enum
 
 class AlgoBase:
 	
-	def __init__(self, alpha, user_embeddings, user_ids, filter_clickers = False, soft_click = False):
-		self.alpha = alpha
+	def __init__(self, user_embeddings, user_ids, filter_clickers = False, soft_click = False):
 		self.filter_clickers = filter_clickers
 		self.soft_click = soft_click
 
@@ -17,10 +16,11 @@ class AlgoBase:
 		self.user_count = len(self.user_hast_to_id)
 		self.user_embeddings = user_embeddings
 		
-		self.predition = np.ones(self.user_count) * 0.02
-
+	def setup(self, alpha):
+		self.alpha = alpha
 		self.clickers = set()
 		self.user_impressions = np.zeros(self.user_count)
+		self.predition = np.ones(self.user_count) * 0.02
 
 	def prepareClicks(self, users, clicks):
 		new_users = [ self.user_hast_to_id[x] for x in users ]
@@ -44,3 +44,6 @@ class AlgoBase:
 			for user in self.clickers:
 				self.predition[user] = 0 # set prediction of clicker to 0 so they don't get selected from now on (unless randomly selected )				
 
+	def getPrediction(self, user_hash):
+		user_id = self.user_hast_to_id[user_hash]
+		return self.predition[user_id]

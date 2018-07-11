@@ -5,15 +5,16 @@ from numpy.linalg import inv
 from AlgoBase import AlgoBase
 
 class LinUCB_Disjoint(AlgoBase):
-	
-	def __init__(self, alpha, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
-		super(LinUCB_Disjoint, self).__init__(alpha, user_embeddings, user_ids, filter_clickers, soft_click)
+	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
+		super(LinUCB_Disjoint, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
 		self.d = dimensions
-		
+
+	def setup(self, alpha):
+		super(LinUCB_Disjoint, self).setup(alpha)
 		self.A = np.identity(self.d)
 		self.A_i =  np.identity(self.d)
 		self.b =  np.zeros(self.d)
-
+			
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
 		users, clicks = super(LinUCB_Disjoint, self).prepareClicks(users, clicks)
