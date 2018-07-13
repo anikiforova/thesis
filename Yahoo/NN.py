@@ -27,7 +27,7 @@ class NN:
 		self.bad_articles = set()
 		# Network Parameters
 
-		self.n_hidden_1  = 64	# 1st hidden layer of neurons
+		self.n_hidden_1  = 10	# 1st hidden layer of neurons
 		self.n_hidden_2  = 32	# 2nd hidden layer of neurons
 		self.n_hidden_3  = 16	# 3rd hidden layer of neurons
 		self.n_input     = 36	# number of features after LSA
@@ -41,10 +41,10 @@ class NN:
 		# }
 
 		self.weights = {
-			# 'h1': tf.Variable(tf.random_normal([self.n_input, self.n_hidden_1], dtype=np.float64)),       
+			'h1': tf.Variable(tf.random_normal([self.n_input, self.n_hidden_1], dtype=np.float64)),       
 			# 'h2': tf.Variable(tf.random_normal([self.n_hidden_1, self.n_hidden_2], dtype=np.float64)),
 			# 'h3': tf.Variable(tf.random_normal([self.n_hidden_2, self.n_hidden_3],dtype=np.float64)),
-			'out': tf.Variable(tf.random_normal([self.n_input, 1], dtype=np.float64))
+			'out': tf.Variable(tf.random_normal([self.n_hidden_1, 1], dtype=np.float64))
 		}
 
 		# self.choose_action = tf.argmax(self.weights, 0)
@@ -95,16 +95,20 @@ class NN:
 		total = self.batch_click_count + self.batch_no_click_count
 		
 		if total % self.mini_batch_size == 0 and self.batch_click_count > 0:
-			sample_size = total / 2
-			total = sample_size * 2
-			self.batch_a_clicks 	= np.random.sample(self.batch_a_clicks, sample_size, True).reshape([sample_size, self.d])
-			self.batch_a_no_clicks  = np.random.sample(self.batch_a_no_clicks, sample_size, False).reshape([sample_size, self.d])
+			sample_size = int(total / 2)
+			total = int(sample_size * 2)
 
+			sample_clicks 			= np.random.choice(np.arange(0, self.batch_click_count), sample_size, True)
+			sample_no_clicks 		= np.random.choice(np.arange(0, self.batch_no_click_count), sample_size, False)
+			
+			self.batch_a_clicks 	= self.batch_a_clicks.reshape([self.batch_click_count, self.d])[sample_clicks]
+			self.batch_a_no_clicks 	= self.batch_a_no_clicks.reshape([self.batch_no_click_count, self.d])[sample_no_clicks]
+				
 			articles = np.append(self.batch_a_clicks, self.batch_a_no_clicks).reshape([ total, self.d])
 			clicks = np.append(np.ones(sample_size), np.zeros(sample_size)).reshape([ total, 1])
 
 			_, c = self.session.run([self.optimizer, self.cost], feed_dict={self.x: articles, self.y: clicks})
-			avg_cost = c / (2 * click_count)
+			avg_cost = c / (total)
 
 			print("Training error=", "{:.9f}".format(avg_cost))
 			self.batch_a_clicks 		= np.array([])
@@ -203,9 +207,9 @@ class NN:
 
 	def multilayer_perceptron(self, x, weights):
 	    # First hidden layer with SIGMOID activation
-	    # layer_1 = tf.matmul(x, weights['h1'])
-	    # layer_1 = tf.nn.sigmoid(layer_1)
+	    layer_1 = tf.matmul(x, weights['h1'])
+	    layer_1 = tf.nn.sigmoid(layer_1)
 	    # # Output layer with SIGMOID activation
-	    out_layer = tf.matmul(x, weights['out'])
-	   # out_layer = tf.nn.relu(out_layer)
+	    out_layer = tf.matmul(layer_1, weights['out'])
+	    out_layer = tf.nn.sigmoid(out_layer)
 	    return out_layer
