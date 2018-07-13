@@ -632,7 +632,6 @@ vec setBeta(vec & artAgeLocal)
         beta = max(join_rows(0.6*ones<vec>(numElem),0.6*log(artAgeLocal/(5000000/5))),1);
     }
     return beta;
-
 }
 
 /* Same as all selects. */
@@ -892,7 +891,7 @@ void updateBucb(vector<long int>& selected, vector<double>& showsVec, vector<dou
         vec fb1 = fbBucb(indicesBucb,id);
         vec beta1 = beta.elem(indicesBucb);
 
-        mat cd = chol(kernel1+prec1*noiseVar);
+        mat cd = chol(kernel1 + prec1 * noiseVar);
 
         mat tempDiv1 = solve(cd, kernel1.t());
         mat tempDiv2 = solve(cd.t(), tempDiv1);
@@ -900,10 +899,10 @@ void updateBucb(vector<long int>& selected, vector<double>& showsVec, vector<dou
         vec sigma2 = temp3.diag();
         sigma2 = abs(sigma2);
 
-        mat tempDiv3 = solve(cd,fb1);
-        mat tempDiv4 = solve(cd.t(),tempDiv3);
+        mat tempDiv3 = solve(cd, fb1);
+        mat tempDiv4 = solve(cd.t(), tempDiv3);
 
-        meansBucb(indicesBucb,id) = kernel1*tempDiv4;
+        meansBucb(indicesBucb,id) = kernel1 * tempDiv4;
         bucbScore(indicesBucb,id) = meansBucb(indicesBucb,id) + beta1 % sqrt(sigma2);
     }
 
@@ -962,15 +961,15 @@ void updateGp(vector<long int>& selected, vector<double>& showsVec, vector<doubl
 
         mat cd = chol(kernel + prec*noiseVar);
 
-        mat tempDiv1 = solve(cd, kernel.t());
-        mat tempDiv2 = solve(cd.t(), tempDiv1);
+        mat v = solve(cd, kernel.t());
+        mat tempDiv2 = solve(cd.t(), v);
         mat temp3 = kernel - kernel * tempDiv2;
         vec sigma2 = temp3.diag();
         sigma2 = abs(sigma2);
 
         mat tempDiv3 = solve(cd, fb.col(clusterId));
-        mat tempDiv4 = solve(cd.t(), tempDiv3);
-        means.col(clusterId) = kernel * tempDiv4;
+        mat a = solve(cd.t(), tempDiv3);
+        means.col(clusterId) = kernel * a;
 
         sigma2 = abs(sigma2);
 

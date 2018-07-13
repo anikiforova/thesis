@@ -13,6 +13,7 @@ from LinUCB_Disjoint import LinUCB_Disjoint
 from TS_Lin import TS_Lin
 from GP_Clustered import GP_Clustered
 from GP_FITC import GP_FITC
+from NN import NN
 # from Random import Random
 
 def normalize_dimension(dimension):
@@ -22,14 +23,14 @@ def normalize_dimension(dimension):
 
 total_lines = 14392074
 
-alphas 							= [0.02, 0.01, 0.001] #[0.001, 0.005, 0.01, 0.02, 0.05]
+alphas 							= [0.02] #[0.001, 0.005, 0.01, 0.02, 0.05]
 user_recommendation_part 		= [0.02]
 hours 							= 1
 time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
 
 print_output 		= True
 print_mse 			= True
-read_clustered_data = True
+read_clustered_data = False
 soft_click 			= False
 filter_clickers 	= False
 
@@ -38,7 +39,7 @@ dimensions = 100
 number_of_clusters = 10
 
 clusters = "" # "_svd_" + str(dimensions)
-algoName = "LinUCB_Disjoint"
+algoName = "NN"
 algo_path = "{}_{}h_soft{}_filter{}{}".format(algoName, hours, soft_click, filter_clickers, clusters)
 
 if print_output:
@@ -83,7 +84,7 @@ print(" Done.")
 
 # regressor = Regressor.LinearRegression
 
-algo = TS_FITC(user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers, soft_click)
+algo = NN(user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers, soft_click)
 
 for alpha in alphas:
 	for part in user_recommendation_part:

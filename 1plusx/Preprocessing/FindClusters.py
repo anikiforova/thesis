@@ -5,7 +5,7 @@ import random
 from pandas import read_csv
 from pandas import DataFrame
 
-clusters = 10
+clusters = 100
 leaning_size = 100000
 user_dimension = 100
 
@@ -13,7 +13,7 @@ campaign_id = "809153"
 users_processed_path = "../../RawData/Campaigns/{0}/Processed/"
 
 infile_pattern = users_processed_path.format(campaign_id) + "all_users.csv"
-outfile_pattern = users_processed_path.format(campaign_id) + "all_users_clusters_10.csv"
+outfile_pattern = users_processed_path.format(campaign_id) + "all_users_clusters_{0}.csv".format(clusters)
 
 print("Reading user information.")
 users = read_csv(infile_pattern, ",")

@@ -17,17 +17,20 @@ class GP_Clustered(AlgoBase):
 		self.cluster_count = len(self.cluster_embeddings)
 		self.d = dimensions
 		self.noiseVar = 0.1
-		self.K = np.zeros(self.cluster_count * self.cluster_count).reshape([self.cluster_count, self.cluster_count])
-
+		# mkernel = RBF()
+		# self.K = mkernel(self.cluster_embeddings)
+		self.K = np.identity(self.cluster_count)
 		self.calculate_kernel()
-		self.K += np.random.normal(0, 0.001, self.cluster_count * self.cluster_count).reshape([self.cluster_count, self.cluster_count]) # add error
-
+		# self.K += np.identity(self.cluster_count) * self.noiseVar
+		
 		self.K_u_c = np.zeros(self.user_count * self.cluster_count).reshape([self.user_count, self.cluster_count])
 		self.u_to_c = np.zeros(self.user_count, dtype=int)
 		self.k_u_u = np.zeros(self.user_count)
 		self.calculate_users_to_clusters()
 		
 		# self.kernel = RBF()
+		self.Kernel = RBF()
+
 		# print(self.kernel())
 		print("Done.")
 
@@ -63,10 +66,10 @@ class GP_Clustered(AlgoBase):
 			self.ctr[user_cluster_id] = self.clicks_per_cluster[user_cluster_id] / self.impressions_per_cluster[user_cluster_id]
 
 		print("Done with updating clicks..")
-		# cur_k = self.K + np.diag(1.0/self.impressions_per_cluster) * self.noiseVar
-		# cur_k_inv = inv(cur_k)
-		cur_k = self.K 
-		cur_k_inv = inv(self.K)
+		cur_k = self.K + np.diag(self.noiseVar/self.impressions_per_cluster) 
+		cur_k_inv = inv(cur_k)
+		# cur_k = self.K 
+		# cur_k_inv = inv(self.K)
 
 		print("Done with inversion..")
 		for user_index in np.arange(0, self.user_count):
@@ -74,7 +77,8 @@ class GP_Clustered(AlgoBase):
 			var = self.k_u_u[user_index] - mid.dot(self.K_u_c[user_index].reshape([self.cluster_count, 1]))
 			mean = mid.dot(self.ctr) # UxC . Cx1 = Ux1
 			
-			self.predition[user_index] = mean + self.alpha * np.sqrt(var)
+			self.predition[user_index] = np.random.normal(mean, np.sqrt(var))
+			# self.predition[user_index] = mean + self.alpha * np.sqrt(var)
 		print("Done with predition..")
 		super(GP_Clustered, self).predictionPosprocessing(users, clicks)		
 		print(" Done.")
