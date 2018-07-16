@@ -43,7 +43,7 @@ selectNecessaryColumns <- function(df, columns) {
 }
 
 prepData <- function(files) {
-  data <- read.csv(file=paste0(path, paste0("LinUCB_Disjoint", ".csv")), header=TRUE, sep=",")
+  data <- read.csv(file=paste0(path, paste0(files[1], ".csv")), header=TRUE, sep=",")
   columns = c("MSE", "Impressions", "CumulativeMSE", "RecommendationSizePercent","TotalImpressions","Method", "Alpha","Timestamp")
   data = selectNecessaryColumns(data, columns)
   for (name in files){
@@ -61,19 +61,29 @@ prepData <- function(files) {
   
 ```
 
+```{r LinUCB_Disjoint, include=TRUE, echo=FALSE}
+
+files = c("LinUCB_Disjoint", "Random")
+data = prepData(files)
+selected = data[data$TotalImpressions > 100000,]
+ggplot(selected, aes(x=Timestamp, y=MSE, colour=Factor)) + 
+  geom_line() +
+    xlab("Timestamp") + ylab("Log10 MSE") +
+  scale_y_log10()+
+  # scale_x_continuous(labels=formatterM())+
+    theme_bw() + ggtitle("MSE LinUCB_Disjoint")
+
+```
 ```{r Random, include=TRUE, echo=FALSE}
 
-files = c("NN")
+files = c("LinUCB_Disjoint")
 data = prepData(files)
 ggplot(data, aes(x=TotalImpressions, y=CumulativeMSE, colour=Factor)) + 
   geom_line() +
- #     stat_smooth(aes(x=TotalImpressions, y=MSE), method = "lm", formula = y ~ poly(x, 10), se = FALSE) +
-    xlab("Impressions") + ylab("% of Clicks") +
-   # expand_limits(y=c(0,0.1)) +
-  #+ 
-  #scale_y_log10()+
-    #scale_x_continuous(labels=formatterM())+
-    theme_bw() + ggtitle("Regression 4h (Cumulative)") +
-    scale_color_discrete(name="User Percentage", labels=formatterPretty())
+#  scale_y_log10()+
+    xlab("Impressions") + ylab("Cumulative MSE") +
+    scale_x_continuous(labels=formatterM())+
+    theme_bw() + ggtitle("Cumulative MSE LinUCB_Disjoint") +
+    scale_color_discrete(name="User Percentage")
 
 ```

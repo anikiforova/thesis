@@ -9,10 +9,10 @@ from AlgoBase import AlgoBase
 
 class GP_Clustered(AlgoBase):
 	
-	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
+	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, click_percent = 0.5, equalize_clicks = False, filter_clickers = False, soft_click = False):
 		print("Starting GP_Clustered setup ...", end='', flush=True)	
-		super(GP_Clustered, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
-
+		super(GP_Clustered, self).__init__(user_embeddings, user_ids, click_percent, equalize_clicks, filter_clickers, soft_click)
+			
 		self.cluster_embeddings = cluster_embeddings
 		self.cluster_count = len(self.cluster_embeddings)
 		self.d = dimensions
@@ -21,7 +21,7 @@ class GP_Clustered(AlgoBase):
 		# self.K = mkernel(self.cluster_embeddings)
 		self.K = np.identity(self.cluster_count)
 		self.calculate_kernel()
-		# self.K += np.identity(self.cluster_count) * self.noiseVar
+		self.K += np.identity(self.cluster_count) * self.noiseVar
 		
 		self.K_u_c = np.zeros(self.user_count * self.cluster_count).reshape([self.user_count, self.cluster_count])
 		self.u_to_c = np.zeros(self.user_count, dtype=int)
@@ -66,20 +66,30 @@ class GP_Clustered(AlgoBase):
 			self.ctr[user_cluster_id] = self.clicks_per_cluster[user_cluster_id] / self.impressions_per_cluster[user_cluster_id]
 
 		print("Done with updating clicks..")
-		cur_k = self.K + np.diag(self.noiseVar/self.impressions_per_cluster) 
+		print("Adding variance:")
+		variance_change = self.noiseVar/self.impressions_per_cluster
+		print(variance_change)
+		cur_k = self.K + np.diag(variance_change) 
 		cur_k_inv = inv(cur_k)
 		# cur_k = self.K 
 		# cur_k_inv = inv(self.K)
 
 		print("Done with inversion..")
+		diff = 0.0
 		for user_index in np.arange(0, self.user_count):
 			mid = self.K_u_c[user_index].reshape([1, self.cluster_count]).dot(cur_k_inv) # 1 x C
 			var = self.k_u_u[user_index] - mid.dot(self.K_u_c[user_index].reshape([self.cluster_count, 1]))
 			mean = mid.dot(self.ctr) # UxC . Cx1 = Ux1
 			
-			self.prediction[user_index] = np.random.normal(mean, np.sqrt(var))
-			# self.prediction[user_index] = mean + self.alpha * np.sqrt(var)
-		print("Done with prediction..")
+			# /self.prediction[user_index] = np.random.normal(mean, np.sqrt(var))
+			new_value = mean + self.alpha * np.sqrt(var)
+			diff += (self.prediction[user_index] - new_value)**2
+			self.prediction[user_index] = new_value
+			if user_index < 10:
+				print("mean:{0} var:{1} value:{2} ".format(mean, np.sqrt(var), new_value))
+
+
+		print("Done with prediction..Difference in predictions {0}".format(diff/self.user_count))
 		super(GP_Clustered, self).predictionPosprocessing(users, clicks)		
 		print(" Done.")
 

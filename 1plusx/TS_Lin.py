@@ -6,13 +6,15 @@ from AlgoBase import AlgoBase
 
 class TS_Lin(AlgoBase):
 	
-	def __init__(self, user_embeddings, user_ids, dimensions, filter_clickers = False, soft_click = False):
-		super(TS_Lin, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
+	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, click_percent = 0.5, equalize_clicks = False, filter_clickers = False, soft_click = False):
+		super(TS_Lin, self).__init__(user_embeddings, user_ids, click_percent, equalize_clicks, filter_clickers, soft_click)	
+	# def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
+	# 	super(TS_Lin, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
 		self.d = dimensions
 		self.impressions = 100
 
 	def setup(self, alpha):
-		super(Regression, self).setup(alpha)
+		super(TS_Lin, self).setup(alpha)
 		self.B = np.identity(self.d)
 		self.B_i = np.identity(self.d)
 		self.cov = np.identity(self.d)

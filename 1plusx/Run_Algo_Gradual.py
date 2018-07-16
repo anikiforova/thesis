@@ -23,7 +23,7 @@ def normalize_dimension(dimension):
 
 total_lines = 14392074
 
-alphas 							= [0.001] #[0.001, 0.005, 0.01, 0.02, 0.05]
+alphas 							= [0.0001] #[0.001, 0.005, 0.01, 0.02, 0.05]
 user_recommendation_part 		= [0.02] 
 user_train_part 				= [0.02]
 hours 							= 1
@@ -35,24 +35,23 @@ read_clustered_data = True
 soft_click 			= False
 filter_clickers 	= False
 equalize_clicks 	= False
-equalize_size 		= 0.95
-
-dimensions 			= 100
-number_of_clusters 	= 10
+equalize_size 		= 0.8
+dimensions = 100
+number_of_clusters = 10
 
 clusters =""# "_svd_" + str(dimensions)
-algoName = "GP_Clustered"
+algoName = "TS_Lin"
 additional_info = "soft{}_filter{}_clusters{}_equalize_{}".format(soft_click, filter_clickers, clusters, equalize_clicks)
 
 if print_output:
-	output = open("./Results/{0}.csv".format(algoName), "a")
-	# output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize,Timestamp,Alpha,TrainPart\n")
+	output = open("./Results/{0}_Equalize.csv".format(algoName), "a")
+#	output.write("Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize,Timestamp,Alpha,TrainPart\n")
 if print_mse:
-	output_mse = open("./Results/MSE/{0}.csv".format(algoName), "a")
-	# output_mse.write("MSE,CumulativeMSE,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize,Timestamp,Alpha,TrainPart\n")
+	output_mse = open("./Results/MSE/{0}_Equalize.csv".format(algoName), "a")
+	#output_mse.write("MSE,CumulativeMSE,TotalImpressions,Method,RecommendationSizePercent,RecommendationSize,Timestamp,Alpha,TrainPart\n")
 
 algoName += clusters #+ "_f" + str(filter_clickers)
-algoName += ""#"_Equalize_" + str(equalize_size)#"_AdamOptimizer"
+algoName += "_GRS"#"_AdamOptimizer"
 
 name = "809153"
 path = "..//..//RawData//Campaigns"
@@ -87,11 +86,12 @@ print(" Done.")
 
 # regressor = Regressor.LinearRegression
 
-algo = GP_Clustered(user_embeddings, user_ids, cluster_embeddings, dimensions, equalize_size, equalize_clicks, filter_clickers, soft_click)
+algo = TS_Lin(user_embeddings, user_ids, cluster_embeddings, dimensions, equalize_size, equalize_clicks, filter_clickers, soft_click)
 
 for alpha in alphas:
 	for part in user_recommendation_part:
-		for train_part in user_train_part: 
+		for train_part in user_train_part:
+			initial_recommendation_part = 0.5
 			impression_count = 1.0
 			click_count = 0.0
 			total_impressions = 0.0
@@ -103,14 +103,14 @@ for alpha in alphas:
 			total_local_clicks = 0.0
 			impressions_per_recommendation_group = 0.0
 
+			total_user_ids = len(user_ids)
+
 			SE = 0.0
 			cumulative_SE = 0.0 
 
 			users_to_update = list()
 			clicks_to_update = list()
-			user_recommendation_size = int(len(user_ids) * part)
-			user_train_size = int(len(user_ids) * train_part)
-
+			
 			print("Starting evaluation of {0} with recommendation of size: {1}% train size {2}% and alpha: {3}".format(algoName, part * 100, train_part*100, alpha))
 			input = open("{0}//{1}//Processed//sorted_time_impressions.csv".format(path, name), "r")
 			input.readline() # get rid of header
@@ -141,15 +141,20 @@ for alpha in alphas:
 					continue	
 
 				if (timestamp - hour_begin_timestamp).seconds >= time_between_updates_in_seconds and len(users_to_update) > 1000:
+					cur_recommendation_part = max(initial_recommendation_part, part)
+					initial_recommendation_part = initial_recommendation_part / 2.0 
+
+					user_recommendation_size = int(total_user_ids * cur_recommendation_part)
+					user_train_size = int(total_user_ids * cur_recommendation_part)
+
+					print("Recommendation size is: {0}".format(user_recommendation_size))
 					recommended_users = algo.get_recommendations(user_recommendation_size)
 					train_users = algo.get_recommendations(user_train_size)
 					if len(clicks_to_update) != 0:
 						if print_mse:
 							MSE = SE / impressions_per_recommendation_group
 							cumulative_MSE = cumulative_SE / total_impressions
-							# output_mse.write("{0},{1},{2},{3},{4},{5},{6},{7},{8}\n".format(MSE, cumulative_MSE, total_impressions, algoName, part, user_recommendation_size, timestamp_raw, alpha, train_part))
-							output_mse.write("{0},{1},{2},{3},{4},{5},{6},{7}\n".format(MSE, cumulative_MSE, total_impressions, algoName, part, user_recommendation_size, timestamp_raw, alpha))
-
+							output_mse.write("{0},{1},{2},{3},{4},{5},{6},{7},{8}\n".format(MSE, cumulative_MSE, total_impressions, algoName, part, user_recommendation_size, timestamp_raw, alpha, train_part))
 							output_mse.flush()
 						SE = 0.0
 						impressions_per_recommendation_group = 0.0
@@ -181,7 +186,7 @@ for alpha in alphas:
 					print('{:.2%} Common Impressions: {} Cumulative CTR: {:.3%} CTR:{:.3%} Cumulative MC: {:.3%} MC:{:.3%}'.format(total_impressions/total_lines, int(impression_count), click_count/impression_count, local_clicks/local_count, missed_clicks/total_clicks, local_missed_clicks/total_local_clicks))
 
 					if print_output:
-						output.write("{0},{1},{2},{3},{4},{5},{6},{7}\n".format(click_count, impression_count, total_impressions, algoName, part, user_recommendation_size, timestamp_raw, alpha))
+						output.write("{0},{1},{2},{3},{4},{5},{6},{7},{8}\n".format(click_count, impression_count, total_impressions, algoName, part, user_recommendation_size, timestamp_raw, alpha, train_part))
 						output.flush()
 
 					local_clicks = 0.0	

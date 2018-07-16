@@ -1,7 +1,7 @@
 
 import glob
 
-for name in glob.glob("./Results/*.csv"):
+for name in glob.glob("./Results/TS_Lin_Equal*.csv"):
 	nameParts = name.split("/")
 	print(name)
 	input_file = name

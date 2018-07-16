@@ -92,7 +92,7 @@ ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) +
 ```
 ```{r random, include=TRUE, echo=FALSE}
 
-plot_results("NN")
+plot_results("Random")
 
 ```
 
@@ -174,6 +174,28 @@ selected = data[(data$Method == "Random")
 ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
   geom_line() + xlab("Impressions") + ylab("% of Clicks") +
   expand_limits(y=c(4,7), x=c(0, 225000)) + theme_bw() + 
+  ggtitle("Egreedy Comparison")
+
+```
+
+
+```{r all_algos, include=TRUE, echo=FALSE}
+
+files = c("NN", "EGreedy_Lin", "NN_Lin", "NN_Lin_50_50")
+data <- read.csv(file=paste0(path, paste0("Random.csv")), header=TRUE, sep=",")
+for (name in files){
+  data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
+  data <- rbind(data, data1)  
+}
+
+data$Percent = data$Clicks / data$Impressions * 100
+data$Factor = paste(data$Method, data$Alpha, sep=" ")
+
+selected = data
+
+ggplot(selected, aes(x=Impressions, y=Percent, colour=Factor)) + 
+  geom_line() + xlab("Impressions") + ylab("% of Clicks") +
+  expand_limits(y=c(4,5), x=c(0, 225000)) + theme_bw() + 
   ggtitle("Egreedy Comparison")
 
 ```

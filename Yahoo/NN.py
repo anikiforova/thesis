@@ -116,40 +116,6 @@ class NN:
 			self.batch_click_count 		= 0	
 			self.batch_no_click_count 	= 0
 
-		# if click :
-		# 	self.batch_a_clicks = np.append(self.batch_a_clicks, pair)
-		# 	self.batch_clicks = np.append(self.batch_clicks, click)
-		# else: 
-		# 	self.batch_a_no_clicks = np.append(self.batch_a_no_clicks, pair)
-		# 	self.batch_no_clicks = np.append(self.batch_no_clicks, click)
-
-		# click_count = len(self.batch_clicks)
-		# no_click_count = len(self.batch_no_clicks)	
-		# # print(str(click_count) + " " + str(no_click_count) + " " + str(click_count +no_click_count))
-		# if (click_count + no_click_count) % self.mini_batch_size == 0 and click_count > 0:	
-		# 	# print("Trainging 	")
-		# 	click_sample_size = int(no_click_count * 0.2)
-		# 	sample_size = no_click_count + click_sample_size
-		# 	sample = np.random.choice(np.arange(0, click_count), click_sample_size, True)
-		# 	self.batch_a_clicks = self.batch_a_clicks.reshape([click_count, self.d])[sample]
-		# 	self.batch_clicks = self.batch_clicks[sample]
-
-		# 	articles = np.append(self.batch_a_clicks, self.batch_a_no_clicks).reshape([sample_size, self.d])
-		# 	clicks = np.append(self.batch_clicks, self.batch_no_clicks).reshape([sample_size, 1])
-			
-		# 	_, c = self.session.run([self.optimizer, self.cost], feed_dict={self.x: articles, self.y: clicks})
-
-		# 	self.batch_a_clicks = np.array([])
-		# 	self.batch_clicks = np.array([])
-		# 	self.batch_a_no_clicks = np.array([])
-		# 	self.batch_no_clicks = np.array([])
-
-		# 	# Display logs per epoch
-		# 	# if self.epoch % self.display_step == 0:
-		# 	avg_cost = c / (2 * click_count)
-		# 	print("Epoch:", '%05d' % self.epoch, "Training error=", "{:.9f}".format(avg_cost))
-		# 	self.epoch += 1
-
 	def warmup(self, fo):
 		pass
 
