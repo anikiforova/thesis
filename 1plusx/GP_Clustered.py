@@ -77,14 +77,14 @@ class GP_Clustered(AlgoBase):
 			var = self.k_u_u[user_index] - mid.dot(self.K_u_c[user_index].reshape([self.cluster_count, 1]))
 			mean = mid.dot(self.ctr) # UxC . Cx1 = Ux1
 			
-			self.predition[user_index] = np.random.normal(mean, np.sqrt(var))
-			# self.predition[user_index] = mean + self.alpha * np.sqrt(var)
-		print("Done with predition..")
+			self.prediction[user_index] = np.random.normal(mean, np.sqrt(var))
+			# self.prediction[user_index] = mean + self.alpha * np.sqrt(var)
+		print("Done with prediction..")
 		super(GP_Clustered, self).predictionPosprocessing(users, clicks)		
 		print(" Done.")
 
 	def get_recommendations(self, count):
-		recommendation_ids = self.predition.argsort()[-count:][::-1]
+		recommendation_ids = self.prediction.argsort()[-count:][::-1]
 		recommendation_hashes = [ self.user_id_to_hash[x] for x in recommendation_ids ]
 
 		return set(recommendation_hashes)

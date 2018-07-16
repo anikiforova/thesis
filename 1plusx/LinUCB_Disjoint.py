@@ -31,14 +31,14 @@ class LinUCB_Disjoint(AlgoBase):
 
 		index = 0
 		for embedding in self.user_embeddings:
-			self.predition[index] = embedding.dot(theta) + self.alpha * math.sqrt(embedding.reshape([1, self.d]).dot(self.A_i).dot(embedding))
+			self.prediction[index] = embedding.dot(theta) + self.alpha * math.sqrt(embedding.reshape([1, self.d]).dot(self.A_i).dot(embedding))
 			index += 1
 
 		super(LinUCB_Disjoint, self).predictionPosprocessing(users, clicks)		
 		print(" Done.")
 
 	def get_recommendations(self, count):
-		recommendation_ids = self.predition.argsort()[-count:][::-1]
+		recommendation_ids = self.prediction.argsort()[-count:][::-1]
 		recommendation_hashes = [ self.user_id_to_hash[x] for x in recommendation_ids ]
 
 		return set(recommendation_hashes)

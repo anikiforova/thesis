@@ -42,7 +42,7 @@ class TS_Lin(AlgoBase):
 		index = 0
 		sample_mu = np.random.multivariate_normal(self.mu, self.cov, self.user_count)
 		for embedding in self.user_embeddings:
-			self.predition[index] = embedding.dot(sample_mu[index])
+			self.prediction[index] = embedding.dot(sample_mu[index])
 			index += 1	
 
 		self.impressions += train_user_count
@@ -50,7 +50,7 @@ class TS_Lin(AlgoBase):
 		print(" Done.")
 
 	def get_recommendations(self, count):
-		recommendation_ids = self.predition.argsort()[-count:][::-1]
+		recommendation_ids = self.prediction.argsort()[-count:][::-1]
 		recommendation_hashes = [ self.user_id_to_hash[x] for x in recommendation_ids ]
 
 		return set(recommendation_hashes)

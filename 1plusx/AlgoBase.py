@@ -20,7 +20,7 @@ class AlgoBase:
 		self.alpha = alpha
 		self.clickers = set()
 		self.user_impressions = np.zeros(self.user_count)
-		self.predition = np.ones(self.user_count) * 0.02
+		self.prediction = np.ones(self.user_count) * 0.02
 
 	def prepareClicks(self, users, clicks):
 		new_users = np.array([ self.user_hash_to_id[x] for x in users ])
@@ -42,15 +42,15 @@ class AlgoBase:
 				self.clickers.add(user)
 
 			for user in self.clickers:
-				self.predition[user] = 0 # set prediction of clicker to 0 so they don't get selected from now on (unless randomly selected )				
+				self.prediction[user] = 0 # set prediction of clicker to 0 so they don't get selected from now on (unless randomly selected )				
 
 	def getPrediction(self, user_hash):
 		user_id = self.user_hash_to_id[user_hash]
-		return self.predition[user_id]
+		return self.prediction[user_id]
 
 	def get_recommendations(self, count):
-		recommendation_ids = self.predition.argsort()[-count:][::-1]
-		print("Best prediction:" + str(self.predition[recommendation_ids[0]]))
+		recommendation_ids = self.prediction.argsort()[-count:][::-1]
+		print("Best prediction:" + str(self.prediction[recommendation_ids[0]]))
 		recommendation_hashes = [ self.user_id_to_hash[x] for x in recommendation_ids ]
 
 		return set(recommendation_hashes)

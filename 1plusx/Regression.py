@@ -29,7 +29,7 @@ class Regression(AlgoBase):
 		
 		self.model = linear_model.LinearRegression()
 		self.model.fit(cur_users, self.o_clicks)
-		self.predition = self.model.predict(self.user_embeddings)
+		self.prediction = self.model.predict(self.user_embeddings)
 
 		super(Regression, self).predictionPosprocessing(users, clicks)	
 		print(" Done.")
@@ -38,7 +38,7 @@ class Regression(AlgoBase):
 		explore = int( self.alpha * count )
 		exploit = count - explore
 
-		ordered_predictions = self.predition.argsort()
+		ordered_predictions = self.prediction.argsort()
 		recommendation_ids_exploit = ordered_predictions[-exploit:][::-1]
 		recommendation_ids_explore = np.random.choice(ordered_predictions[:exploit], explore, replace= False)
 

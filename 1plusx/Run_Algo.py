@@ -24,7 +24,7 @@ def normalize_dimension(dimension):
 total_lines = 14392074
 
 alphas 							= [0.02] #[0.001, 0.005, 0.01, 0.02, 0.05]
-user_recommendation_part 		= [0.02]
+user_recommendation_part 		= [0.02, 0.05, 0.1] 
 hours 							= 1
 time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
 
@@ -38,7 +38,7 @@ filter_clickers 	= False
 dimensions = 100
 number_of_clusters = 10
 
-clusters = "" # "_svd_" + str(dimensions)
+clusters =""# "_svd_" + str(dimensions)
 algoName = "NN"
 algo_path = "{}_{}h_soft{}_filter{}{}".format(algoName, hours, soft_click, filter_clickers, clusters)
 
@@ -132,7 +132,7 @@ for alpha in alphas:
 
 			if warmup and (timestamp - hour_begin_timestamp).seconds < time_between_updates_in_seconds: 
 				users_to_update.append(user_id)
-				clicks_to_update.append(click)	
+				clicks_to_update.append(click)
 				continue	
 
 			if (timestamp - hour_begin_timestamp).seconds >= time_between_updates_in_seconds and len(users_to_update) > 1000:
