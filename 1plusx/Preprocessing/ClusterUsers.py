@@ -33,18 +33,24 @@ clusters = np.array(clusters).reshape([cluster_count, user_dimension])
 
 print("Read user info..")
 users = read_csv(users_file_path, ",")
-# assign users to clusters and give relative distance to clusters
 print("Process user info..")
 users['UserEmbedding'] = users['UserEmbedding'].apply(lambda x: np.fromstring(x[1:-1], sep=" "))
+print("Calculate user cluster embeddings..")
 users["ClusteredEmbedding"] = users["UserEmbedding"].apply(lambda x: get_embedding(x, clusters))
 
 print("Output new user cluster info..")
 # output users to file using clustered embedding inctead of the user embedding
-output = open(clustered_users_output_path, "w")
-output.write("UserEmbedding,UserHash\n")
-for index, row in users.iterrows():
-	user_str = np.array2string(row["ClusteredEmbedding"], separator=' ')[1:-1].replace('\n', '')
-	output.write("{0},{1}\n".format(user_str, row["UserHash"]))
-	output.flush()
+# output = open(clustered_users_output_path, "w")
+# output.write("UserEmbedding,UserHash\n")
+# for index, row in users.iterrows():
+	# user_str = np.array2string(row["ClusteredEmbedding"], separator=' ')[1:-1].replace('\n', '')
+	# output.write("{0},{1}\n".format(user_str, row["UserHash"]))
+	# output.flush()
 
-output.close()
+# output.close()
+cluster_counts = np.zeros(cluster_count)
+for index, row in users.iterrows():
+	max_cluster_id = np.argmax(row["ClusteredEmbedding"])
+	cluster_counts[max_cluster_id] += 1
+
+print(cluster_counts)

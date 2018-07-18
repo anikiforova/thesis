@@ -9,21 +9,7 @@ library(ggplot2)
 library(scales)
 library(gridExtra)
 
-path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/MSE/"
-plot_results <- function(algorith_name="Random") {
-  
-  data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
-  data$Percent = data$Clicks / data$Impressions * 100
-  data$Factor = paste(data$Method, sep=" ")
-
-  ggplot(data, aes(x=TotalImpressions, y=MSE, colour=Factor)) + 
-     geom_line() +
-#    stat_smooth(aes(x = TotalImpressions, y =MSE), method = "lm",
- #               formula = y ~ poly(x, 2), se = FALSE) +
-    xlab("Impressions") + ylab("% of Clicks") +
-    #expand_limits(y=c(4,7.5), x=c(0, 225000)) + 
-    theme_bw() + ggtitle(algorith_name)
-}
+path_mse = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/MSE/"
 
 formatterM <- function(){
   function(x) paste(x/1000000, "M")
@@ -42,12 +28,12 @@ selectNecessaryColumns <- function(df, columns) {
   df[,columns]
 }
 
-prepData <- function(files) {
-  data <- read.csv(file=paste0(path, paste0(files[1], ".csv")), header=TRUE, sep=",")
-  columns = c("MSE", "Impressions", "CumulativeMSE", "RecommendationSizePercent","TotalImpressions","Method", "Alpha","Timestamp")
+prepMSEData <- function(files) {
+  data <- read.csv(file=paste0(path_mse, paste0(files[1], ".csv")), header=TRUE, sep=",")
+  columns = c("MSE", "Impressions", "CumulativeMSE", "RecommendationSizePercent","TotalImpressions","Method", "Alpha","Timestamp","TrainPart")
   data = selectNecessaryColumns(data, columns)
   for (name in files){
-    data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
+    data1 <- read.csv(file=paste0(path_mse, paste0(name, ".csv")), header=TRUE, sep=",")
     data1 = selectNecessaryColumns(data1, columns)
     data <- rbind(data, data1)  
   }
@@ -60,30 +46,103 @@ prepData <- function(files) {
 }
   
 ```
+```{r Random_0_1, include=TRUE, echo=FALSE}
 
+files = c("Random_0_1", "Random")
+data = prepData(files)
+
+ggplot(data, aes(x=TotalImpressions)) + 
+  geom_line(aes(y=MSE, colour=Factor),linetype = "dashed") +
+  geom_line(aes(y=Percent, colour=Factor)) +
+    xlab("Impressions") + ylab("MSE") + 
+  scale_y_continuous(sec.axis = sec_axis(~.*1, name = "CTR"))+
+    theme_bw() + ggtitle("MSE Random float vs discrete")
+
+```
+```{r TS_Lin_MSE, include=TRUE, echo=FALSE}
+
+files = c("TS_Lin_MSE")
+data = prepData(files)
+
+selected = data[data$TotalImpressions > 500000,]
+
+g1 = ggplot(selected, aes(x=TotalImpressions)) + 
+  geom_line(aes(y=MSE, colour=Factor)) +
+  expand_limits(y=c(0, 0.01))+
+  xlab("Impressions") + ylab("MSE") + theme_bw() + ggtitle("MSE LinUCB_Disjoint") 
+    
+g2 = ggplot(selected, aes(x=TotalImpressions)) + 
+  geom_line(aes(y=Percent, colour=Factor)) +
+  expand_limits(y=c(0, 0.01))+
+  xlab("Impressions") + ylab("MSE") + theme_bw() + ggtitle("MSE LinUCB_Disjoint") 
+
+
+```
 ```{r LinUCB_Disjoint, include=TRUE, echo=FALSE}
 
-files = c("LinUCB_Disjoint", "Random")
-data = prepData(files)
+files = c("LinUCB_Disjoint")
+data = prepMSEData(files)
 selected = data[data$TotalImpressions > 100000,]
-ggplot(selected, aes(x=Timestamp, y=MSE, colour=Factor)) + 
+ggplot(selected, aes(x=TotalImpressions, y=CumulativeMSE, colour=Factor)) + 
   geom_line() +
-    xlab("Timestamp") + ylab("Log10 MSE") +
-  scale_y_log10()+
+    xlab("Impressions") + ylab("Log10 MSE") +
+#  scale_y_log10()+
   # scale_x_continuous(labels=formatterM())+
     theme_bw() + ggtitle("MSE LinUCB_Disjoint")
 
 ```
 ```{r Random, include=TRUE, echo=FALSE}
 
-files = c("LinUCB_Disjoint")
-data = prepData(files)
+files = c("Random")
+data = prepMSEData(files)
 ggplot(data, aes(x=TotalImpressions, y=CumulativeMSE, colour=Factor)) + 
   geom_line() +
 #  scale_y_log10()+
     xlab("Impressions") + ylab("Cumulative MSE") +
     scale_x_continuous(labels=formatterM())+
     theme_bw() + ggtitle("Cumulative MSE LinUCB_Disjoint") +
+    scale_color_discrete(name="User Percentage")
+
+```
+```{r NN, include=TRUE, echo=FALSE}
+
+files = c("NN")
+data = prepMSEData(files)
+ggplot(data, aes(x=Timestamp, y=MSE, colour=Factor)) + 
+  geom_line() +
+#  scale_y_log10()+
+    xlab("Impressions") + ylab("MSE") +
+  #  scale_x_continuous(labels=formatterM())+
+   theme_bw() + ggtitle("MSE NN") +
+    scale_color_discrete(name="User Percentage")
+
+```
+
+```{r TS_Lin_Percent, include=TRUE, echo=FALSE}
+
+files = c("TS_Lin_Percent") # , "LinUCB_Disjoint"
+data = prepMSEData(files)
+selected = data[data$TotalImpressions > 500000,]
+ggplot(selected, aes(x=Timestamp, y=MSE, colour=Factor)) + 
+  geom_line() +
+#  scale_y_log10()+
+    xlab("Impressions") + ylab("Cumulative MSE") +
+   theme_bw() + ggtitle("MSE TS_Lin") +
+    scale_color_discrete(name="User Percentage")
+
+```
+```{r TS_Lin_Train, include=TRUE, echo=FALSE}
+
+files = c("TS_Lin_train") # , "LinUCB_Disjoint"
+data = prepMSEData(files)
+data$Factor = factor(paste("R:", data$RecommendationSizePercent * 100, "% T:",data$TrainPart * 100,"%", sep=""))
+
+selected = data[data$TotalImpressions > 500000,]
+ggplot(selected, aes(x=Timestamp, y=CumulativeMSE, colour=Factor)) + 
+  geom_line() +
+#  scale_y_log10()+
+    xlab("Time") + ylab("MSE") +
+   theme_bw() + ggtitle("MSE TS_Lin") +
     scale_color_discrete(name="User Percentage")
 
 ```
