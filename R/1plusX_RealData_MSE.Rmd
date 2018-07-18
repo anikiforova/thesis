@@ -61,36 +61,43 @@ ggplot(data, aes(x=TotalImpressions)) +
 ```
 ```{r TS_Lin_MSE, include=TRUE, echo=FALSE}
 
-files = c("TS_Lin_MSE")
-data = prepData(files)
+files = c("TS_Lin_MSE", "LinUCB_Disjoint_MSE")#, "Random")
+dataMSE = prepData(files)
+dataCTR = prepData(files, path_ctr)
+selectedMSE = dataMSE[dataMSE$TotalImpressions > 5000000,]
+selectedCTR = dataCTR
 
-selected = data[data$TotalImpressions > 500000,]
-
-g1 = ggplot(selected, aes(x=TotalImpressions)) + 
-  geom_line(aes(y=MSE, colour=Factor)) +
-  expand_limits(y=c(0, 0.01))+
-  xlab("Impressions") + ylab("MSE") + theme_bw() + ggtitle("MSE LinUCB_Disjoint") 
-    
-g2 = ggplot(selected, aes(x=TotalImpressions)) + 
-  geom_line(aes(y=Percent, colour=Factor)) +
-  expand_limits(y=c(0, 0.01))+
-  xlab("Impressions") + ylab("MSE") + theme_bw() + ggtitle("MSE LinUCB_Disjoint") 
-
-
-```
-```{r LinUCB_Disjoint, include=TRUE, echo=FALSE}
-
-files = c("LinUCB_Disjoint")
-data = prepMSEData(files)
-selected = data[data$TotalImpressions > 100000,]
-ggplot(selected, aes(x=TotalImpressions, y=CumulativeMSE, colour=Factor)) + 
-  geom_line() +
-    xlab("Impressions") + ylab("Log10 MSE") +
+g1 = ggplot(selectedMSE, aes(x=TotalImpressions)) + 
+ geom_line(aes(y=MSE, colour=Factor)) +
+ # stat_smooth(aes(y=MSE, colour=Factor), method = "lm", formula = y ~ poly(x, 10), se = FALSE) +
 #  scale_y_log10()+
-  # scale_x_continuous(labels=formatterM())+
-    theme_bw() + ggtitle("MSE LinUCB_Disjoint")
+  expand_limits(y=c(0, 0.002)) +
+  scale_x_continuous(labels=formatterM())+
+  xlab("Impressions") + ylab("Cumulative MSE") + theme_bw() + ggtitle("Cumulative MSE") +
+  theme(legend.justification=c(1,0), legend.position="bottom")  
+    
+g2 = ggplot(selectedCTR, aes(x=TotalImpressions)) + 
+#  geom_line(aes(y=Percent, colour=Factor)) +
+    stat_smooth(aes(y=Percent, colour=Factor), method = "lm", formula = y ~ poly(x, 10), se = FALSE) +
+  scale_x_continuous(labels=formatterM())+
+  xlab("Impressions") + ylab("CTR") + theme_bw() + ggtitle("CTR")+
+  theme(legend.justification=c(1,0), legend.position="bottom")  
+
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+
+mylegend<-g_legend(g2)
+
+grid.arrange(arrangeGrob(g1 + theme(legend.position="none"),
+                         g2 + theme(legend.position="none"),
+                               nrow=1, ncol=2, widths=unit(c(9, 9), "cm"), heights=unit(9, "cm")),
+                   mylegend, nrow=2, widths=unit(18, "cm"), heights=unit(c(9, 1), "cm"))
 
 ```
+
 ```{r Random, include=TRUE, echo=FALSE}
 
 files = c("Random")

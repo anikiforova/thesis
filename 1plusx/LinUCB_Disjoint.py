@@ -5,8 +5,9 @@ from numpy.linalg import inv
 from AlgoBase import AlgoBase
 
 class LinUCB_Disjoint(AlgoBase):
-	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
-		super(LinUCB_Disjoint, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
+	
+	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, click_percent = 0.5, equalize_clicks = False, filter_clickers = False, soft_click = False):
+		super(LinUCB_Disjoint, self).__init__(user_embeddings, user_ids, click_percent, equalize_clicks, filter_clickers, soft_click)
 		self.d = dimensions
 
 	def setup(self, alpha):

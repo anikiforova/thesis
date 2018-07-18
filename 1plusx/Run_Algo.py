@@ -23,7 +23,7 @@ def normalize_dimension(dimension):
 
 total_lines = 14392074
 
-alphas 							= [0.0001] #[0.001, 0.005, 0.01, 0.02, 0.05]
+alphas 							= [0.002] #[0.001, 0.005, 0.01, 0.02, 0.05]
 user_recommendation_part 		= [0.02] 
 user_train_part 				= [0.02]
 hours 							= 1
@@ -41,7 +41,7 @@ dimensions 			= 100
 number_of_clusters 	= 10
 
 clusters =""# "_svd_" + str(dimensions)
-algoName = "TS_Lin_MSE"
+algoName = "LinUCB_Disjoint_MSE"
 additional_info = "soft{}_filter{}_clusters{}_equalize_{}".format(soft_click, filter_clickers, clusters, equalize_clicks)
 
 if print_output:
@@ -88,7 +88,7 @@ print(" Done.")
 
 # regressor = Regressor.LinearRegression
 
-algo = TS_Lin(user_embeddings, user_ids, cluster_embeddings, dimensions, equalize_size, equalize_clicks, filter_clickers, soft_click)
+algo = LinUCB_Disjoint(user_embeddings, user_ids, cluster_embeddings, dimensions, equalize_size, equalize_clicks, filter_clickers, soft_click)
 
 for alpha in alphas:
 	for part, train_part in zip(user_recommendation_part, user_train_part):
