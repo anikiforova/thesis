@@ -8,18 +8,16 @@ from AlgoBase import AlgoBase
 
 class NN(AlgoBase):
 	
-	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, click_percent = 0.5, equalize_clicks = False, filter_clickers = False, soft_click = False):
-		super(NN, self).__init__(user_embeddings, user_ids, click_percent, equalize_clicks, filter_clickers, soft_click)
-		self.d = dimensions
-		
+	def __init__(self, meta):
+		super(NN, self).__init__(meta)
 		self.learning_rate = 0.001
 
 		# Network Parameters
 		self.n_hidden_1  = 20	# 1st hidden layer of neurons
 		# self.n_hidden_2  = 32	# 2nd hidden layer of neurons
 		# self.n_hidden_3  = 16	# 3rd hidden layer of neurons
-		self.n_input     = self.d	# number of features after LSA
-		tf.set_random_seed(7855)
+		self.n_input     = self.meta.dimensions	# number of features after LSA
+		#tf.set_random_seed(7855) # this seed work is tricky - maybe need 
 		
 		# Layer weights, should change them to see results
 		self.weights = {
@@ -55,10 +53,10 @@ class NN(AlgoBase):
 
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
-		users, clicks = super(NN, self).prepareClicks(users, clicks)
+		users, clicks = self.prepareClicks(users, clicks)
 		
 		total = len(clicks)
-		batch_user_embeddings	= np.array([self.user_embeddings[id] for id in users]).reshape([total, self.d])
+		batch_user_embeddings	= np.array([self.user_embeddings[id] for id in users]).reshape([total, self.meta.dimensions])
 		
 		_, c = self.session.run([self.optimize, self.cost], feed_dict={self.x: batch_user_embeddings, self.y: clicks})
 		avg_cost = c / float(total)
@@ -68,7 +66,7 @@ class NN(AlgoBase):
 		self.prediction = self.session.run(self.pred, feed_dict={self.x: self.user_embeddings})
 		self.prediction = np.array([item for sublist in self.prediction for item in sublist])
 		
-		super(NN, self).predictionPosprocessing(users, clicks)		
+		self.predictionPosprocessing(users, clicks)		
 		print(" Done.")
 
 	def neural_net(self, x, weights, biases):

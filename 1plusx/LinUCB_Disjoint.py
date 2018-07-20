@@ -3,43 +3,39 @@ import math
 from numpy.linalg import inv
 
 from AlgoBase import AlgoBase
+from Metadata import Metadata
 
 class LinUCB_Disjoint(AlgoBase):
 	
-	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, click_percent = 0.5, equalize_clicks = False, filter_clickers = False, soft_click = False):
-		super(LinUCB_Disjoint, self).__init__(user_embeddings, user_ids, click_percent, equalize_clicks, filter_clickers, soft_click)
-		self.d = dimensions
+	def __init__(self, meta):
+		super(LinUCB_Disjoint, self).__init__(meta)
 
-	def setup(self, alpha):
-		super(LinUCB_Disjoint, self).setup(alpha)
-		self.A = np.identity(self.d)
-		self.A_i =  np.identity(self.d)
-		self.b =  np.zeros(self.d)
+	def setup(self):
+		super(LinUCB_Disjoint, self).setup()
+
+		self.A 		= np.identity(self.meta.dimensions)
+		self.A_i	= np.identity(self.meta.dimensions)
+		self.b 		= np.zeros(self.meta.dimensions)
 			
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
-		users, clicks = super(LinUCB_Disjoint, self).prepareClicks(users, clicks)
+		users, clicks = self.prepareClicks(users, clicks)
 		train_user_count = len(clicks)
 
 		for user_id, click in zip(users, clicks):
 			embedding = self.user_embeddings[user_id]
-			self.A += embedding.reshape([self.d, 1]).dot(embedding.reshape([1, self.d]))
+			self.A += embedding.reshape([self.meta.dimensions, 1]).dot(embedding.reshape([1, self.meta.dimensions]))
 			if click == 1 :
 				self.b += embedding
 
 		self.A_i = inv(self.A)
 		theta = self.A_i.dot(self.b) # [self.d, self.d] x [self.d, 1] = [self.d, 1]
 
-		index = 0
-		for embedding in self.user_embeddings:
-			self.prediction[index] = embedding.dot(theta) + self.alpha * math.sqrt(embedding.reshape([1, self.d]).dot(self.A_i).dot(embedding))
-			index += 1
+		for index, embedding in enumerate(self.user_embeddings):
+			mean = embedding.dot(theta)
+			var = math.sqrt(embedding.reshape([1, self.meta.dimensions]).dot(self.A_i).dot(embedding))
 
-		super(LinUCB_Disjoint, self).predictionPosprocessing(users, clicks)		
+			self.prediction[index] = mean + self.meta.alpha * var
+
+		self.predictionPosprocessing(users, clicks)		
 		print(" Done.")
-
-	def get_recommendations(self, count):
-		recommendation_ids = self.prediction.argsort()[-count:][::-1]
-		recommendation_hashes = [ self.user_id_to_hash[x] for x in recommendation_ids ]
-
-		return set(recommendation_hashes)

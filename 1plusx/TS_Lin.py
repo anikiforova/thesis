@@ -6,56 +6,42 @@ from AlgoBase import AlgoBase
 
 class TS_Lin(AlgoBase):
 	
-	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, click_percent = 0.5, equalize_clicks = False, filter_clickers = False, soft_click = False):
-		super(TS_Lin, self).__init__(user_embeddings, user_ids, click_percent, equalize_clicks, filter_clickers, soft_click)	
-	# def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
-	# 	super(TS_Lin, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
-		self.d = dimensions
+	def __init__(self, meta):
+		super(TS_Lin, self).__init__(meta)	
 		self.impressions = 100
 
-	def setup(self, alpha):
-		super(TS_Lin, self).setup(alpha)
-		self.B = np.identity(self.d)
-		self.B_i = np.identity(self.d)
-		self.cov = np.identity(self.d)
-		self.R = 0.1
-		
-		self.mu = np.zeros(self.d).reshape([1, self.d])
-		self.f = np.zeros(self.d).reshape([1, self.d])
+	def setup(self):
+		super(TS_Lin, self).setup()
 
-	def get_v_2(self):
-		return self.alpha# ((self.R **2) * 24 * self.d / math.log(self.impressions, 2))*math.log(1/(1-self.alpha), 2)
+		self.B = np.identity(self.meta.dimensions)
+		self.B_i = np.identity(self.meta.dimensions)
+		self.cov = np.identity(self.meta.dimensions)
+		
+		self.mu = np.zeros(self.meta.dimensions).reshape([1, self.meta.dimensions])
+		self.f  = np.zeros(self.meta.dimensions).reshape([1, self.meta.dimensions])
 
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
-		users, clicks = super(TS_Lin, self).prepareClicks(users, clicks)
+		users, clicks = self.prepareClicks(users, clicks)
 		train_user_count = len(clicks)
 
 		for user_id, click in zip(users, clicks):
 			embedding = self.user_embeddings[user_id]
-			self.B += embedding.reshape([self.d, 1]).dot(embedding.reshape([1, self.d]))
+			self.B += embedding.reshape([self.meta.dimensions, 1]).dot(embedding.reshape([1, self.meta.dimensions]))
 			if click:
 				self.f += embedding
 
 		self.B_i = inv(self.B)
-		self.cov = self.get_v_2() * self.B_i 
-		self.mu = list(np.array(self.B_i.dot(self.f.reshape([self.d, 1]))).flat)
+		self.cov = self.meta.alpha * self.B_i 
+		self.mu = list(np.array(self.B_i.dot(self.f.reshape([self.meta.dimensions, 1]))).flat)
 
-		index = 0
 		sample_mu = np.random.multivariate_normal(self.mu, self.cov, self.user_count)
-		for embedding in self.user_embeddings:
+		for index, embedding in enumerate(self.user_embeddings):
 			self.prediction[index] = embedding.dot(sample_mu[index])
-			index += 1	
-
+		
 		self.impressions += train_user_count
-		super(TS_Lin, self).predictionPosprocessing(users, clicks)		
+		self.predictionPosprocessing(users, clicks)		
 		print(" Done.")
-
-	def get_recommendations(self, count):
-		recommendation_ids = self.prediction.argsort()[-count:][::-1]
-		recommendation_hashes = [ self.user_id_to_hash[x] for x in recommendation_ids ]
-
-		return set(recommendation_hashes)
 
 
 

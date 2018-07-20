@@ -9,11 +9,11 @@ from AlgoBase import AlgoBase
 
 class Regression(AlgoBase):
 	
-	def __init__(self, user_embeddings, user_ids, cluster_embeddings, dimensions, filter_clickers = False, soft_click = False):
-		super(Regression, self).__init__(user_embeddings, user_ids, filter_clickers, soft_click)
+	def __init__(self, meta):
+		super(Regression, self).__init__(meta)
 
-	def setup(self, alpha):
-		super(Regression, self).setup(alpha)
+	def setup(self):
+		super(Regression, self).setup()
 		self.o_users = np.array([], dtype=np.uint32)
 		self.o_clicks = np.array([], dtype=np.uint32)
 
@@ -21,7 +21,7 @@ class Regression(AlgoBase):
 
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
-		users, clicks = super(Regression, self).prepareClicks(users, clicks)
+		users, clicks = self.prepareClicks(users, clicks)
 
 		self.o_users = np.append(self.o_users, users)
 		self.o_clicks = np.append(self.o_clicks, clicks)
@@ -31,11 +31,12 @@ class Regression(AlgoBase):
 		self.model.fit(cur_users, self.o_clicks)
 		self.prediction = self.model.predict(self.user_embeddings)
 
-		super(Regression, self).predictionPosprocessing(users, clicks)	
+		self.predictionPosprocessing(users, clicks)	
 		print(" Done.")
 
-	def get_recommendations(self, count):
-		explore = int( self.alpha * count )
+	def get_recommendations(self, percent):
+		count = int(self.user_count * percent)
+		explore = int( self.meta.alpha * count )
 		exploit = count - explore
 
 		ordered_predictions = self.prediction.argsort()
