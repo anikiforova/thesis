@@ -101,7 +101,18 @@ class AlgoBase:
 	def get_recommendations(self, percent):
 		count = int(self.user_count * percent)
 		recommendation_ids = self.prediction.argsort()[-count:][::-1]
+		for i in np.arange(0, 5):
+			print("R: {} ID: {}".format(self.prediction[recommendation_ids[i]], recommendation_ids[i]))
+
 #		print("Best prediction:" + str(self.prediction[recommendation_ids[0]]))
 		recommendation_hashes = set([ self.user_id_to_hash[x] for x in recommendation_ids ])
 
 		return recommendation_hashes
+
+
+
+
+
+
+
+

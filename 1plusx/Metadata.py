@@ -15,6 +15,7 @@ class Metadata:
 	cluster_count	 			= 10
 	cluster_name_postfix 		= ""
 
+	calculate_users_kernels 	= False
 	# GP
 	noiseVar 					= 0.01
 
@@ -87,3 +88,38 @@ class Metadata:
 		print(" Done.")
 
 		return user_ids, user_embeddings
+
+	def save_user_clusters(self, kernels):
+		print("Saving kernels.. ", end='', flush=True)	
+		output = open("{0}//all_users_kernels_{1}.csv".format(self.path, self.cluster_count), "w")
+		output.write("Kernels\n")
+		for k in kernels:
+			user_str = np.array2string(k, separator=' ')[1:-1].replace('\n', '')
+			output.write("{}\n".format(user_str))
+			
+		output.close()
+		print(" Done.")
+
+	def read_user_clusters(self, user_count):
+		print("Reading kernels.. ", end='', flush=True)	
+		kernels = read_csv("{0}//all_users_kernels_{1}.csv".format(self.path, self.cluster_count), header=0)
+		print(" Done.")
+
+		print("Parsing kernels.. ", end='', flush=True)	
+		kernels = np.array(kernels["Kernels"])
+		kernels = np.array([np.fromstring(x, sep=" ") for x in kernels])
+		kernels = [item for sublist in kernels for item in sublist]
+		kernels = np.array(kernels).reshape([user_count, self.cluster_count])
+		print(" Done.")
+
+		return kernels
+
+
+
+
+
+
+
+
+
+

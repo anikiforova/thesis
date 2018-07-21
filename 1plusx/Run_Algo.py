@@ -25,7 +25,7 @@ print_mse 					= False
 
 meta = Metadata()
 
-algoName = "GP_Clustered_Test"
+algoName = "LinUCB_Disjoint_Test"
 
 if print_output:
 	output = open("./Results/{0}.csv".format(algoName), "a")
@@ -37,8 +37,10 @@ if print_mse:
 
 output_algoName = meta.construct_algo_name(algoName)
 
-algo = GP_Clustered(meta)
-
+specials = read_csv("{0}//special_users.csv".format(meta.path), header=0)
+specials = set(specials["UserHash"].values)
+specials_count = len(specials)
+algo = LinUCB_Disjoint(meta)
 for alpha in alphas:
 	for recommendation_part, train_part in zip(user_recommendation_part, user_train_part):
 		meta.set_local_params(alpha, recommendation_part, train_part)
@@ -92,8 +94,6 @@ for alpha in alphas:
 				cumulative_SE = 0.0
 				continue	
 
-			# temp 	= algo.get_recommendations(0.000001)
-			# print(temp)
 			if (timestamp - hour_begin_timestamp).seconds >= meta.time_between_updates_in_seconds and len(clicks_to_update) > 1000:
 				# 	if print_mse:
 				# 		MSE = SE / impressions_per_recommendation_group
@@ -106,7 +106,12 @@ for alpha in alphas:
 				# 	# update based on train part
 				
 				algo.update(users_to_update, clicks_to_update)
-				recommended_users 	= algo.get_recommendations(recommendation_part)
+				new_recommended_users 	= algo.get_recommendations(recommendation_part)
+				intersection = new_recommended_users.intersection(recommended_users)
+				recommended_users = new_recommended_users
+				recommendation_size = float(len(recommended_users))
+				special_intersection = specials.intersection(new_recommended_users)
+				print( "Intersection with: Old:{:.3%} Specials:{:.3%}".format((float(len(intersection)) /recommendation_size  ), float(len(special_intersection))/specials_count))
 				train_users = recommended_users
 				
 				if recommendation_part != train_part:
