@@ -16,16 +16,17 @@ from TS_Lin import TS_Lin
 from GP_Clustered import GP_Clustered
 from NN import NN
 
-alphas 						= [0.02] #[0.001, 0.005, 0.01, 0.02, 0.05]
-user_recommendation_part 	= [0.05] 
-user_train_part 			= [0.05]
+# 1.2 for 0.02 
+alphas 						= [0.001, 0.0001, 0.01]
+user_recommendation_part 	= [0.02, 0.05] 
+user_train_part 			= [0.02, 0.05]
 
 print_output 				= True
 print_mse 					= False
 
 meta = Metadata()
 
-algoName = "LinUCB_Disjoint_Test"
+algoName = "TS_Lin"
 
 if print_output:
 	output = open("./Results/{0}.csv".format(algoName), "a")
@@ -40,7 +41,9 @@ output_algoName = meta.construct_algo_name(algoName)
 specials = read_csv("{0}//special_users.csv".format(meta.path), header=0)
 specials = set(specials["UserHash"].values)
 specials_count = len(specials)
-algo = LinUCB_Disjoint(meta)
+
+algo = TS_Lin(meta)
+
 for alpha in alphas:
 	for recommendation_part, train_part in zip(user_recommendation_part, user_train_part):
 		meta.set_local_params(alpha, recommendation_part, train_part)

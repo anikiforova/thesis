@@ -49,6 +49,8 @@ class Metadata:
 		if self.equalize_clicks:
 			algo_name += "_E_" + str(self.no_click_percent) 
 
+		if self.hours != 1:
+			algo_name += "_H_" + str(self.hours) 			
 		return algo_name
 
 	def read_cluster_embeddings(self):

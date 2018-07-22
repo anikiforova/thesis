@@ -87,7 +87,6 @@ class GP_Clustered(AlgoBase):
 		# print(cur_k_inv)
 
 		print("Done with inversion..")
-		diff = 0.0
 		for user_index in np.arange(0, self.user_count):
 			mid = self.K_u_c[user_index].reshape([1, self.meta.cluster_count]).dot(cur_k_inv) # 1 x C
 			var = self.k_u_u[user_index] - mid.dot(self.K_u_c[user_index].reshape([self.meta.cluster_count, 1]))
@@ -97,8 +96,8 @@ class GP_Clustered(AlgoBase):
 			self.prediction[user_index] = mean + self.meta.alpha * np.sqrt(var)
 			#diff += (self.prediction[user_index] - new_value)**2
 			#self.prediction[user_index] = new_value
-			# if user_index < 10:
-			# 	print("mean:{0} var:{1} value:{2} ".format(mean, np.sqrt(var), new_value))
+			if user_index < 10:
+				print("mean:{0} var:{1} value:{2} ".format(mean, np.sqrt(var), self.prediction[user_index]))
 
 
 		print("Done with prediction.")

@@ -65,22 +65,20 @@ prepData <- function(files, path="~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plu
 
 ```{r best, include=TRUE, echo=FALSE}
 
-files = c("Regression", "LinUCB_Disjoint", "TS_Lin", "NN")
+files =  c("LinUCB_Disjoint", "TS_Lin", "Regression", "Random")
 data = prepData(files)
+data$Factor = factor(paste(data$Method, data$RecommendationSizePercent, data$Alpha* 100))
 
-data = data[(data$Method == "Regression" & data$RecommendationSizePercent == "0.021" ) |
-              (data$Method == "LinUCB_Disjoint" & data$RecommendationSizePercent == 0.02 & data$Alpha == 0.02) |
-              (data$Method == "TS_Lin" & data$RecommendationSizePercent == 0.02 & data$Alpha == 0.0001) |
-              (data$Method == "Random") | 
-              (data$Method == "NN_AdamOptimizer" & data$RecommendationSizePercent == 0.1) | 
-              (data$Method == "LinUCB_Disjoint_clustered_10"),]
+
+               
 
 ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
   geom_line() +
-   expand_limits(y=c(0,1.2)) + 
-   scale_x_continuous(labels=formatterM())+
-    theme_bw() + ggtitle("All (Cumulative)") +
-    scale_color_discrete(name="User Percentage")
+    xlab("Impressions") + ylab("% of Clicks") +
+    expand_limits(y=c(0,1.2)) + 
+ #   scale_x_continuous(labels=formatterM()) + 
+  theme_bw() + ggtitle("LinUCB_Disjoint (Cumulative)") +
+    scale_color_discrete(name="Algo Details/Alpha", labels=formatterPretty())
 ```
 
 ```{r Regression, include=TRUE, echo=FALSE}
@@ -99,20 +97,19 @@ ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) +
     scale_color_discrete(name="Method")
 ```
 
-```{r all_algos, include=TRUE, echo=FALSE}
+```{r Regression, include=TRUE, echo=FALSE}
 
-files = c("Regression_4h")
+files =  c("Regression", "Random")
 data = prepData(files)
-ggplot(data, aes(x=TotalImpressions, y=Percent, colour=UserPercentage)) + 
+data$Factor = factor(paste(data$Method, data$RecommendationSizePercent, data$Alpha* 100))
+
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
   geom_line() +
-  #    stat_smooth(aes(x=Timestamp, y=Percent), method = "lm", formula = y ~ poly(x, 21), se = FALSE) +
     xlab("Impressions") + ylab("% of Clicks") +
     expand_limits(y=c(0,1.2)) + 
-    #scale_x_continuous(labels=formatterM())+
-    theme_bw() + ggtitle("Regression 4h (Cumulative)") +
-    scale_color_discrete(name="User Percentage", labels=formatterPretty())
-
-
+ #   scale_x_continuous(labels=formatterM()) + 
+  theme_bw() + ggtitle("Regression") +
+    scale_color_discrete(name="Algo Details/Alpha", labels=formatterPretty())
 ```
 
 ```{r all_algos, include=TRUE, echo=FALSE}
@@ -137,9 +134,9 @@ ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) +
 files = c("LinUCB_Disjoint")
 data = prepData(files)
 
-data$Factor = factor(paste(data$Method, data$Alpha* 100))
-data = data[data$RecommendationSizePercent == 0.02 & data$Alpha == 0.01,]
-ggplot(data, aes(x=Timestamp, y=Percent, colour=Factor)) + 
+data$Factor = factor(paste(data$Method, data$RecommendationSizePercent, data$Alpha* 100))
+#data = data[ data$Alpha == 0.02,]
+ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
   geom_line() +
     xlab("Impressions") + ylab("% of Clicks") +
     expand_limits(y=c(0,1.2)) + 
@@ -288,18 +285,21 @@ ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) +
 
 ```{r best, include=TRUE, echo=FALSE}
 
-files = c("LinUCB_Disjoint", "LinUCB_Disjoint_Test", "Random", "GP_Clustered_10")
+files = c("LinUCB_Disjoint", "LinUCB_Disjoint_Test", "Random", "GP_Clustered_Test", "TS_Lin_Test")
 data = prepData(files)
 
 data = data[(data$Method == "LinUCB_Disjoint" & data$RecommendationSizePercent == 0.02 & data$Alpha == 0.02) |
             (data$Method == "LinUCB_Disjoint_Test_E_0.8")|
             (data$Method == "Random") | 
-              (data$Method == "GP_Clustered_10" & data$RecommendationSizePercent == 0.1 ),]
+              (data$Method == "GP_Clustered_Test" )|
+              (data$Method == "TS_Lin_Test_E_0.8" )
+            ,]
 
-ggplot(data, aes(x=TotalImpressions, y=Impressions, colour=Factor)) + 
+ggplot(data, aes(x=Timestamp, y=Impressions, colour=Factor)) + 
   geom_line() +
-   expand_limits(y=c(0,1.2)) + 
-   scale_x_continuous(labels=formatterM())+
+   expand_limits(y=c(0,1000000)) + 
+   #scale_x_continuous(labels=formatterM())+
+  scale_y_continuous(labels=formatterM())+
     theme_bw() + ggtitle("All (Cumulative)") +
     scale_color_discrete(name="User Percentage")
 ```
