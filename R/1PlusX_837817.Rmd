@@ -1,8 +1,8 @@
 ---
-title: "Algorithm comparison"
+title: "1PlusX_837817"
 author: "Ana Dimitrova"
+date: "7/24/2018"
 output: pdf_document
-
 ---
  
 
@@ -45,14 +45,17 @@ selectNecessaryColumns <- function(df, columns) {
   df[,columns]
 }
 
-prepData <- function(files, path=path) {
-  data <- read.csv(file=paste0(path, paste0(files[1], ".csv")), header=TRUE, sep=",")
+prepData <- function(files, cur_path=path) {
+  file=paste0(cur_path, paste0(files[1], ".csv"))
+  data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
   columns = c("Clicks", "Impressions", "RecommendationSizePercent","TotalImpressions","Method", "Alpha","Timestamp","TrainPart", "MSE", "CumulativeMSE")
   data = selectNecessaryColumns(data, columns)
-  for (name in files){
-    data1 <- read.csv(file=paste0(path, paste0(name, ".csv")), header=TRUE, sep=",")
-    data1 = selectNecessaryColumns(data1, columns)
-    data <- rbind(data, data1)  
+  if(length(files) > 1){
+    for (name in files){
+      data1 <- read.csv(file=paste0(cur_path, paste0(name, ".csv")), header=TRUE, sep=",")
+      data1 = selectNecessaryColumns(data1, columns)
+      data <- rbind(data, data1)  
+    }
   }
   data$Percent = data$Clicks / data$Impressions * 100
   data$Factor = factor(paste(data$Method, " ", data$Alpha, " R:", data$RecommendationSizePercent * 100, sep=""))
@@ -77,11 +80,11 @@ plotGroup <- function(g1, g2, title) {
                 top = title)
 }
 
-getCTRPlot <- function(data) {
+getCTRPlot <- function(data, limits = c(0,1.5)) {
   g1 = ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
     geom_line() +
     xlab("Impressions") + ylab("CTR") +
-    expand_limits(y=c(0,1.5)) + 
+    expand_limits(y=limits) + 
     scale_x_continuous(labels=formatterM()) + 
     theme_bw() 
   
@@ -107,7 +110,7 @@ And the expectation for the discrete values {0, 1} is clearly 0.5%.
 In terms of CTR both perform equally around 0.18.
 ```{r Random, include=TRUE, echo=FALSE}
 
-files =  c("Random", "Random_Float")
+files =  c("Random")
 data = prepData(files)
 data$Factor = factor(paste(data$Method," R:", data$RecommendationSizePercent*100, "%", sep=""))
 
@@ -153,7 +156,7 @@ This plot shows the effect of changing the update time - from the standard 1h to
 
 files =  c("LinUCB_Disjoint")
 data = prepData(files)
-data$Eq = lapply(data$Method, function(m) { if(grepl("_H_", m)) "4h" else "1h" })
+data$Eq = lapply(data$Method, function(m) { if(grepl("_H_", m)) "12h" else "1h" })
 
 data$Factor = factor(paste("R:",data$RecommendationSizePercent *100, "% ", data$Eq, sep=""))
 
@@ -163,6 +166,22 @@ g1 = getCTRPlot(data)
 g2 = getMSEPlot(data, c(0,0.003), "Rec. Size/Hours")
 
 plotGroup(g1, g2, "LinUCB Rec:2% - Evaluation of #Hours between update")
+```
+```{r GP_Clustered, include=TRUE, echo=FALSE}
+
+files =  c("GP_Clustered", "GP_Clustered_Matern", "GP_Clustered_RBF", "Random")
+data = prepData(files)
+
+data$Factor = factor(paste(data$Method, sep = ""))
+
+data = subset(data, Impressions > 1000 & ((RecommendationSizePercent == 0.2) | Method == "Random_H_12") 
+                & (Alpha == 1 | Alpha == "NA"))
+
+g1 = getCTRPlot(data, c(0,0.75)) 
+data = subset(data, Method != "Random_H_12")
+g2 = getMSEPlot(data, c(0,0.003), "Rec. size")
+
+plotGroup(g1, g2, "GP Evaluation of parameters and kernels")
 ```
 
 This plot aims to show the behavior of LinUCB (and by proxy other linear algos) with changing recommendation size. Clearly the algorithm recommendations become worse the bigger the recommendation list is.

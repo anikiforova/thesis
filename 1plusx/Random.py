@@ -11,8 +11,8 @@ class Random(AlgoBase):
 		super(Random, self).__init__(meta)
 
 	def update(self, users, clicks):
-		# self.prediction = np.random.uniform(0, 1, self.user_count)
-		self.prediction = np.random.randint(0, 2, self.user_count)
+		self.prediction = np.random.uniform(0, 1, self.user_count)
+		# self.prediction = np.random.randint(0, 2, self.user_count)
 		
 
 

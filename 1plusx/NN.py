@@ -16,7 +16,7 @@ class NN(AlgoBase):
 		self.n_hidden_1  = 20	# 1st hidden layer of neurons
 		# self.n_hidden_2  = 32	# 2nd hidden layer of neurons
 		# self.n_hidden_3  = 16	# 3rd hidden layer of neurons
-		self.n_input     = self.meta.dimensions	# number of features after LSA
+		self.n_input     = self.meta.meta.dimensions	# number of features after LSA
 		#tf.set_random_seed(7855) # this seed work is tricky - maybe need 
 		
 		# Layer weights, should change them to see results
@@ -56,9 +56,9 @@ class NN(AlgoBase):
 		users, clicks = self.prepareClicks(users, clicks)
 		
 		total = len(clicks)
-		batch_user_embeddings	= np.array([self.user_embeddings[id] for id in users]).reshape([total, self.meta.dimensions])
+		batch_user_embeddings	= np.array([self.user_embeddings[id] for id in users]).reshape([total, self.meta.meta.dimensions])
 		
-		_, c = self.session.run([self.optimize, self.cost], feed_dict={self.x: batch_user_embeddings, self.y: clicks})
+		_, c = self.session.run([self.optimize, self.cost], feed_dict={self.x: batch_user_embeddings, self.y: clicks.reshape([total, 1])})
 		avg_cost = c / float(total)
 		print("Training error=", "{:.9f}".format(avg_cost))
 			

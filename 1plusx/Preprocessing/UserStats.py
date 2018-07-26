@@ -26,7 +26,7 @@ class User:
 		self.LastTimestamp = timestamp
 		self.TotalImpressions = 0
 
-name = "809153"
+name = "837817"
 path = "..//..//RawData//Campaigns"
 impressions_path = "{0}//{1}//Processed//sorted_time_impressions.csv".format(path, name)
 user_stats_path = "{0}//{1}//Processed//user_statistics.csv".format(path, name)

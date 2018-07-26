@@ -7,11 +7,11 @@ from pandas import DataFrame
 from sklearn.metrics.pairwise import euclidean_distances
 #from sklearn.preprocessing import normalize
 
-clusters = 20
+clusters = 10
 leaning_size = 100000
 user_dimension = 100
 
-campaign_id = "809153"
+campaign_id = "837817" #"809153"
 users_processed_path = "../../RawData/Campaigns/{0}/Processed/"
 
 infile_pattern = users_processed_path.format(campaign_id) + "all_users.csv"

@@ -15,13 +15,13 @@ def normalize_dimension(dimension):
 	return (dimension - min_value)/(max_value - min_value)
 
 def squared_distance(x, y):
-	return sqrt(np.sum((x-y)*(x-y)))
+	return np.sum((x-y)*(x-y))
 
-def kernel(self, x, y, d):
-	distance = squared_distance(x, y)
-	return 0.5 * np.exp(- (distance * distance)/(2*(d**2)))
+def kernel(x, y, d):
+	sdistance = squared_distance(x, y)
+	return 0.5 * np.exp(- sdistance/(2*(d**2)))
 
-def kernel_from_distance(self, distance):
+def kernel_from_distance(distance):
 	return np.exp(-0.5 * distance)
 
 def calculate_kernel(K, cluster_count, cluster_embeddings):
@@ -33,7 +33,7 @@ def calculate_users_to_clusters(cluster_count, user_count, user_embeddings, clus
 	cluster_counts = np.zeros(cluster_count)
 
 	for user_index in np.arange(0, user_count):
-		distances = [squared_distance(user_embeddings[user_index], c, cluster_count) for c in cluster_embeddings]
+		distances = [kernel(user_embeddings[user_index], c, cluster_count) for c in cluster_embeddings]
 		# self.K_u_c[user_index] = np.array([self.kernel_from_distance(d) for d in distances])
 		# self.u_to_c[user_index] = int(np.argmax(distances)) 
 		closest_cluster_id = int(np.argmax(distances))
@@ -50,7 +50,7 @@ noiseVar 		= 0.1
 clusters =""# "_svd_" + str(dimensions)
 algoName = "GP_Clustered"
 
-name = "809153"
+name = "837817"
 path = "..//..//RawData//Campaigns"
 
 print("Reading users.. ", end='', flush=True)	
