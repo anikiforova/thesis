@@ -21,10 +21,10 @@ from GP_Clustered import GP_Clustered
 from NN import NN
 
 meta = Metadata()
-algoName = "NN"
+algoName = "LinUCB_Disjoint"
 
-testsMeta = TestBuilder.get_nn_tests(meta)
-algo = NN(meta)
+testsMeta = TestBuilder.get_lin_tests(meta)
+algo = LinUCB_Disjoint(meta)
 
 output_path = "./Results/{0}/{1}_New.csv".format(meta.campaign_id, algoName)
 output_column_names = False

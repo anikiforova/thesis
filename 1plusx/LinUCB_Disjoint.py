@@ -10,12 +10,12 @@ class LinUCB_Disjoint(AlgoBase):
 	def __init__(self, meta):
 		super(LinUCB_Disjoint, self).__init__(meta)
 
-	def setup(self):
-		super(LinUCB_Disjoint, self).setup()
+	def setup(self, testMeta):
+		super(LinUCB_Disjoint, self).setup(testMeta)
 
-		self.A 		= np.identity(self.meta.meta.dimensions)
-		self.A_i	= np.identity(self.meta.meta.dimensions)
-		self.b 		= np.zeros(self.meta.meta.dimensions)
+		self.A 		= np.identity(self.meta.dimensions)
+		self.A_i	= np.identity(self.meta.dimensions)
+		self.b 		= np.zeros(self.meta.dimensions)
 			
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
@@ -24,7 +24,7 @@ class LinUCB_Disjoint(AlgoBase):
 
 		for user_id, click in zip(users, clicks):
 			embedding = self.user_embeddings[user_id]
-			self.A += embedding.reshape([self.meta.meta.dimensions, 1]).dot(embedding.reshape([1, self.meta.meta.dimensions]))
+			self.A += embedding.reshape([self.meta.dimensions, 1]).dot(embedding.reshape([1, self.meta.dimensions]))
 			if click == 1 :
 				self.b += embedding
 
@@ -33,9 +33,9 @@ class LinUCB_Disjoint(AlgoBase):
 
 		for index, embedding in enumerate(self.user_embeddings):
 			mean = embedding.dot(theta)
-			var = math.sqrt(embedding.reshape([1, self.meta.meta.dimensions]).dot(self.A_i).dot(embedding))
+			var = math.sqrt(embedding.reshape([1, self.meta.dimensions]).dot(self.A_i).dot(embedding))
 
-			self.prediction[index] = mean + self.meta.alpha * var
+			self.prediction[index] = mean + self.testMeta.alpha * var
 
 		self.predictionPosprocessing(users, clicks)		
 		print(" Done.")

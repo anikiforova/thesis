@@ -49,15 +49,16 @@ def get_lin_tests(meta):
 		for rec_part in [0.02, 0.05, 0.1, 0.2, 0.5]:
 			for click_percent in [0, 0.2, 0.5]:
 				eq = click_percent != 0
-				tests.append(build_regression_test(meta, eq = eq, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
+				tests.append(build_lin_test(meta, eq = eq, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
 	return tests
 
+# DONE
 def get_nn_tests(meta):
 	return [
 			# test learning rate
-	# build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, eq = True, click_percent = 0.2), 
-	# build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.2, eq = True, click_percent = 0.2),
-	# build_nn_test(meta, learning_rate = 0.0001, h = 12, rec_part = 0.2, eq = True, click_percent = 0.2),
+	build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, eq = True, click_percent = 0.2), 
+	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.2, eq = True, click_percent = 0.2),
+	build_nn_test(meta, learning_rate = 0.0001, h = 12, rec_part = 0.2, eq = True, click_percent = 0.2),
 	
 	# test train part
 	build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.1, eq = True, click_percent = 0.2),
@@ -72,6 +73,7 @@ def get_nn_tests(meta):
 	build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, eq = False) 
 		]
 
+# Run uncommented tests.
 def get_gp_tests(meta):
 	return [	
 # test no eq of clicks

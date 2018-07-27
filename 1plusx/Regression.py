@@ -12,8 +12,8 @@ class Regression(AlgoBase):
 	def __init__(self, meta):
 		super(Regression, self).__init__(meta)
 
-	def setup(self):
-		super(Regression, self).setup()
+	def setup(self, testMeta):
+		super(Regression, self).setup(testMeta)
 		self.o_users = np.array([], dtype=np.uint32)
 		self.o_clicks = np.array([], dtype=np.uint32)
 
