@@ -4,11 +4,11 @@ from pandas import DataFrame
 
 class TestMetadata:
 
-	equalize_clicks 				= True
+	equalize_clicks 				= False
 	click_percent					= 0.2
 	
 	# GP
-	gp_running_algo					= True
+	gp_running_algo					= False
 	kernel_name						= ""
 	noiseVar 						= 0.01
 	nu 								= 1.5

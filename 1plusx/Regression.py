@@ -36,7 +36,7 @@ class Regression(AlgoBase):
 
 	def get_recommendations(self, percent):
 		count = int(self.user_count * percent)
-		explore = int( self.meta.alpha * count )
+		explore = int( self.testMeta.alpha * count )
 		exploit = count - explore
 
 		ordered_predictions = self.prediction.argsort()
