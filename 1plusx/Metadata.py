@@ -24,9 +24,6 @@ class Metadata:
 		max_value = np.max(array)
 		return (array - min_value)/(max_value - min_value)
 
-	def construct_algo_name(self, algo):
-		return algo + self.cluster_name_postfix
-			
 	def read_user_embeddings(self):
 		print("Reading users.. ", end='', flush=True)	
 		users = read_csv("{0}//all_users{1}.csv".format(self.path, self.cluster_name_postfix), header=0)

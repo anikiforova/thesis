@@ -10,13 +10,16 @@ class NN(AlgoBase):
 	
 	def __init__(self, meta):
 		super(NN, self).__init__(meta)
-		self.learning_rate = 0.001
+		
 
+	def setup(self, testMetadata):
+		super(NN, self).setup(testMetadata)
+		
 		# Network Parameters
 		self.n_hidden_1  = 20	# 1st hidden layer of neurons
 		# self.n_hidden_2  = 32	# 2nd hidden layer of neurons
 		# self.n_hidden_3  = 16	# 3rd hidden layer of neurons
-		self.n_input     = self.meta.meta.dimensions	# number of features after LSA
+		self.n_input     = self.meta.dimensions	# number of features after LSA
 		#tf.set_random_seed(7855) # this seed work is tricky - maybe need 
 		
 		# Layer weights, should change them to see results
@@ -41,22 +44,22 @@ class NN(AlgoBase):
 
 		# Define loss and optimizer
 		self.cost = tf.nn.l2_loss(self.pred - self.y, name="squared_error_cost")
-		# self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
-		# self.optimizer = tf.train.AdagradOptimizer(self.learning_rate) 
-		self.optimizer = tf.train.AdamOptimizer() 
+		# self.optimizer = tf.train.GradientDescentOptimizer(self.testMeta.learning_rate).minimize(self.cost)
+		# self.optimizer = tf.train.AdagradOptimizer(self.testMeta.learning_rate) 
+		self.optimizer = tf.train.AdamOptimizer(self.testMeta.learning_rate) 
 		self.optimize = self.optimizer.minimize(self.cost)
 
 		# Initializing the variables
 		self.init = tf.global_variables_initializer()
 		self.session = tf.Session()
 		self.session.run(self.init)
-
+			
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
 		users, clicks = self.prepareClicks(users, clicks)
 		
 		total = len(clicks)
-		batch_user_embeddings	= np.array([self.user_embeddings[id] for id in users]).reshape([total, self.meta.meta.dimensions])
+		batch_user_embeddings	= np.array([self.user_embeddings[id] for id in users]).reshape([total, self.meta.dimensions])
 		
 		_, c = self.session.run([self.optimize, self.cost], feed_dict={self.x: batch_user_embeddings, self.y: clicks.reshape([total, 1])})
 		avg_cost = c / float(total)

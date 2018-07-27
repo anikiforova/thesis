@@ -4,35 +4,73 @@ from pandas import DataFrame
 
 class TestMetadata:
 
-	equalize_clicks 			= True
-	no_click_percent 			= 0.8
-	click_percent				= 1 - no_click_percent
+	equalize_clicks 				= True
+	click_percent					= 0.2
 	
 	# GP
-	gp_running_algo				= True
-	kernel_name					= ""
-	noiseVar 					= 0.01
-	nu 							= 1.5
-	length_scale				= 100
-	cluster_count	 			= 10
+	gp_running_algo					= True
+	kernel_name						= ""
+	noiseVar 						= 0.01
+	nu 								= 1.5
+	length_scale					= 100
+	cluster_count	 				= 10
 	
-	alpha						= 0.0
+	# NN
+	nn_running_algo					= False
+	learning_rate 					= 0.001
+
+	# LinUCB, TS_Lin, GP (only as scale)
+	alpha							= 0.0
 
 	hours 							= 12
 	time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
+
+	train_part 						= 0.2
+	recommendation_part 			= 0.2
 
 	def __init__(self, meta):
 		self.meta 			= meta
 		self.length_scale	= self.meta.dimensions
 
 	def get_additional_info(self):
-		info = "H:{}".format(self.hours)
+		info = "H:{},Train:{},Rec:{},Alpha:{}".format(self.hours, self.train_part, self.recommendation_part, self.alpha)
 
 		if self.equalize_clicks:
-			info =  "{},Eq:{}".format(info, self.click_percent)
+			info =  "{},ClickPercent:{:.2}".format(info, self.click_percent)
 
 		if self.gp_running_algo:
-			info =  "{},C:{},L:{},NU:{},K:{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
+			info =  "{},#Clusters:{},LengthScale:{},Nu:{:.2},Kernel:{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
+
+		if self.nn_running_algo:
+			info = "{},LearningRate:{}".format(info, self.learning_rate)
+				
+		return info
+
+	def get_additional_column_info(self):
+		info = "{},{},{},{}".format(self.hours, self.train_part, self.recommendation_part, self.alpha)
+
+		if self.equalize_clicks:
+			info = "{},{:.2}".format(info, self.click_percent)
+
+		if self.gp_running_algo:
+			info =  "{},{},{},{:.2},{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
+
+		if self.nn_running_algo:
+			info = "{},{}".format(info, self.learning_rate)
+
+		return info
+
+	def get_additional_column_names(self):
+		info = "Hours,TrainPart,RecommendationPart,Alpha"
+
+		if self.equalize_clicks:
+			info =  info + ",EqClicks"
+
+		if self.gp_running_algo:
+			info =  info + ",ClusterCount,LengthScale,Nu,Kernel"
+
+		if self.nn_running_algo:
+			info = info + ",LearningRate"
 
 		return info
 

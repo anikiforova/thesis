@@ -48,7 +48,7 @@ selectNecessaryColumns <- function(df, columns) {
 prepData <- function(files, cur_path=path) {
   file=paste0(cur_path, paste0(files[1], ".csv"))
   data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
-  columns = c("Clicks", "Impressions", "RecommendationSizePercent","TotalImpressions","Method", "Alpha","Timestamp","TrainPart", "MSE", "CumulativeMSE")
+  columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart", "MSE", "CumulativeMSE", "Nu", "Hours", "LengthScale", "ClusterCount")
   data = selectNecessaryColumns(data, columns)
   if(length(files) > 1){
     for (name in files){
@@ -58,8 +58,8 @@ prepData <- function(files, cur_path=path) {
     }
   }
   data$Percent = data$Clicks / data$Impressions * 100
-  data$Factor = factor(paste(data$Method, " ", data$Alpha, " R:", data$RecommendationSizePercent * 100, sep=""))
-  data$UserPercentage = factor(data$RecommendationSizePercent * 100)
+  data$Factor = factor(paste(data$Method, " ", data$Alpha, " R:", data$RecommendationPart * 100, sep=""))
+  data$UserPercentage = factor(data$RecommendationPart * 100)
   #data$Timestamp = data$Timestamp / 1000
   data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
   data
@@ -112,7 +112,7 @@ In terms of CTR both perform equally around 0.18.
 
 files =  c("Random")
 data = prepData(files)
-data$Factor = factor(paste(data$Method," R:", data$RecommendationSizePercent*100, "%", sep=""))
+data$Factor = factor(paste(data$Method," R:", data$RecommendationPart*100, "%", sep=""))
 
 g1 = getCTRPlot(data)
 g2 = getMSEPlot(data, c(0,1), "Model/Rec Size")
@@ -127,7 +127,7 @@ files =  c("Regression")
 data = prepData(files)
 data$Factor = factor(paste(substr(data$Method, 1, 3), "% A:", data$Alpha, sep=""))
 
-data = subset(data, Impressions > 1000 & !(Method == "Random" & RecommendationSizePercent== 0.05)
+data = subset(data, Impressions > 1000 & !(Method == "Random" & RecommendationPart== 0.05)
               & (Method %in% c("Regression","Random")))
 
 g1 = getCTRPlot(data)
@@ -158,9 +158,9 @@ files =  c("LinUCB_Disjoint")
 data = prepData(files)
 data$Eq = lapply(data$Method, function(m) { if(grepl("_H_", m)) "12h" else "1h" })
 
-data$Factor = factor(paste("R:",data$RecommendationSizePercent *100, "% ", data$Eq, sep=""))
+data$Factor = factor(paste("R:",data$RecommendationPart *100, "% ", data$Eq, sep=""))
 
-data = subset(data, Impressions > 1000 & (grepl("_H_", Method) | (Method == "LinUCB_Disjoint" & RecommendationSizePercent %in% c(0.02, 0.05) & Alpha == 0.02)))
+data = subset(data, Impressions > 1000 & (grepl("_H_", Method) | (Method == "LinUCB_Disjoint" & RecommendationPart %in% c(0.02, 0.05) & Alpha == 0.02)))
 
 g1 = getCTRPlot(data)
 g2 = getMSEPlot(data, c(0,0.003), "Rec. Size/Hours")
@@ -172,10 +172,9 @@ plotGroup(g1, g2, "LinUCB Rec:2% - Evaluation of #Hours between update")
 files =  c("GP_Clustered", "GP_Clustered_Matern", "GP_Clustered_RBF", "Random")
 data = prepData(files)
 
-data$Factor = factor(paste(data$Method, sep = ""))
+data$Factor = factor(paste(data$Method," A:", data$Alpha, sep = ""))
 
-data = subset(data, Impressions > 1000 & ((RecommendationSizePercent == 0.2) | Method == "Random_H_12") 
-                & (Alpha == 1 | Alpha == "NA"))
+data = subset(data, Impressions > 1000 & ((RecommendationPart == 0.2 & (Alpha == 1 | is.na(Alpha))) | Method == "Random_H_12"))
 
 g1 = getCTRPlot(data, c(0,0.75)) 
 data = subset(data, Method != "Random_H_12")
@@ -183,6 +182,21 @@ g2 = getMSEPlot(data, c(0,0.003), "Rec. size")
 
 plotGroup(g1, g2, "GP Evaluation of parameters and kernels")
 ```
+```{r GP_Clustered, include=TRUE, echo=FALSE}
+
+files =  c("GP_Clustered_New")
+data = prepData(files)
+
+data$Factor = factor(paste(" Nu:", data$Nu, " H:", data$Hours, " LS:", data$LengthScale, " CL:", data$ClusterCount, sep = ""))
+
+data = subset(data, Impressions > 1000)
+
+g1 = getCTRPlot(data, c(0,0.75)) 
+g2 = getMSEPlot(data, c(0,0.003), "")
+
+plotGroup(g1, g2, "GP Evaluation of parameters and kernels")
+```
+
 
 This plot aims to show the behavior of LinUCB (and by proxy other linear algos) with changing recommendation size. Clearly the algorithm recommendations become worse the bigger the recommendation list is.
 Executed with fixed alpha = 0.02 which is the one that has displayed best results so far.
@@ -190,8 +204,8 @@ Executed with fixed alpha = 0.02 which is the one that has displayed best result
 
 files =  c("LinUCB_Disjoint")
 data = prepData(files)
-data$Factor = factor(paste(substr(data$Method, 1, 6), " R:", data$RecommendationSizePercent*100, "%", sep = ""))
-data = subset(data, Impressions > 1000 & ((Method == "Random" & RecommendationSizePercent == 0.02) | ( Method == "LinUCB_Disjoint" & Alpha == 0.02)))
+data$Factor = factor(paste(substr(data$Method, 1, 6), " R:", data$RecommendationPart*100, "%", sep = ""))
+data = subset(data, Impressions > 1000 & ((Method == "Random" & RecommendationPart == 0.02) | ( Method == "LinUCB_Disjoint" & Alpha == 0.02)))
 g1 = getCTRPlot(data)
 g2 = getMSEPlot(data, c(0,0.003), "Method/Rec. Size")
 
@@ -203,7 +217,7 @@ files =  c("TS_Lin")
 data = prepData(files)
 
 data$Factor = factor(paste(data$Method, "% A:", data$Alpha, sep = ""))
-data = subset(data, Impressions > 1000 & Method == "TS_Lin" & RecommendationSizePercent == 0.02)
+data = subset(data, Impressions > 1000 & Method == "TS_Lin" & RecommendationPart == 0.02)
 g1 = getCTRPlot(data)
 g2 = getMSEPlot(data, c(0,0.003), "Method/Alpha")
 
@@ -214,7 +228,7 @@ plotGroup(g1, g2, "TS_Lin Rec:2% - Evaluation of best Alpha")
 files =  c("TS_Lin")
 data = prepData(files)
 
-data$Factor = factor(paste(data$Method, " R:", data$RecommendationSizePercent * 100, "%", sep = ""))
+data$Factor = factor(paste(data$Method, " R:", data$RecommendationPart * 100, "%", sep = ""))
 data = subset(data, Impressions > 1000 & Method == "TS_Lin" & Alpha == 0.0001)
 
 g1 = getCTRPlot(data)
@@ -231,7 +245,7 @@ data$Method =  lapply(data$Method, as.character)
 data$Eq = lapply(data$Method, function(m) { if(grepl("_E_", m)) paste("E:",substr(m, nchar(m)-2, nchar(m)), sep="") else "" })
 
 data$Factor = factor(paste(substr(data$Method, 1, 6), " ", data$Eq, sep = ""))
-data = subset(data, Impressions > 1000 & RecommendationSizePercent == 0.02 & Alpha == 0.0001)
+data = subset(data, Impressions > 1000 & RecommendationPart == 0.02 & Alpha == 0.0001)
 g1 = getCTRPlot(data)
 g2 = getMSEPlot(data, c(0,0.05), "Method")
 
@@ -244,7 +258,7 @@ files =  c("TS_Lin", "Regression", "LinUCB_Disjoint")
 data = prepData(files)
 data$Factor = factor(paste(substr(data$Method, 1, 6), " A:", data$Alpha, sep = ""))
 
-data = subset(data, Impressions > 1000 & RecommendationSizePercent == 0.02 &
+data = subset(data, Impressions > 1000 & RecommendationPart == 0.02 &
                  ((Method == "TS_Lin"           & Alpha == 0.001) |
                   (Method == "Regression"       & Alpha == 0.01) |
                   (Method == "LinUCB_Disjoint"  & Alpha == 0.02) ))
@@ -261,7 +275,7 @@ files =  c("TS_Lin", "NN", "LinUCB_Disjoint", "Regression", "GP_Clustered")
 data = prepData(files)
 data$Factor = factor(data$Method)
 
-data = subset(data, Impressions > 1000 & RecommendationSizePercent == 0.02 &
+data = subset(data, Impressions > 1000 & RecommendationPart == 0.02 &
                  ((Method == "TS_Lin"           & Alpha == 0.001) |
                   (Method == "Regression"       & Alpha == 0.01) |
                   (Method == "LinUCB_Disjoint"  & Alpha == 0.02) |
