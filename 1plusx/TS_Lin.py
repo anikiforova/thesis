@@ -8,10 +8,9 @@ class TS_Lin(AlgoBase):
 	
 	def __init__(self, meta):
 		super(TS_Lin, self).__init__(meta)	
-		self.impressions = 100
-
-	def setup(self):
-		super(TS_Lin, self).setup()
+		
+	def setup(self, testMeta):
+		super(TS_Lin, self).setup(testMeta)
 
 		self.B = np.identity(self.meta.dimensions)
 		self.B_i = np.identity(self.meta.dimensions)
@@ -32,14 +31,13 @@ class TS_Lin(AlgoBase):
 				self.f += embedding
 
 		self.B_i = inv(self.B)
-		self.cov = self.meta.alpha * self.B_i 
+		self.cov = self.testMeta.alpha * self.B_i 
 		self.mu = list(np.array(self.B_i.dot(self.f.reshape([self.meta.dimensions, 1]))).flat)
 
 		sample_mu = np.random.multivariate_normal(self.mu, self.cov, self.user_count)
 		for index, embedding in enumerate(self.user_embeddings):
 			self.prediction[index] = embedding.dot(sample_mu[index])
 		
-		self.impressions += train_user_count
 		self.predictionPosprocessing(users, clicks)		
 		print(" Done.")
 

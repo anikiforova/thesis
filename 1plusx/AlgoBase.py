@@ -43,7 +43,7 @@ class AlgoBase:
 		users = new_users
 		clicks = scaled_clicks		
 
-		if self.testMeta.equalize_clicks:
+		if self.testMeta.click_percent > 0:
 			click_indexes 			= clicks == 1
 			no_click_indexes 		= clicks == 0
 			new_users_click 		= np.array(users[click_indexes])

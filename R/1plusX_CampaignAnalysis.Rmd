@@ -9,7 +9,7 @@ fig_width: 20
 library(ggplot2)
 library("gridExtra")
 path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/837817/Processed/sorted_time_impressions.csv"
-data <- read.csv(file=path, header=TRUE, sep=",")
+#data <- read.csv(file=path, header=TRUE, sep=",")
 data$Timestamp = data$Timestamp / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
 formatterPretty <- function(){

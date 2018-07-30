@@ -3,6 +3,7 @@ title: "1PlusX_837817"
 author: "Ana Dimitrova"
 date: "7/24/2018"
 output: pdf_document
+geometry: margin=1cm
 ---
  
 
@@ -48,7 +49,7 @@ selectNecessaryColumns <- function(df, columns) {
 prepData <- function(files, cur_path=path) {
   file=paste0(cur_path, paste0(files[1], ".csv"))
   data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
-  columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart", "MSE", "CumulativeMSE", "Nu", "Hours", "LengthScale", "ClusterCount")
+  columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart", "MSE", "CumulativeMSE","MMSE", "MCumulativeMSE", "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate")
   data = selectNecessaryColumns(data, columns)
   if(length(files) > 1){
     for (name in files){
@@ -80,21 +81,31 @@ plotGroup <- function(g1, g2, title) {
                 top = title)
 }
 
-getCTRPlot <- function(data, limits = c(0,1.5)) {
+plotGroup3 <- function(g1, g2, g3, title) {
+  grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(9, 9, 9), "cm"), heights=unit(9, "cm"), top = title)
+}
+
+getCTRPlot <- function(data, limits = c(0,1.5), scaleName="") {
   g1 = ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
     geom_line() +
     xlab("Impressions") + ylab("CTR") +
     expand_limits(y=limits) + 
     scale_x_continuous(labels=formatterM()) + 
-    theme_bw() 
+    theme_bw() +
+    theme(plot.title = element_text(size = 10, face = "bold"), 
+          legend.title=element_text(size=8), 
+          legend.text=element_text(size=8), 
+          legend.key.size = unit(1,"line")) +
+    scale_color_discrete(name=scaleName)+
+    theme(legend.position="bottom")
   
   g1
 }
 
 getMSEPlot <- function(data, xLimit, scaleName) {
-  g2 = ggplot(data, aes(x=TotalImpressions, y=MSE, colour=Factor)) + 
-  stat_smooth(aes(y=MSE, colour=Factor), method = "lm", formula = y ~ poly(x, 10), se = FALSE) +
-    xlab("Impressions") + ylab("MSE") +
+  g2 = ggplot(data, aes(x=TotalImpressions, y=MMSE, colour=Factor)) + 
+  stat_smooth(aes(y=MMSE, colour=Factor), method = "lm", formula = y ~ poly(x, 10), se = FALSE) +
+    xlab("Impressions") + ylab("MMSE") +
     expand_limits(y=xLimit) + 
     scale_x_continuous(labels=formatterM()) +
     theme_bw() +
@@ -114,80 +125,32 @@ files =  c("Random")
 data = prepData(files)
 data$Factor = factor(paste(data$Method," R:", data$RecommendationPart*100, "%", sep=""))
 
-g1 = getCTRPlot(data)
+g1 = getCTRPlot(data, c(0,1), "")
 g2 = getMSEPlot(data, c(0,1), "Model/Rec Size")
 
 plotGroup(g1, g2, "Random - Evaluation of Rec. size and sampling choices.")
 ```
 
-
-```{r Regression_Alphas, include=TRUE, echo=FALSE}
-
-files =  c("Regression")
-data = prepData(files)
-data$Factor = factor(paste(substr(data$Method, 1, 3), "% A:", data$Alpha, sep=""))
-
-data = subset(data, Impressions > 1000 & !(Method == "Random" & RecommendationPart== 0.05)
-              & (Method %in% c("Regression","Random")))
-
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.005), "Method/Alpha")
-
-plotGroup(g1, g2, "Regression Rec:2% - Evaluation of Alpha values ")
-```
-This plot shows how equalizing the clicks affects performance. Both MSE and CTR get worse once we try to balance the number of clicks with the number of no clicks. The increase in MSE is expected since the model will be more optimistic in the ctr ration therefore we will predict generally larger values. However the CTR also suffers. The assumption at the moment is that that is caused by overfitting. 
-Currently the resampling is done on the whole set of clicks, and updated strategy might include adding age to the clicks so that the more recent clicks are resampled more often than older ones.
-```{r Regression_Equalize, include=TRUE, echo=FALSE}
-files =  c("Regression")
-data = prepData(files)
-data$Method =  lapply(data$Method, as.character)
-data$Eq = lapply(data$Method, function(m) { if(grepl("_E_", m)) paste("E:",substr(m, nchar(m)-2, nchar(m)), sep="") else "" })
-
-data$Factor = factor(paste("A:",data$Alpha, " ", data$Eq, sep=""))
-data = subset(data, Impressions > 1000 & Alpha %in% c(0.001, 0.01))
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.005), "Method/Alpha")
-
-plotGroup(g1, g2, "Regression Rec:2% - Evaluation of click resampling")
-
-```
-This plot shows the effect of changing the update time - from the standard 1h to 4h. The plot shows not great differences in performance. In the begginning 4h presents a bit better results since it's using bigger set of data points to create the model, but from there on it becomes less flexibable to the 1h model and deteriorates slightly in performance compared to 1h model. The analysis holds when performed on both 2% and 5% recommendation size.
-```{r LinUCB_Hours, include=TRUE, echo=FALSE}
-
-files =  c("LinUCB_Disjoint")
-data = prepData(files)
-data$Eq = lapply(data$Method, function(m) { if(grepl("_H_", m)) "12h" else "1h" })
-
-data$Factor = factor(paste("R:",data$RecommendationPart *100, "% ", data$Eq, sep=""))
-
-data = subset(data, Impressions > 1000 & (grepl("_H_", Method) | (Method == "LinUCB_Disjoint" & RecommendationPart %in% c(0.02, 0.05) & Alpha == 0.02)))
-
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.003), "Rec. Size/Hours")
-
-plotGroup(g1, g2, "LinUCB Rec:2% - Evaluation of #Hours between update")
-```
-```{r GP_Clustered, include=TRUE, echo=FALSE}
-
-files =  c("GP_Clustered", "GP_Clustered_Matern", "GP_Clustered_RBF", "Random")
-data = prepData(files)
-
-data$Factor = factor(paste(data$Method," A:", data$Alpha, sep = ""))
-
-data = subset(data, Impressions > 1000 & ((RecommendationPart == 0.2 & (Alpha == 1 | is.na(Alpha))) | Method == "Random_H_12"))
-
-g1 = getCTRPlot(data, c(0,0.75)) 
-data = subset(data, Method != "Random_H_12")
-g2 = getMSEPlot(data, c(0,0.003), "Rec. size")
-
-plotGroup(g1, g2, "GP Evaluation of parameters and kernels")
-```
 ```{r GP_Clustered, include=TRUE, echo=FALSE}
 
 files =  c("GP_Clustered_New")
 data = prepData(files)
 
-data$Factor = factor(paste(" Nu:", data$Nu, " H:", data$Hours, " LS:", data$LengthScale, " CL:", data$ClusterCount, sep = ""))
+data$Factor = factor(paste(" Nu:", data$Nu, " H:", data$Hours, " LS:", data$LengthScale, " CL:", data$ClusterCount, " Eq:", data$EqClicks, sep = ""))
+
+data = subset(data, Impressions > 1000)
+
+g1 = getCTRPlot(data, c(0,0.75)) 
+g2 = getMSEPlot(data, c(0,0.003), "")
+
+plotGroup(g1, g2, "GP Evaluation of parameters and kernels")
+```
+```{r LinUCB, include=TRUE, echo=FALSE}
+
+files =  c("LinUCB_Disjoint_New")
+data = prepData(files)
+
+data$Factor = factor(paste(" Rec:", data$RecommendationPart, " H:", data$Hours, " LS:", data$Alpha," Eq:", data$EqClicks, sep = ""))
 
 data = subset(data, Impressions > 1000)
 
@@ -197,97 +160,56 @@ g2 = getMSEPlot(data, c(0,0.003), "")
 plotGroup(g1, g2, "GP Evaluation of parameters and kernels")
 ```
 
+```{r NN, include=TRUE, echo=FALSE}
 
-This plot aims to show the behavior of LinUCB (and by proxy other linear algos) with changing recommendation size. Clearly the algorithm recommendations become worse the bigger the recommendation list is.
-Executed with fixed alpha = 0.02 which is the one that has displayed best results so far.
+files =  c("NN_New")
+data = prepData(files)
+
+
+data = subset(data, Impressions > 1000)
+data_rec = subset(data, EqClicks == 0.2 & LearningRate == 0.01)
+data_rec$Factor = factor(paste(data_rec$RecommendationPart * 100, "%", sep = ""))
+
+data_learning_rate = subset(data, EqClicks == 0.2 & RecommendationPart == 0.2)
+data_learning_rate$Factor = factor(paste(data_learning_rate$LearningRate, sep = ""))
+
+data_eq = subset(data, EqClicks == 0.5 & RecommendationPart == 0.2)
+data_eq$Factor = factor(paste(data_eq$LearningRate, sep = ""))
+
+g1 = getCTRPlot(data_rec, c(0,1), "Rec:")            + ggtitle("Rec Change-EQ:0.2")
+g2 = getCTRPlot(data_learning_rate, c(0,1), "LRate:")+ ggtitle("LRate Change")
+g3 = getCTRPlot(data_eq, c(0,1), "LRate:")           + ggtitle("LRate Change-EQ:0.5")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"))
+
+#plotGroup(g1, g2, "NN Evaluation of parameters and kernels")
+```
+
 ```{r Regression, include=TRUE, echo=FALSE}
 
-files =  c("LinUCB_Disjoint")
-data = prepData(files)
-data$Factor = factor(paste(substr(data$Method, 1, 6), " R:", data$RecommendationPart*100, "%", sep = ""))
-data = subset(data, Impressions > 1000 & ((Method == "Random" & RecommendationPart == 0.02) | ( Method == "LinUCB_Disjoint" & Alpha == 0.02)))
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.003), "Method/Rec. Size")
-
-plotGroup(g1, g2, "LinUCB Alpha:0.02 - Evaluation of Rec. Size")
-```
-```{r TS_Lin, include=TRUE, echo=FALSE}
-
-files =  c("TS_Lin")
+files =  c("Regression_New")
 data = prepData(files)
 
-data$Factor = factor(paste(data$Method, "% A:", data$Alpha, sep = ""))
-data = subset(data, Impressions > 1000 & Method == "TS_Lin" & RecommendationPart == 0.02)
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.003), "Method/Alpha")
+data$Factor = factor(paste(" Rec:", data$RecommendationPart, " H:", data$Hours, " LS:", data$Alpha," Eq:", data$EqClicks, sep = ""))
 
-plotGroup(g1, g2, "TS_Lin Rec:2% - Evaluation of best Alpha")
-```
-```{r TS_Lin, include=TRUE, echo=FALSE}
+data = subset(data, Impressions > 1000)
 
-files =  c("TS_Lin")
-data = prepData(files)
+g1 = getCTRPlot(data, c(0,0.75)) 
+g2 = getMSEPlot(data, c(0,0.003), "")
 
-data$Factor = factor(paste(data$Method, " R:", data$RecommendationPart * 100, "%", sep = ""))
-data = subset(data, Impressions > 1000 & Method == "TS_Lin" & Alpha == 0.0001)
-
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.003), "Method/Rec. size")
-
-plotGroup(g1, g2, "TS_Lin Alpha:0.02 - Evaluation of rec. size")
+plotGroup(g1, g2, "Regression Evaluation of parameters and kernels")
 ```
 
-```{r TS_Lin, include=TRUE, echo=FALSE}
+```{r TS_Lin, include=FALSE, echo=FALSE}
 
-files =  c("TS_Lin")
-data = prepData(files)
-data$Method =  lapply(data$Method, as.character)
-data$Eq = lapply(data$Method, function(m) { if(grepl("_E_", m)) paste("E:",substr(m, nchar(m)-2, nchar(m)), sep="") else "" })
+#files =  c("TS_Lin_New")
+#data = prepData(files)
 
-data$Factor = factor(paste(substr(data$Method, 1, 6), " ", data$Eq, sep = ""))
-data = subset(data, Impressions > 1000 & RecommendationPart == 0.02 & Alpha == 0.0001)
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.05), "Method")
+#data$Factor = factor(paste(" Rec:", data$RecommendationPart, " H:", data$Hours, " LS:", data$Alpha, sep = ""))
 
-plotGroup(g1, g2, "TS_Lin Rec:2% - Evaluation of click resampling")
+#data = subset(data, Impressions > 1000)
+
+#g1 = getCTRPlot(data, c(0,0.75)) 
+#g2 = getMSEPlot(data, c(0,0.003), "")
+
+#plotGroup(g1, g2, "GP Evaluation of parameters and kernels")
 ```
-
-```{r all, include=TRUE, echo=FALSE}
-
-files =  c("TS_Lin", "Regression", "LinUCB_Disjoint")
-data = prepData(files)
-data$Factor = factor(paste(substr(data$Method, 1, 6), " A:", data$Alpha, sep = ""))
-
-data = subset(data, Impressions > 1000 & RecommendationPart == 0.02 &
-                 ((Method == "TS_Lin"           & Alpha == 0.001) |
-                  (Method == "Regression"       & Alpha == 0.01) |
-                  (Method == "LinUCB_Disjoint"  & Alpha == 0.02) ))
-
-g1 = getCTRPlot(data)
-g2 = getMSEPlot(data, c(0,0.003), "Method/Alpha")
-
-plotGroup(g1, g2, "Comparison algos with best params")
-```
-
-```{r all, include=TRUE, echo=FALSE}
-
-files =  c("TS_Lin", "NN", "LinUCB_Disjoint", "Regression", "GP_Clustered")
-data = prepData(files)
-data$Factor = factor(data$Method)
-
-data = subset(data, Impressions > 1000 & RecommendationPart == 0.02 &
-                 ((Method == "TS_Lin"           & Alpha == 0.001) |
-                  (Method == "Regression"       & Alpha == 0.01) |
-                  (Method == "LinUCB_Disjoint"  & Alpha == 0.02) |
-                  (Method == "NN_E_0.8"         & Alpha == 0.0001) |
-                  (Method == "GP_Clustered_E_0.8"& Alpha == 1.2)
-                    ))
-
-ggplot(data, aes(x=Timestamp, y=Impressions, colour=Factor)) + 
-    geom_line() +
-    xlab("Timestamp") + ylab("Cumulative Common Impressions") +
-    scale_y_continuous(labels=formatterM()) +
-    theme_bw() +
-    ggtitle("Cumulative # Impressions during Exploration Scavanging")
-  
-``` 

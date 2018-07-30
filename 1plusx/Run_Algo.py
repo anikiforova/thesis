@@ -21,10 +21,10 @@ from GP_Clustered import GP_Clustered
 from NN import NN
 
 meta = Metadata()
-algoName = "LinUCB_Disjoint"
+algoName = "Regression"
 
 testsMeta = TestBuilder.get_lin_tests(meta)
-algo = LinUCB_Disjoint(meta)
+algo = Regression(meta)
 
 output_path = "./Results/{0}/{1}_New.csv".format(meta.campaign_id, algoName)
 output_column_names = False
@@ -41,7 +41,7 @@ else:
 for testMeta in testsMeta:
 	algo.setup(testMeta)
 	if output_column_names:
-		output.write("Clicks,Impressions,TotalImpressions,Method,Timestamp,MSE,CumulativeMSE,{}\n".format(testMeta.get_additional_column_names()))
+		output.write("Clicks,Impressions,TotalImpressions,Method,Timestamp,MSE,CumulativeMSE,MMSE,MCumulativeMSE,{}\n".format(testMeta.get_additional_column_names()))
 		output_column_names = False
 
 	impression_count 	= 1.0
@@ -56,8 +56,10 @@ for testMeta in testsMeta:
 	impressions_per_recommendation_group = 0.0
 	
 	SE = 0.0
+	local_modified_SE = 0.0
 	local_SE = 0.0
 	cumulative_SE = 0.0 
+	modified_cumulative_SE = 0.0
 
 	warmup = True
 
@@ -75,16 +77,26 @@ for testMeta in testsMeta:
 		user_id, click, timestamp_raw, timestamp = Util.get_line_info(line)
 
 		impressions_per_recommendation_group += 1
-		cur_SE 			= (click - algo.getPrediction(user_id)) ** 2
-		SE 				+= cur_SE 
-		local_SE 		+= cur_SE
-		cumulative_SE 	+= cur_SE
+		prediction = algo.getPrediction(user_id)
+		modified_click_value = click
+		if click:
+			modified_click_value = modified_click_value / 0.003
+
+		cur_SE 					= (click - algo.getPrediction(user_id)) ** 2
+		cur_modified_SE 		= (modified_click_value - algo.getPrediction(user_id)) ** 2
+
+		local_SE 				+= cur_SE
+		cumulative_SE 			+= cur_SE
+
+		local_modified_SE 		+= cur_modified_SE
+		modified_cumulative_SE 	+= cur_modified_SE
 
 		if warmup and (timestamp - hour_begin_timestamp).seconds < testMeta.time_between_updates_in_seconds: 
 			users_to_update.append(user_id)
 			clicks_to_update.append(click)
-			SE = 0.0
 			cumulative_SE = 0.0
+			modified_SE = 0.0
+			modified_cumulative_SE = 0.0
 			continue	
 
 		if (timestamp - hour_begin_timestamp).seconds >= testMeta.time_between_updates_in_seconds:			
@@ -124,15 +136,15 @@ for testMeta in testsMeta:
 
 			print('{:.2%} ImpC:{} ClkC:{} CumCTR:{:.3%} CTR:{:.3%} CumMC:{:.3%} MC:{:.3%} Overlap:{} UniqueUsers:{}'.format(total_impressions/meta.total_lines, int(impression_count), int(click_count), click_count/impression_count, local_clicks/local_count, missed_clicks/total_clicks, local_missed_clicks/total_local_clicks, int(total_local_count), unique_users_seen))
 
-			output.write("{0},{1},{2},{3},{4},{5},{6},{7}\n".format(click_count, impression_count, total_impressions, algoName, timestamp_raw, local_SE/10000, cumulative_SE/total_impressions, testMeta.get_additional_column_info()))
+			output.write("{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{}\n".format(click_count, impression_count, total_impressions, algoName, timestamp_raw, local_SE/10000, local_modified_SE/10000, cumulative_SE/total_impressions, modified_cumulative_SE/total_impressions, testMeta.get_additional_column_info()))
 			output.flush()
 
 			local_SE = 0.0	
 			local_clicks = 0.0	
 			local_count = 1.0
 			local_missed_clicks = 0.0
+			local_modified_SE = 0.0
 			total_local_clicks = 0.0
-			SE = 0.0
 			
 	input.close()
 				

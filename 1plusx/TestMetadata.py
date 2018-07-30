@@ -4,7 +4,6 @@ from pandas import DataFrame
 
 class TestMetadata:
 
-	equalize_clicks 				= False
 	click_percent					= 0.2
 	
 	# GP
@@ -33,10 +32,7 @@ class TestMetadata:
 		self.length_scale	= self.meta.dimensions
 
 	def get_additional_info(self):
-		info = "H:{},Train:{},Rec:{},Alpha:{}".format(self.hours, self.train_part, self.recommendation_part, self.alpha)
-
-		if self.equalize_clicks:
-			info =  "{},ClickPercent:{:.2}".format(info, self.click_percent)
+		info = "H:{},Train:{},Rec:{},Alpha:{},ClickPercent:{:.2}".format(self.hours, self.train_part, self.recommendation_part, self.alpha, self.click_percent)
 
 		if self.gp_running_algo:
 			info =  "{},#Clusters:{},LengthScale:{},Nu:{:.2},Kernel:{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
@@ -47,10 +43,7 @@ class TestMetadata:
 		return info
 
 	def get_additional_column_info(self):
-		info = "{},{},{},{}".format(self.hours, self.train_part, self.recommendation_part, self.alpha)
-
-		if self.equalize_clicks:
-			info = "{},{:.2}".format(info, self.click_percent)
+		info = "{},{},{},{},{}".format(self.hours, self.train_part, self.recommendation_part, self.alpha, self.click_percent)
 
 		if self.gp_running_algo:
 			info =  "{},{},{},{:.2},{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
@@ -61,10 +54,7 @@ class TestMetadata:
 		return info
 
 	def get_additional_column_names(self):
-		info = "Hours,TrainPart,RecommendationPart,Alpha"
-
-		if self.equalize_clicks:
-			info =  info + ",EqClicks"
+		info = "Hours,TrainPart,RecommendationPart,Alpha,EqClicks"
 
 		if self.gp_running_algo:
 			info =  info + ",ClusterCount,LengthScale,Nu,Kernel"
