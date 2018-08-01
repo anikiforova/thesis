@@ -11,13 +11,11 @@ class Metadata:
 	
 	cluster_name_postfix		= ""
 
-	total_lines = 5409623 #14392074
-	campaign_id = 837817#722100
-
-	path = "..//..//RawData//Campaigns//{0}//Processed".format(campaign_id)
-
-	def __init__(self):
-		pass
+	total_lines = dict({597165:2257957, 837817:5409623, 722100:8475542, 809153:14392075})
+	
+	def __init__(self, campaign_id):
+		self.campaign_id = campaign_id
+		self.path = "..//..//RawData//Campaigns//{0}//Processed".format(self.campaign_id)
 
 	def normalize_array(self, array):
 		min_value = np.min(array)

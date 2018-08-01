@@ -48,30 +48,45 @@ def get_lin_tests(meta):
 				tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
 	return tests
 
+def get_lin_tests_mini(meta):
+	tests = list()
+	for alpha in [0.1, 0.01, 0.001]:
+		for rec_part in [0.02, 0.2]:
+			for click_percent in [0.0]:
+				tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
+	return tests
+
 # DONE
+def get_random_tests(meta):
+	t = TestMetadata(meta)
+	t.recommendation_part 	= 0.2
+	t.hours 				= 12
+
+	return [t]
+
 def get_nn_tests(meta):
 	return [
-			# test learning rate
-# 	build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, click_percent = 0.2), 
-# 	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.2, click_percent = 0.2),
-# 	build_nn_test(meta, learning_rate = 0.0001, h = 12, rec_part = 0.2, click_percent = 0.2),
+	# test learning rate
+	build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, click_percent = 0.2), 
+	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.2, click_percent = 0.2),
+	build_nn_test(meta, learning_rate = 0.0001, h = 12, rec_part = 0.2, click_percent = 0.2),
 	
 # 	# test train part
-# 	build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.1, click_percent = 0.2),
-# #	build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.2, click_percent = 0.2), # duplicate
-# 	build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.5, click_percent = 0.2),
+	build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.1, click_percent = 0.2),
+	# build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.2, click_percent = 0.2), # duplicate
+	build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.5, click_percent = 0.2),
 
 	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.1, click_percent = 0.2),
 	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.1, click_percent = 0.5),
-# #	build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.2, click_percent = 0.2), # duplicate
+	# build_nn_test(meta, learning_rate = 0.01,  h = 12, rec_part = 0.2, click_percent = 0.2), # duplicate
 	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.5, click_percent = 0.2),
 	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.5, click_percent = 0.5),
 	
 	# click percent
-	# build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, click_percent = 0.5), 
-	# build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.2, click_percent = 0.5),
-	# build_nn_test(meta, learning_rate = 0.0001, h = 12, rec_part = 0.2, click_percent = 0.5),
-	#build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, click_percent = 0.0) 
+	build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, click_percent = 0.5), 
+	build_nn_test(meta, learning_rate = 0.001,  h = 12, rec_part = 0.2, click_percent = 0.5),
+	build_nn_test(meta, learning_rate = 0.0001, h = 12, rec_part = 0.2, click_percent = 0.5),
+	build_nn_test(meta, learning_rate = 0.01,   h = 12, rec_part = 0.2, click_percent = 0.0) 
 		]
 
 # Run uncommented tests.
@@ -95,7 +110,19 @@ build_gp_test(meta, click_percent = 0.2, nu = 2.5, length_scale = 200, cluster_c
 #try different timespan
 build_gp_test(meta, click_percent = 0.2, nu = 1.5, length_scale = 100, cluster_count = 10, h = 4,  rec_part = 0.2),
 build_gp_test(meta, click_percent = 0.2, nu = 2.5, length_scale = 100, cluster_count = 10, h = 4,  rec_part = 0.2),
-# try different cluster count
-build_gp_test(meta, click_percent = 0.2, nu = 1.5, length_scale = 100, cluster_count = 20, h = 12, rec_part = 0.2),
-build_gp_test(meta, click_percent = 0.2, nu = 2.5, length_scale = 100, cluster_count = 20, h = 12, rec_part = 0.2)
+# # try different cluster count
+# build_gp_test(meta, click_percent = 0.2, nu = 1.5, length_scale = 100, cluster_count = 20, h = 12, rec_part = 0.2),
+# build_gp_test(meta, click_percent = 0.2, nu = 2.5, length_scale = 100, cluster_count = 20, h = 12, rec_part = 0.2)
+# build_gp_test(meta, click_percent = 0.0, nu = 1.5, length_scale = 100, cluster_count = 20, h = 12, rec_part = 0.2),
+# build_gp_test(meta, click_percent = 0.0, nu = 2.5, length_scale = 100, cluster_count = 20, h = 12, rec_part = 0.2),
+# build_gp_test(meta, click_percent = 0.0, nu = 3.5, length_scale = 100, cluster_count = 20, h = 12, rec_part = 0.2),
+
+# build_gp_test(meta, click_percent = 0.0, nu = 1.5, length_scale = 100, cluster_count = 20, h = 4, rec_part = 0.2),
+# build_gp_test(meta, click_percent = 0.0, nu = 2.5, length_scale = 100, cluster_count = 20, h = 4, rec_part = 0.2),
+# build_gp_test(meta, click_percent = 0.0, nu = 3.5, length_scale = 100, cluster_count = 20, h = 4, rec_part = 0.2),
+
+# build_gp_test(meta, click_percent = 0.0, nu = 1.5, length_scale = 200, cluster_count = 20, h = 12, rec_part = 0.2),
+# build_gp_test(meta, click_percent = 0.0, nu = 2.5, length_scale = 200, cluster_count = 20, h = 12, rec_part = 0.2),
+# build_gp_test(meta, click_percent = 0.0, nu = 3.5, length_scale = 200, cluster_count = 20, h = 12, rec_part = 0.2)
+
 			]

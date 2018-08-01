@@ -4,7 +4,7 @@ import glob
 import numpy as np
 import pyarrow.parquet as pq
 
-campaign_id = "837817"
+campaign_id = "597165"
 path = "../../RawData/Campaigns/{0}/"
 processed_path = "../../RawData/Campaigns/{0}/Processed/{1}"
 

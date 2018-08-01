@@ -16,7 +16,7 @@ class NN(AlgoBase):
 		super(NN, self).setup(testMetadata)
 		
 		# Network Parameters
-		self.n_hidden_1  = 20	# 1st hidden layer of neurons
+		self.n_hidden_1  = self.testMeta.hidden_layers	# 1st hidden layer of neurons
 		# self.n_hidden_2  = 32	# 2nd hidden layer of neurons
 		# self.n_hidden_3  = 16	# 3rd hidden layer of neurons
 		self.n_input     = self.meta.dimensions	# number of features after LSA

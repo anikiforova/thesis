@@ -1,15 +1,14 @@
 ---
 title: "R Notebook"
-output: html_notebook
-fig_width: 20 
+output: pdf_document
 ---
 
 
-```{r}
+```{r include=TRUE, echo=FALSE,warning=FALSE}
 library(ggplot2)
 library("gridExtra")
-path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/837817/Processed/sorted_time_impressions.csv"
-#data <- read.csv(file=path, header=TRUE, sep=",")
+path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/597165/Processed/sorted_time_impressions.csv"
+data <- read.csv(file=path, header=TRUE, sep=",")
 data$Timestamp = data$Timestamp / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
 formatterPretty <- function(){
@@ -46,9 +45,7 @@ formatterDensity <- function(){
 
 ```
 
-
-User Impressions per day.
-```{r}
+```{r include=TRUE, echo=FALSE}
 library(scales)
 
 ggplot(data, aes(data$Timestamp, fill=Click)) + 
@@ -62,7 +59,7 @@ ggplot(data, aes(data$Timestamp, fill=Click)) +
 
 ```
 
-```{r}
+```{r include=TRUE, echo=FALSE}
 all_impressions = hist(data$Timestamp, breaks = "hours", 
      col="blue", main = "Histogramm of Impressions for Campaign",  
      xlab = "Timestamp", ylab = "Frequency", freq=TRUE, plot = FALSE)
@@ -89,9 +86,9 @@ ggplot(df, aes(x=time,y=ratio)) +
 
 ```
 
-```{r}
+```{r include=TRUE, echo=FALSE}
 
-stats_path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/837817/Processed/user_statistics.csv"
+stats_path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/597165/Processed/user_statistics.csv"
 users <- read.csv(file=stats_path, header=TRUE, sep=",")
 cat(paste("Total Users", nrow(users), "\n"))
 cat(paste("Total Impressions", sum(users$TotalImpressions), "\n"))
@@ -112,13 +109,13 @@ cat(paste("Total number of impressions that could be discarded past first clicks
 
 ```
 
-```{r}
+```{r include=TRUE, echo=FALSE}
 ggplot(data=click_users, aes(CTR)) + 
   geom_histogram(bins = 50, color="blue") +
   theme_bw() + xlab("CTR") + ylab("User Count") + ggtitle("CTR for the users that have click activity.")
 ```
 
-```{r, fig.height = 5, fig.width = 10}
+```{r, include=TRUE, echo=FALSE}
 g1 = ggplot(data=click_users, aes(ActiveTime)) + 
   geom_histogram(bins=30, color="blue") +
   theme_bw() + xlab("Time in Hours") + ylab("Density") + ggtitle("Total Active Time") + 
@@ -129,10 +126,10 @@ g2 = ggplot(data=click_users, aes(TimeUntilClickSec)) +
   theme_bw() + xlab("Time in Hours") + ylab("Density") + ggtitle("Active Time before First Click") + 
   scale_x_continuous(labels=formatterTimeInHour()) + expand_limits(y=c(0, 15e3)) 
 
-grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(12, 12),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(24, "cm"), heights=unit(c(9, 1), "cm"))
+grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(7, 7),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(14, "cm"), heights=unit(c(9, 1), "cm"))
 ```
 Clearly the total active time is more evenly distributed compared to the time of the time until first click. The time until first click is almost always within 
-```{r, fig.height = 5, fig.width = 10}
+```{r include=TRUE, echo=FALSE}
 g1 = ggplot(data=users[users$TotalImpressions < 50,], aes(TotalImpressions)) + 
   geom_histogram(bins = 50, color="blue", aes(y=..density..)) +
   theme_bw() + xlab("# Impressions") + ylab("Density") + 
@@ -145,10 +142,10 @@ g2 = ggplot(data=click_users[click_users$TotalImpressions < 50,], aes(TotalImpre
   expand_limits(y=c(0, 0.30)) + theme(plot.title=element_text(size=12))
   
 
-grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(12, 12),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(24, "cm"), heights=unit(c(9, 1), "cm"))
+grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(7, 7),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(14, "cm"), heights=unit(c(9, 1), "cm"))
 ```
 
-```{r, fig.height = 5, fig.width = 10}
+```{r include=TRUE, echo=FALSE}
 
 g1 = ggplot(data=click_users, aes(TotalImpressions)) + 
   geom_histogram(bins = 50, color="blue", aes(y=..density..)) +
@@ -160,6 +157,6 @@ g2 = ggplot(data=click_users, aes(FirstClickIndex)) +
   theme_bw() + xlab("First Click Index") + ylab("Density") + ggtitle("Density for First Click Index (Click Users)") +
   expand_limits(y=c(0, 0.25)) + theme(plot.title=element_text(size=12))
 
-grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(12, 12),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(24, "cm"), heights=unit(c(9, 1), "cm"))
+grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(7, 7),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(14, "cm"), heights=unit(c(9, 1), "cm"))
 ```
 

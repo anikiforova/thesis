@@ -17,6 +17,7 @@ class TestMetadata:
 	# NN
 	nn_running_algo					= False
 	learning_rate 					= 0.001
+	hidden_layers					= 10
 
 	# LinUCB, TS_Lin, GP (only as scale)
 	alpha							= 0.0
@@ -38,7 +39,7 @@ class TestMetadata:
 			info =  "{},#Clusters:{},LengthScale:{},Nu:{:.2},Kernel:{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
 
 		if self.nn_running_algo:
-			info = "{},LearningRate:{}".format(info, self.learning_rate)
+			info = "{},LearningRate:{},HiddenLayers:{}".format(info, self.learning_rate, self.hidden_layers)
 				
 		return info
 
@@ -49,7 +50,7 @@ class TestMetadata:
 			info =  "{},{},{},{:.2},{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
 
 		if self.nn_running_algo:
-			info = "{},{}".format(info, self.learning_rate)
+			info = "{},{},{}".format(info, self.learning_rate, self.hidden_layers)
 
 		return info
 
@@ -60,7 +61,7 @@ class TestMetadata:
 			info =  info + ",ClusterCount,LengthScale,Nu,Kernel"
 
 		if self.nn_running_algo:
-			info = info + ",LearningRate"
+			info = info + ",LearningRate,HiddenLayers"
 
 		return info
 
