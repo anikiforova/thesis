@@ -1,0 +1,372 @@
+---
+title: "1PlusX - Campaign 722100"
+author: "Ana Dimitrova"
+output: pdf_document
+geometry: margin=1cm
+---
+ 
+
+```{r setup, include=TRUE, echo=FALSE,warning=FALSE}
+library(ggplot2)
+library(scales)
+library(gridExtra)
+
+campaign_id = 722100
+path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaign_id, "/", sep="")
+path_ctr = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/CTR/", campaign_id, "/", sep="")
+
+formatterM <- function(){
+  function(x) paste(x/1000000, "M")
+}
+
+selectNecessaryColumns <- function(df, columns) {
+  for (column in columns) {
+    if(!(column %in% colnames(df))){
+      df[column] = NA
+    } 
+  }
+  df[,columns]
+}
+
+prepData <- function(files, cur_path=path) {
+  file=paste0(cur_path, paste0(files[1], ".csv"))
+  data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
+  columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart", "MSE", "CumulativeMSE","MMSE", "MCumulativeMSE", "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate")
+  data = selectNecessaryColumns(data, columns)
+  if(length(files) > 1){
+    for (name in files){
+      data1 <- read.csv(file=paste0(cur_path, paste0(name, ".csv")), header=TRUE, sep=",")
+      data1 = selectNecessaryColumns(data1, columns)
+      data <- rbind(data, data1)  
+    }
+  }
+  data$Percent = data$Clicks / data$Impressions * 100
+  data$Factor = factor(paste(data$Method, " ", data$Alpha, " R:", data$RecommendationPart * 100, sep=""))
+  data$UserPercentage = factor(data$RecommendationPart * 100)
+  data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
+  data
+}
+  
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+
+plotGroup <- function(g1, g2, title) {
+  mylegend<-g_legend(g2)
+  grid.arrange(arrangeGrob(g1 + theme(legend.position="none"),
+                           g2 + theme(legend.position="none"),
+                                 nrow=1, ncol=2, widths=unit(c(8, 8), "cm"), heights=unit(9, "cm")),
+                mylegend, nrow=2, widths=unit(16, "cm"), heights=unit(c(9, 1), "cm"),
+                top = title)
+}
+
+getCTRPlot <- function(data, limits = c(0,1.5), scaleName="") {
+  g1 = ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
+    geom_line() +
+    xlab("Impressions") + ylab("CTR") +
+    expand_limits(y=limits) + 
+    scale_x_continuous(labels=formatterM()) + 
+    theme_bw() +
+    theme(plot.title = element_text(size = 10, face = "bold"), 
+          legend.title=element_text(size=8), 
+          legend.text=element_text(size=8), 
+          legend.key.size = unit(1,"line"),
+          axis.title.x = element_text(size=8),
+          axis.title.y = element_text(size=8),
+          legend.position="bottom") +
+    scale_color_discrete(name=scaleName)
+  g1
+}
+
+getMSEPlot <- function(data, xLimit, scaleName) {
+  g2 = ggplot(data, aes(x=TotalImpressions, y=MMSE, colour=Factor)) + 
+  stat_smooth(aes(y=MMSE, colour=Factor), method = "lm", formula = y ~ poly(x, 20), se = FALSE) +
+    xlab("Impressions") + ylab("MMSE") +
+    expand_limits(y=xLimit) + 
+    scale_x_continuous(labels=formatterM()) +
+    theme_bw() +
+     theme(plot.title = element_text(size = 10, face = "bold"), 
+          legend.title=element_text(size=8), 
+          legend.text=element_text(size=8), 
+          legend.position="bottom",
+          legend.key.size = unit(1,"line"),
+          axis.title.x = element_text(size=8),
+          axis.title.y = element_text(size=8))+
+    scale_color_discrete(name=scaleName)
+  g2
+}
+  
+```
+
+
+\section*{\centering {Best performance per algorithm for 20\% recommendation size}}
+```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
+
+#files =  c("GP_Clustered", "NN", "LinUCB_Disjoint", "Regression", "Random","TS_Lin")
+files =  c("Regression", "Random")
+data = prepData(files)
+
+data$Factor = factor(data$Method)
+data = subset(data, Impressions > 1000 & RecommendationPart == 0.2 )
+
+data = subset(data, (Method == "GP_Clustered" & EqClicks == 0 & ClusterCount == 10 & Hours == 12 & LengthScale == 100 & Nu == 2.5 ) |
+                (Method == "NN" & EqClicks == 0.5 & LearningRate == 0.01 ) |
+                (Method == "Regression" & EqClicks == 0 & Alpha == 0.01) |
+                (Method == "LinUCB_Disjoint" & EqClicks == 0 & Alpha == 0.01)|
+                (Method == "TS_Lin" & EqClicks == 0 & Alpha == 0.001)|
+                (Method == "Random" ) 
+                )
+
+g1 = getCTRPlot(data, c(0,0.50)) 
+g2 = getMSEPlot(data, c(0,0.003), "")
+
+plotGroup(g1, g2, "Best of all (Rec: 20%)")
+```
+\newpage
+\section*{\centering Random}
+```{r Random, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("Random")
+data = prepData(files)
+data$Factor = factor(data$Method)
+
+g1 = getCTRPlot(data, c(0,1), "")
+g2 = getMSEPlot(data, c(0,1), "")
+
+plotGroup(g1, g2, "Random")
+```
+\newpage
+\section*{\centering GP CTR and modified MSE}
+Recommendation for all of the experiements for GP is 20% size.
+```{r GP, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("GP_Clustered")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data1 = subset(data, Nu == 2.5 & Hours == 12 & LengthScale == 100 & ClusterCount == 10)
+data1$Factor = factor(paste(data1$EqClicks, sep = ""))
+
+data2 = subset(data, EqClicks == 0 & Hours == 12 & LengthScale == 100 & ClusterCount == 10)
+data2$Factor = factor(paste(data2$Nu, sep = ""))
+
+data3 = subset(data, EqClicks == 0 & Hours == 12 & LengthScale == 100 & Nu == 2.5)
+data3$Factor = factor(paste(data3$ClusterCount , sep = ""))
+
+g1 = getCTRPlot(data1, c(0,1), "EQ:")+ ggtitle("EQ - Nu:2.5,H:12,CC:10")
+g2 = getCTRPlot(data2, c(0,1), "Nu:")  + ggtitle("Nu - EQ:0,H:12,CC:10")
+g3 = getCTRPlot(data3, c(0,1), "CC:")   + ggtitle("CC - EQ:0.2,Nu:2.5,H:12")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="GP results")
+
+```
+\break\break
+```{r GP_MSE, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("GP_Clustered")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data1 = subset(data, Nu == 2.5 & Hours == 12 & LengthScale == 100 & ClusterCount == 10)
+data1$Factor = factor(paste(data1$EqClicks, sep = ""))
+
+data2 = subset(data, EqClicks == 0 & Hours == 12 & LengthScale == 100 & ClusterCount == 10)
+data2$Factor = factor(paste(data2$Nu, sep = ""))
+
+data3 = subset(data, EqClicks == 0.2 & Hours == 12 & LengthScale == 100 & Nu == 2.5)
+data3$Factor = factor(paste(data3$ClusterCount , sep = ""))
+
+g1 = getMSEPlot(data1, c(0,0.01), "EQ:")+ ggtitle("EQ - Nu:2.5,H:12,CC:10")
+g2 = getMSEPlot(data2, c(0,0.01), "Nu:")  + ggtitle("Nu - EQ:0,H:12,CC:10")
+g3 = getMSEPlot(data3, c(0,0.01), "CC:")   + ggtitle("CC - EQ:0.2,Nu:2.5,H:12")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="GP MMSE results")
+
+```
+
+
+\newpage
+\section*{\centering LinUCB CTR and modified MSE}
+```{r LinUCB, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("LinUCB_Disjoint")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data_alpha = subset(data, EqClicks == 0.0 & RecommendationPart == 0.02)
+data_alpha$Factor = factor(paste(data_alpha$Alpha, sep = ""))
+
+data_rec = subset(data, Alpha == 0.1 & EqClicks == 0.0)
+data_rec$Factor = factor(paste(data_rec$RecommendationPart * 100, "%",sep = ""))
+
+data_eq = subset(data, RecommendationPart == 0.02 & Alpha == 0.1)
+data_eq$Factor = factor(paste(data_eq$EqClicks*100, "%", sep = ""))
+
+g1 = getCTRPlot(data_alpha, c(0,3), "Alpha:")  + ggtitle("Alpha Change-EQ:0,Rec:0.2")
+g2 = getCTRPlot(data_rec, c(0,1), "Rec:")      + ggtitle("Rec. Change-Alpha:0.1")
+g3 = getCTRPlot(data_eq, c(0,1), "EQ:")        + ggtitle("EQ Change-Alpha:0.1")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="LinUCB results")
+
+```
+\break\break
+```{r LinUCB_MSE, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("LinUCB_Disjoint")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data_alpha = subset(data, EqClicks == 0.0 & RecommendationPart == 0.02)
+data_alpha$Factor = factor(paste(data_alpha$Alpha, sep = ""))
+
+data_rec = subset(data, Alpha == 0.1 & EqClicks == 0.0)
+data_rec$Factor = factor(paste(data_rec$RecommendationPart * 100, "%",sep = ""))
+
+data_eq = subset(data, RecommendationPart == 0.02 & Alpha == 0.1)
+data_eq$Factor = factor(paste(data_eq$EqClicks*100, "%", sep = ""))
+
+g1 = getMSEPlot(data_alpha, c(0,0.001), "Alpha:")  + ggtitle("Alpha Change-EQ:0,Rec:0.2")
+g2 = getMSEPlot(data_rec, c(0,0.001), "Rec:")      + ggtitle("Rec. Change-Alpha:0.1")
+g3 = getMSEPlot(data_eq, c(0,0.001), "EQ:")        + ggtitle("EQ Change-Alpha:0.1")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="LinUCB MMSE results")
+
+```
+
+\newpage
+\section*{\centering Regression CTR and modified MSE}
+```{r Regression, include=TRUE, echo=FALSE}
+#, fig.width = 10, fig.asp = 1
+files =  c("Regression")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data_alpha = subset(data, EqClicks == 0.0 & RecommendationPart == 0.02)
+data_alpha$Factor = factor(paste(data_alpha$Alpha, sep = ""))
+
+data_rec = subset(data, Alpha == 0.1 & EqClicks == 0.0)
+data_rec$Factor = factor(paste(data_rec$RecommendationPart * 100, "%",sep = ""))
+
+data_eq = subset(data, RecommendationPart == 0.02 & Alpha == 0.1)
+data_eq$Factor = factor(paste(data_eq$EqClicks*100, "%", sep = ""))
+
+g1 = getCTRPlot(data_alpha, c(0,3), "Alpha:")  + ggtitle("Alpha Change-EQ:0,Rec:0.2")
+g2 = getCTRPlot(data_rec, c(0,1), "Rec:")      + ggtitle("Rec. Change-Alpha:0.1")
+g3 = getCTRPlot(data_eq, c(0,1), "EQ:")        + ggtitle("EQ Change-Alpha:0.1")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="Regression results")
+
+```
+\break\break
+```{r Regression_MSE, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("Regression")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data_alpha = subset(data, EqClicks == 0.0 & RecommendationPart == 0.02)
+data_alpha$Factor = factor(paste(data_alpha$Alpha, sep = ""))
+
+data_rec = subset(data, Alpha == 0.1 & EqClicks == 0.0)
+data_rec$Factor = factor(paste(data_rec$RecommendationPart * 100, "%",sep = ""))
+
+data_eq = subset(data, RecommendationPart == 0.02 & Alpha == 0.1)
+data_eq$Factor = factor(paste(data_eq$EqClicks*100, "%", sep = ""))
+
+g1 = getMSEPlot(data_alpha, c(0,0.001), "Alpha:")  + ggtitle("Alpha Change-EQ:0,Rec:0.2")
+g2 = getMSEPlot(data_rec, c(0,0.001), "Rec:")      + ggtitle("Rec. Change-Alpha:0.1")
+g3 = getMSEPlot(data_eq, c(0,0.001), "EQ:")        + ggtitle("EQ Change-Alpha:0.1")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="Regression MMSE results")
+
+```
+
+\newpage
+\section*{\centering NN CTR and modified MSE}
+```{r NN, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("NN")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data1 = subset(data, EqClicks == 0.2 & LearningRate == 0.01)
+data1$Factor = factor(paste(data1$RecommendationPart * 100, "%", sep = ""))
+
+data2 = subset(data, EqClicks == 0.2 & RecommendationPart == 0.2)
+data2$Factor = factor(paste(data2$LearningRate, sep = ""))
+
+data3 = subset(data, EqClicks == 0.5 & RecommendationPart == 0.2)
+data3$Factor = factor(paste(data3$LearningRate, sep = ""))
+
+g1 = getCTRPlot(data1, c(0,1), "Rec:")  + ggtitle("Rec Change-EQ:0.2")
+g2 = getCTRPlot(data2, c(0,1), "LRate:")+ ggtitle("LRate Change")
+g3 = getCTRPlot(data3, c(0,1), "LRate:")+ ggtitle("LRate Change-EQ:0.5")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="NN results")
+
+```
+\newpage
+\section*{\centering TS Lin CTR and modified MSE}
+```{r TS_Lin, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("TS_Lin")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data_alpha = subset(data, EqClicks == 0.0 & RecommendationPart == 0.02)
+data_alpha$Factor = factor(paste(data_alpha$Alpha, sep = ""))
+
+data_rec = subset(data, Alpha == 0.001 & EqClicks == 0.0)
+data_rec$Factor = factor(paste(data_rec$RecommendationPart * 100, "%",sep = ""))
+
+data_eq = subset(data, RecommendationPart == 0.02 & Alpha == 0.001)
+data_eq$Factor = factor(paste(data_eq$EqClicks*100, "%", sep = ""))
+
+g1 = getCTRPlot(data_alpha, c(0,3), "Alpha:")  + ggtitle("Alpha Change-EQ:0,Rec:0.2")
+g2 = getCTRPlot(data_rec, c(0,3), "Rec:")      + ggtitle("Rec. Change-Alpha:0.001")
+g3 = getCTRPlot(data_eq, c(0,3), "EQ:")        + ggtitle("EQ Change-Alpha:0.001")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="TS_Lin results")
+
+```
+\break\break
+```{r TS_Lin_MSE, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
+
+files =  c("TS_Lin")
+data = prepData(files)
+data = subset(data, Impressions > 1000)
+
+data_alpha = subset(data, EqClicks == 0.0 & RecommendationPart == 0.02)
+data_alpha$Factor = factor(paste(data_alpha$Alpha, sep = ""))
+
+data_rec = subset(data, Alpha == 0.001 & EqClicks == 0.0)
+data_rec$Factor = factor(paste(data_rec$RecommendationPart * 100, "%",sep = ""))
+
+data_eq = subset(data, RecommendationPart == 0.02 & Alpha == 0.001)
+data_eq$Factor = factor(paste(data_eq$EqClicks*100, "%", sep = ""))
+
+g1 = getMSEPlot(data_alpha, c(0,0.001), "Alpha:")  + ggtitle("Alpha Change-EQ:0,Rec:0.2")
+g2 = getMSEPlot(data_rec, c(0,0.001), "Rec:")      + ggtitle("Rec. Change-Alpha:0.1")
+g3 = getMSEPlot(data_eq, c(0,0.001), "EQ:")        + ggtitle("EQ Change-Alpha:0.1")
+grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="TS_Lin MMSE results")
+
+```
+
+```{r all, include=TRUE, echo=FALSE}
+
+files =  c("TS_Lin", "NN", "LinUCB_Disjoint", "Regression", "GP_Clustered")
+data = prepData(files)
+data$Factor = factor(data$Method)
+
+data = subset(data, Impressions > 1000 & RecommendationPart == 0.2 )
+data = subset(data, 
+                (Method == "GP_Clustered" & EqClicks == 0 & ClusterCount == 10 & Hours == 12 & LengthScale == 100 & Nu == 2.5 ) |
+                (Method == "NN" & EqClicks == 0.5 & LearningRate == 0.01 ) |
+                (Method == "Regression" & EqClicks == 0 & Alpha == 0.01) |
+                (Method == "LinUCB_Disjoint" & EqClicks == 0 & Alpha == 0.01)|
+                (Method == "TS_Lin" & EqClicks == 0 & Alpha == 0.001)|
+                (Method == "Random" ) 
+                )
+
+ggplot(data, aes(x=Timestamp, y=Impressions, colour=Factor)) + 
+    geom_line() +
+    xlab("Timestamp") + ylab("Cumulative Common Impressions") +
+    scale_y_continuous(labels=formatterM()) +
+    theme_bw() +
+    ggtitle("Cumulative # Impressions during Exploration Scavanging")
+  
+``` 
