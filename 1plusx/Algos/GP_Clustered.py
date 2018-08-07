@@ -4,8 +4,8 @@ from numpy.linalg import inv
 
 from sklearn.gaussian_process.kernels import Matern, RBF
 
-from AlgoBase import AlgoBase
-from TestMetadata import TestMetadata
+from .AlgoBase import AlgoBase
+from .TestMetadata import TestMetadata
 
 class GP_Clustered(AlgoBase):
 	

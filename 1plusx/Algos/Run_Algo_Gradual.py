@@ -7,13 +7,13 @@ from pandas import read_csv
 from pandas import DataFrame
 from numpy import genfromtxt
 
-from Random import Random
-from Regression import Regression
-from LinUCB_Disjoint import LinUCB_Disjoint
-from TS_Lin import TS_Lin
-from GP_Clustered import GP_Clustered
-from GP_FITC import GP_FITC
-from NN import NN
+from .Random import Random
+from .Regression import Regression
+from .LinUCB_Disjoint import LinUCB_Disjoint
+from .TS_Lin import TS_Lin
+from .GP_Clustered import GP_Clustered
+from .GP_FITC import GP_FITC
+from .NN import NN
 # from Random import Random
 
 def normalize_dimension(dimension):

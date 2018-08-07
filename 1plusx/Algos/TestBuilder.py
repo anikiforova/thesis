@@ -1,8 +1,8 @@
 
 import numpy as np
 
-from Metadata import Metadata
-from TestMetadata import TestMetadata
+from .Metadata import Metadata
+from .TestMetadata import TestMetadata
 
 def build_gp_test(meta, click_percent = 0.2, kernel = "Matern", nu = 1.5, length_scale = 100, cluster_count = 10, alpha = 1, h = 12, rec_part = 0.2):
 	t = TestMetadata(meta)

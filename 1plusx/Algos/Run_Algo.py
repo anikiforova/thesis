@@ -8,23 +8,24 @@ from pandas import DataFrame
 from numpy import genfromtxt
 from pathlib import Path
 
-from Metadata import Metadata
-from TestMetadata import TestMetadata
 import TestBuilder
 import Util
 
-from Random import Random
-from Regression import Regression
-from LinUCB_Disjoint import LinUCB_Disjoint
-from TS_Lin import TS_Lin
-from GP_Clustered import GP_Clustered
-from NN import NN
+from .Metadata import Metadata
+from .TestMetadata import TestMetadata
 
-campaign_id = 597165
+from .Random import Random
+from .Regression import Regression
+from .LinUCB_Disjoint import LinUCB_Disjoint
+from .TS_Lin import TS_Lin
+from .GP_Clustered import GP_Clustered
+from .NN import NN
+
+campaign_id = 722100
 meta = Metadata(campaign_id)
 
-algoName = "TS_Lin"
-algo = TS_Lin(meta)
+algoName = "Regression"
+algo = Regression(meta)
 
 testsMeta = TestBuilder.get_lin_tests(meta)
 
@@ -50,11 +51,11 @@ for testMeta in testsMeta:
 	click_count 		= 0.0
 	local_clicks 		= 0.0
 	local_count 		= 1.0
-	total_local_count 	= 0.0
+	total_local_count 	= 1.0
 	missed_clicks 		= 0.0
-	total_clicks 		= 0.0
+	total_clicks 		= 1.0
 	local_missed_clicks = 0.0
-	total_local_clicks 	= 0.0
+	total_local_clicks 	= 1.0
 	impressions_per_recommendation_group = 0.0
 	
 	SE = 0.0
@@ -110,7 +111,7 @@ for testMeta in testsMeta:
 			users_to_update = list()
 			clicks_to_update = list()
 			hour_begin_timestamp = timestamp
-			total_local_count = 0.0
+			total_local_count = 1.0
 			warmup = False
 			continue
 
@@ -144,7 +145,7 @@ for testMeta in testsMeta:
 			local_count = 1.0
 			local_missed_clicks = 0.0
 			local_modified_SE = 0.0
-			total_local_clicks = 0.0
+			total_local_clicks = 1.0
 			
 	input.close()
 				

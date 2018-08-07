@@ -4,7 +4,7 @@ import numpy as np
 import math
 import random
 
-from AlgoBase import AlgoBase 
+from .AlgoBase import AlgoBase 
 
 class NN(AlgoBase):
 	

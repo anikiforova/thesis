@@ -11,7 +11,7 @@ class Metadata:
 	
 	cluster_name_postfix		= ""
 
-	total_lines = dict({597165:2257957, 837817:5409623, 722100:8475542, 809153:14392075})
+	total_lines = dict({0:0, 597165:2257957, 837817:5409623, 722100:8475542, 809153:14392075})
 	
 	def __init__(self, campaign_id):
 		self.campaign_id = campaign_id

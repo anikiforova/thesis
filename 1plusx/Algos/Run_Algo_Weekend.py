@@ -7,10 +7,10 @@ from pandas import read_csv
 from pandas import DataFrame
 from numpy import genfromtxt
 
-from Random import Random
-from Regression import Regression
-from LinUCB_Disjoint import LinUCB_Disjoint
-from TS_Lin import TS_Lin
+from .Random import Random
+from .Regression import Regression
+from .LinUCB_Disjoint import LinUCB_Disjoint
+from .TS_Lin import TS_Lin
 # from Random import Random
 
 def normalize_dimension(dimension):
