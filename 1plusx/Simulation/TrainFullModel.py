@@ -7,8 +7,7 @@ from pandas import read_csv
 
 import sys
 from os import path
-# sys.path.append('../../plusx')
-print(path.dirname( path.dirname( path.abspath(__file__) ) ))
+# to be able to access sister folders
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
 import Algos.Util as Util

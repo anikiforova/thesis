@@ -31,9 +31,7 @@ class Regression(AlgoBase):
 			
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
-		
-
-		self.fit(user, clicks)
+		self.fit(users, clicks)
 		self.prediction = self.model.predict(self.user_embeddings)
 
 		self.predictionPosprocessing(users, clicks)	

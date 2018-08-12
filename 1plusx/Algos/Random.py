@@ -3,7 +3,7 @@ import math
 from numpy.linalg import inv
 from random import randint
 
-from .AlgoBase import AlgoBase
+from AlgoBase import AlgoBase
 
 class Random(AlgoBase):
 	

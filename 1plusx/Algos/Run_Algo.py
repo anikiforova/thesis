@@ -8,18 +8,18 @@ from pandas import DataFrame
 from numpy import genfromtxt
 from pathlib import Path
 
+from Metadata import Metadata
+from TestMetadata import TestMetadata
+
+from Random import Random
+from Regression import Regression
+from LinUCB_Disjoint import LinUCB_Disjoint
+from TS_Lin import TS_Lin
+from GP_Clustered import GP_Clustered
+from NN import NN
+
 import TestBuilder
 import Util
-
-from .Metadata import Metadata
-from .TestMetadata import TestMetadata
-
-from .Random import Random
-from .Regression import Regression
-from .LinUCB_Disjoint import LinUCB_Disjoint
-from .TS_Lin import TS_Lin
-from .GP_Clustered import GP_Clustered
-from .NN import NN
 
 campaign_id = 722100
 meta = Metadata(campaign_id)
@@ -137,7 +137,17 @@ for testMeta in testsMeta:
 
 			print('{:.2%} ImpC:{} ClkC:{} CumCTR:{:.3%} CTR:{:.3%} CumMC:{:.3%} MC:{:.3%} Overlap:{} UniqueUsers:{}'.format(total_impressions/meta.total_lines[campaign_id], int(impression_count), int(click_count), click_count/impression_count, local_clicks/local_count, missed_clicks/total_clicks, local_missed_clicks/total_local_clicks, int(total_local_count), unique_users_seen))
 
-			output.write("{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{}\n".format(click_count, impression_count, total_impressions, algoName, timestamp_raw, local_SE/10000, local_modified_SE/10000, cumulative_SE/total_impressions, modified_cumulative_SE/total_impressions, testMeta.get_additional_column_info()))
+			output.write("{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{}\n".format(
+				click_count, 
+				impression_count, 
+				total_impressions, 
+				algoName, 
+				timestamp_raw, 
+				local_SE/10000, 
+				local_modified_SE/10000, 
+				cumulative_SE/total_impressions, 
+				modified_cumulative_SE/total_impressions, 
+				testMeta.get_additional_column_info()))
 			output.flush()
 
 			local_SE = 0.0	

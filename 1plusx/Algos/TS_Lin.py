@@ -2,7 +2,7 @@ import numpy as np
 import math
 from numpy.linalg import inv
 
-from .AlgoBase import AlgoBase
+from AlgoBase import AlgoBase
 
 class TS_Lin(AlgoBase):
 	
