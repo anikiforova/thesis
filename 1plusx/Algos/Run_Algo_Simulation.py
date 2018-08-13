@@ -70,11 +70,12 @@ for simulation_id in np.arange(0, 1):
 
 		warmup = True
 
-		users_to_update = list()
-		clicks_to_update = list()
-		all_common_impressions = list()
-		predicted_values = list()
-		recommended_users = list()
+		background_impressions  = list()
+		users_to_update 		= list()
+		clicks_to_update 		= list()
+		all_common_impressions 	= list()
+		predicted_values 		= list()
+		recommended_users 		= list()
 
 		print("Starting evaluation of {} with {}".format(algoName, testMeta.get_additional_info()))
 
@@ -141,7 +142,7 @@ for simulation_id in np.arange(0, 1):
 
 				print('{:.2%} ImpC:{} ClkC:{} CumCTR:{:.3%} CTR:{:.3%} CumMC:{:.3%} MC:{:.3%} Overlap:{} UniqueUsers:{}'.format(total_impressions/meta.total_lines[campaign_id], int(impression_count), int(click_count), click_count/impression_count, local_clicks/local_count, missed_clicks/total_clicks, local_missed_clicks/total_local_clicks, int(total_local_count), unique_users_seen))
 
-				cur_ctr, Calibration, NE, RIG = SimulationMetrics.get_simulation_metrics(all_common_impressions, algo.prediction, background_ctr)
+				cur_ctr, Calibration, NE, RIG = SimulationMetrics.get_entropy_metrics(all_common_impressions, algo.prediction, background_ctr)
 
 				output.write("{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{}\n".format(
 					click_count, 

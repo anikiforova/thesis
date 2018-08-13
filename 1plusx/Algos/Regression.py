@@ -5,7 +5,7 @@ from random import randint
 from sklearn import linear_model
 from enum import Enum
 
-from .AlgoBase import AlgoBase
+from AlgoBase import AlgoBase
 
 class Regression(AlgoBase):
 	
@@ -33,7 +33,6 @@ class Regression(AlgoBase):
 		print("Starting Update.. ", end='', flush=True)
 		self.fit(users, clicks)
 		self.prediction = self.model.predict(self.user_embeddings)
-
 		self.predictionPosprocessing(users, clicks)	
 		print(" Done.")
 

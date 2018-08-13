@@ -55,7 +55,7 @@ class TestMetadata:
 		return info
 
 	def get_additional_column_names(self):
-		info = "Hours,TrainPart,RecommendationPart,Alpha,EqClicks"
+		info = ",Hours,TrainPart,RecommendationPart,Alpha,EqClicks"
 
 		if self.gp_running_algo:
 			info =  info + ",ClusterCount,LengthScale,Nu,Kernel"

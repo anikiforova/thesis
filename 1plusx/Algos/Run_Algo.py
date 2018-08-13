@@ -18,18 +18,19 @@ from TS_Lin import TS_Lin
 from GP_Clustered import GP_Clustered
 from NN import NN
 
+import SimulationMetrics
 import TestBuilder
 import Util
 
-campaign_id = 722100
+campaign_id = 837817 # 597165 # 837817
 meta = Metadata(campaign_id)
 
-algoName = "Regression"
+algoName = "LinUCB_Disjoint"
 algo = Regression(meta)
 
 testsMeta = TestBuilder.get_lin_tests(meta)
 
-output_path = "./Results/{0}/{1}.csv".format(meta.campaign_id, algoName)
+output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, algoName)
 output_column_names = False
 if not Path(output_path).is_file():
 	output = open(output_path, "w")	
@@ -43,31 +44,20 @@ else:
 
 for testMeta in testsMeta:
 	algo.setup(testMeta)
-	if output_column_names:
-		output.write("Clicks,Impressions,TotalImpressions,Method,Timestamp,MSE,CumulativeMSE,MMSE,MCumulativeMSE,{}\n".format(testMeta.get_additional_column_names()))
-		output_column_names = False
 
-	impression_count 	= 1.0
-	click_count 		= 0.0
-	local_clicks 		= 0.0
-	local_count 		= 1.0
-	total_local_count 	= 1.0
-	missed_clicks 		= 0.0
-	total_clicks 		= 1.0
-	local_missed_clicks = 0.0
-	total_local_clicks 	= 1.0
-	impressions_per_recommendation_group = 0.0
-	
-	SE = 0.0
-	local_modified_SE = 0.0
-	local_SE = 0.0
-	cumulative_SE = 0.0 
-	modified_cumulative_SE = 0.0
+	if output_column_names:
+		output.write("Clicks,Impressions,TotalImpressions,Method,Timestamp,BatchCTR,ModelCTR,MSE,MMSE,FullMSE,FullROC,FullTPR,FullFPR,FullFNR,FullPPR,ModelCalibration,ModelNE,ModelRIG{}\n".format(testMeta.get_additional_column_names()))
+		output_column_names = False
 
 	warmup = True
 
-	users_to_update = list()
-	clicks_to_update = list()
+	all_model_impressions = list()
+	all_prediction_values = list()
+	all_prediction_clicks = list()
+	all_impressions = list()
+	batch_users = list()
+	batch_clicks = list()
+
 	recommended_users = list()
 
 	print("Starting evaluation of {} with {}".format(algoName, testMeta.get_additional_info()))
@@ -78,84 +68,70 @@ for testMeta in testsMeta:
 	
 	for total_impressions, line in enumerate(input):
 		user_id, click, timestamp_raw, timestamp = Util.get_line_info(line)
-
-		impressions_per_recommendation_group += 1
-		prediction = algo.getPrediction(user_id)
-		modified_click_value = click * 300
-
-		cur_SE 					= (click - prediction) ** 2
-		cur_modified_SE 		= (modified_click_value - prediction) ** 2
-
-		local_SE 				+= cur_SE
-		cumulative_SE 			+= cur_SE
-
-		local_modified_SE 		+= cur_modified_SE
-		modified_cumulative_SE 	+= cur_modified_SE
-
+		
 		if warmup and (timestamp - hour_begin_timestamp).seconds < testMeta.time_between_updates_in_seconds: 
-			users_to_update.append(user_id)
-			clicks_to_update.append(click)
-			cumulative_SE = 0.0
-			modified_SE = 0.0
-			modified_cumulative_SE = 0.0
+			batch_users.append(user_id)
+			batch_clicks.append(click)
 			continue	
 
 		if (timestamp - hour_begin_timestamp).seconds >= testMeta.time_between_updates_in_seconds:			
-			algo.update(users_to_update, clicks_to_update)
+			algo.update(batch_users, batch_clicks)
 			recommended_users = algo.get_recommendations(testMeta.recommendation_part)
-			train_users = recommended_users
 
-			if testMeta.recommendation_part != testMeta.train_part:
-				train_users = algo.get_recommendations(testMeta.train_part)
+			batch_users = list()
+			batch_clicks = list()
 			
-			users_to_update = list()
-			clicks_to_update = list()
 			hour_begin_timestamp = timestamp
-			total_local_count = 1.0
 			warmup = False
 			continue
 
+		all_impressions.append(click)
+		all_prediction_values.append(algo.getPrediction(user_id))
 		if user_id in recommended_users:	
-			impression_count += 1
-			local_count += 1
-			click_count += click
-			local_clicks += click
-			if user_id in train_users:
-				users_to_update.append(user_id)
-				clicks_to_update.append(click)	
+			batch_users.append(user_id)
+			batch_clicks.append(click)
+			all_model_impressions.append(click)
+			all_prediction_clicks.append(click)
 		else:
-			missed_clicks += click
-			local_missed_clicks += click
-
-		total_clicks += click
-		total_local_clicks += click
+			all_prediction_clicks.append(0)
 
 		# print('.', end='', flush=True)	
 		if total_impressions % 10000 == 0:
-			unique_users_seen = len(set(users_to_update))
-			total_local_count += local_count
+			iterative_metrics = SimulationMetrics.get_iterative_model_metrics(all_impressions, all_prediction_values,all_model_impressions, batch_clicks)
+			full_metrics 	= SimulationMetrics.get_full_model_metrics(all_impressions, all_prediction_clicks)
+			entropy_metrics = SimulationMetrics.get_entropy_metrics(all_prediction_clicks, all_prediction_values, np.mean(all_impressions))
 
-			print('{:.2%} ImpC:{} ClkC:{} CumCTR:{:.3%} CTR:{:.3%} CumMC:{:.3%} MC:{:.3%} Overlap:{} UniqueUsers:{}'.format(total_impressions/meta.total_lines[campaign_id], int(impression_count), int(click_count), click_count/impression_count, local_clicks/local_count, missed_clicks/total_clicks, local_missed_clicks/total_local_clicks, int(total_local_count), unique_users_seen))
+			print('{:.2%} Clicks:{} Imp:{} BatchCTR:{:.3%} CumCTR:{:.3%} CumMSE:{:.03} CumMMSE:{:.03} TPR:{:.03}'.format(
+				total_impressions/meta.total_lines[campaign_id], 
+				iterative_metrics["Clicks"],
+				iterative_metrics["Impressions"],
+				iterative_metrics["ModelBatchCTR"],
+				iterative_metrics["ModelCTR"],
+				iterative_metrics["MSE"],
+				iterative_metrics["MMSE"],
+				full_metrics["TPR"]))
 
-			output.write("{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{}\n".format(
-				click_count, 
-				impression_count, 
+			output.write("{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{:.3},{}\n".format(
+				iterative_metrics["Clicks"], 
+				iterative_metrics["Impressions"], 
 				total_impressions, 
 				algoName, 
 				timestamp_raw, 
-				local_SE/10000, 
-				local_modified_SE/10000, 
-				cumulative_SE/total_impressions, 
-				modified_cumulative_SE/total_impressions, 
+				iterative_metrics["ModelBatchCTR"], 
+				iterative_metrics["ModelCTR"], 
+				iterative_metrics["MSE"], 
+				iterative_metrics["MMSE"], 
+				full_metrics["MSE"],
+				full_metrics["ROC"],
+				full_metrics["TPR"],
+				full_metrics["FPR"],
+				full_metrics["FNR"],
+				full_metrics["PPR"],
+				entropy_metrics["Calibration"],
+				entropy_metrics["NE"],
+				entropy_metrics["RIG"],
 				testMeta.get_additional_column_info()))
 			output.flush()
-
-			local_SE = 0.0	
-			local_clicks = 0.0	
-			local_count = 1.0
-			local_missed_clicks = 0.0
-			local_modified_SE = 0.0
-			total_local_clicks = 1.0
 			
 	input.close()
 				
