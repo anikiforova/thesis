@@ -1,4 +1,4 @@
-Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,Timestamp,Alpha,TrainPart,MSE,CumulativeMSE
+Clicks,Impressions,TotalImpressions,Method,RecommendationPart,Timestamp,Alpha,TrainPart,MSE,CumulativeMSE
 0.0,2.0,460000,LinUCB_Disjoint_E_0.8,0.02,1529485209.0,0.01,0.02,0.09375381125752723,0.00011997256621967276
 0.0,33.0,470000,LinUCB_Disjoint_E_0.8,0.02,1529485282.0,0.01,0.02,0.04572852988547631,0.001090367402799601
 0.0,59.0,480000,LinUCB_Disjoint_E_0.8,0.02,1529485354.0,0.01,0.02,0.04554366992005838,0.0020164778719091673

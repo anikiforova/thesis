@@ -22,13 +22,13 @@ import SimulationMetrics
 import TestBuilder
 import Util
 
-campaign_id = 837817 # 597165 # 837817
+campaign_id = 722100 # 597165 # 837817
 meta = Metadata(campaign_id)
 
 algoName = "LinUCB_Disjoint"
 algo = Regression(meta)
 
-testsMeta = TestBuilder.get_lin_tests(meta)
+testsMeta = TestBuilder.get_lin_tests_mini(meta)
 
 output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, algoName)
 output_column_names = False

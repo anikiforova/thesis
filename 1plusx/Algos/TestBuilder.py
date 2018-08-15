@@ -50,10 +50,10 @@ def get_lin_tests(meta):
 
 def get_lin_tests_mini(meta):
 	tests = list()
-	rec_part 		= 0.2
 	click_percent 	= 0.0
-	for alpha in [0.1, 0.01, 0.001]:
-		tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
+	for rec_part in [0.02, 0.05, 0.1, 0.2, 0.5]:
+		for alpha in [0.1, 0.01, 0.001]:
+			tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
 	return tests
 
 # DONE
