@@ -66,9 +66,18 @@ plotGroup <- function(g1, g2, title) {
                 top = title)
 }
 
+library(grid)
+plotGroupNoLegend <- function(g1, g2, title) {
+  grid.arrange(g1 + theme(legend.position="none"),
+               g2 + theme(legend.position="none"),
+               nrow=1, ncol=2, widths=unit(c(10, 10), "cm"), heights=unit(9, "cm"),
+               top = textGrob(title, gp=gpar(fontsize=15)))
+  
+}
+
 getCTRPlot <- function(data, limits = c(0,1.5), scaleName="", pos="bottom") {
   g1 = ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
-    geom_line() +
+    geom_line(size=1) +
     xlab("Impressions") + ylab("CTR") +
     expand_limits(y=limits) + 
     scale_x_continuous(labels=formatterM()) + 
@@ -88,7 +97,7 @@ getCTRPlot <- function(data, limits = c(0,1.5), scaleName="", pos="bottom") {
 
 getMSEPlot <- function(data, xLimit, scaleName, pos = "bottom") {
   g2 = ggplot(data, aes(x=TotalImpressions, y=MSE, colour=Factor)) + 
-  stat_smooth(aes(y=MSE, colour=Factor), method = "lm", formula = y ~ poly(x, 20), se = FALSE) +
+  stat_smooth(aes(y=MSE, colour=Factor), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=1) +
     xlab("Impressions") + ylab("MSE") +
     expand_limits(y=xLimit) + 
     scale_x_continuous(labels=formatterM()) +
@@ -104,6 +113,49 @@ getMSEPlot <- function(data, xLimit, scaleName, pos = "bottom") {
   g2
 }
   
+getCampaignMetrics <- function(files, campaignId, baseCTR, method = "LinUCB_Disjoint") {
+  path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaignId, "/", sep="")
+  data = prepData(files, path)
+  
+  if (method != "Random")
+  {
+    campaignData = subset(data, Impressions > 1000 & Alpha == 0.01 & (EqClicks == 0.0 | is.na(EqClicks)) & Method == method)  
+  }
+  else 
+  {
+    campaignData = data
+  }
+  maxTotalImpressions = max(campaignData$TotalImpressions)
+  campaignData$CampaignId = campaignId
+  campaignData$BaseCTR = baseCTR
+  campaignData$CTR = campaignData$Clicks / campaignData$Impressions
+  campaignData$Ratio = campaignData$CTR/campaignData$BaseCTR
+  campaignData$RecommendationPart = campaignData$RecommendationPart * 100
+
+  campaignData = campaignData[campaignData$TotalImpressions == maxTotalImpressions, c("CampaignId", "Method", "RecommendationPart", "Clicks", "Impressions", "FullFNR","FullTPR", "BaseCTR", "Ratio", "CTR")]
+  
+  campaignData
+}
+
+getBarPlot <- function(data, yLabel, title){
+  ggplot(data, aes(x=factor(RecommendationPart), y=mean, fill=factor(RecommendationPart))) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) + 
+    geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2, position=position_dodge(.9)) +
+  xlab("Recommendation Size") + ylab(yLabel) + ggtitle(title) +
+  expand_limits(y=0) +
+  theme_bw() +
+  scale_x_discrete(labels=formatterPercent()) +
+  scale_fill_hue() + 
+  theme(legend.justification=c(1,0), 
+        legend.position="bottom",
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=8), 
+        legend.key.size = unit(1,"line"),
+        plot.title = element_text(size = 14, face = "bold"), 
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_text(size=10)) 
+}
 ```
 
 
@@ -111,72 +163,31 @@ getMSEPlot <- function(data, xLimit, scaleName, pos = "bottom") {
 ```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
 source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
 
+# 597165 - 0.001
+# 722100 - 0.01, 0.001
+# 809153 - to rerun entirely
+columnNames = c("CampaignId", "Method", "RecommendationPart", "CTR", "Clicks", "Impressions", "FullFNR", "FullTPR", "BaseCTR", "Ratio")
+all = data.frame(matrix(vector(), 0, length(columnNames), dimnames=list(c(), columnNames)), stringsAsFactors=F)
+campaignIds = c(597165, 837817, 722100) # 809153
 files =  c("Random")
-campaign_id =  837817
-path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaign_id, "/", sep="")
-random = prepData(files, path)
-random$CampaignId = campaign_id
-for (campaign_id in c(809153, 722100, 597165))
+for (campaignId in campaignIds)
 {
-  path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaign_id, "/", sep="")
-  data = prepData(files, path)
-  data$CampaignId = campaign_id
-  random = rbind(random, data)  
+  random = getCampaignMetrics(files =  c("Random"),  campaignId = campaignId, baseCTR=0, method="Random")
+  data = getCampaignMetrics(files = c("LinUCB_Disjoint_Metrics"), campaignId = campaignId, baseCTR=random[1, "CTR"], method="LinUCB_Disjoint") 
+  data$RecommendationPartGainsRatio = data$FullTPR * 100 / data$RecommendationPart
+  all = rbind(all, data) 
 }
 
-group = list(random$CampaignId)
-clicks = aggregate(random$Click, by = group, max)
-names(clicks) <- c("CampaignId", "Clicks")
-impressions = aggregate(random$Impressions, by = group, max)
-names(impressions) <- c("CampaignId","Impressions")
-groupped = merge(clicks, impressions, by=c("CampaignId"))
-groupped$CTR = groupped$Clicks/groupped$Impressions
 
-#files = c("Regression_Test")
-files =  c("LinUCB_Disjoint_Metrics", "Random")
-campaign_id =  837817
-path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaign_id, "/", sep="")
-all = prepData(files, path)
-all$CampaignId = campaign_id
-all$BaseCTR = groupped[groupped$CampaignId == campaign_id, "CTR"]
-for (campaign_id in c(837817, 722100))
-{
-  path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaign_id, "/", sep="")
-  data = prepData(files, path)
-  data$CampaignId = campaign_id
-  data$BaseCTR = groupped[groupped$CampaignId == campaign_id, "CTR"]
-  all = rbind(all, data)  
-}
+ratioData <- summarySE2(all, measurevar=c("Ratio"), groupvars=c("RecommendationPart"))
+fprData <- summarySE2(all, measurevar=c("RecommendationPartGainsRatio"), groupvars=c("RecommendationPart"))
 
-all = subset(all, Impressions > 1000 & ((Alpha == 0.1 & EqClicks == 0.0 & Method == "LinUCB_Disjoint")  | Method == "Random")) 
-group = list(all$RecommendationPart, all$CampaignId, all$Method, all$BaseCTR)
-clicks = aggregate(all$Click, by = group, max)
-names(clicks) <- c("RecommendationPart", "CampaignId", "Method", "BaseCTR", "Clicks")
-impressions = aggregate(all$Impressions, by = group, max)
-names(impressions) <- c("RecommendationPart", "CampaignId", "Method", "BaseCTR", "Impressions")
+g1 = getBarPlot(ratioData, yLabel = "CTR Ratio", title="")
+g2 = getBarPlot(fprData, yLabel = "TPR Ratio", title="")
 
-groupped = merge(clicks, impressions, by=c("RecommendationPart", "CampaignId", "Method", "BaseCTR"))
-
-groupped$CTR = groupped$Clicks / groupped$Impressions
-groupped$Ratio = groupped$CTR/groupped$BaseCTR
-groupped$RecommendationPart = groupped$RecommendationPart * 100
-tgcZRead <- summarySE2(groupped, 
-                       measurevar=c("Ratio"),
-                       groupvars=c("RecommendationPart"))
-
-ggplot(tgcZRead, aes(x=factor(RecommendationPart), y=mean, fill=factor(RecommendationPart))) + 
-    geom_bar(position=position_dodge(), stat="identity") +
-    geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
-                  width=.2,                    # Width of the error bars
-                  position=position_dodge(.9)) +
-  xlab("% Recommendation Size") +
-  ylab("CTR Ratio") +
-  ggtitle("Improvement rate") +
-  expand_limits(y=0) +
-  theme_bw() +
-  scale_fill_hue() + 
-  theme(legend.justification=c(1,0), legend.position="right")    
-
+g = plotGroupNoLegend(g1, g2, "CTR and TPR Ratio with Different Recommendation Sizes") 
+ggsave(paste(imageLocation, paste(campaign_id, "_RecommendationSize.png", sep="")), plot=g, width = 20, height = 11, units = "cm")
+g
 ```
 
 ```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
@@ -201,7 +212,8 @@ g1 = getCTRPlot(data, c(0,0.75), scaleName = "Alrigithm")
 
 g2 = getMSEPlot(data, c(0,0.003), "Alrigithms:")
 
-g = plotGroup(g1, g2, "CTR and MSE for Different Algorithms (Recommendation Size: 20%)")
+g = plotGroup(g1, g2, "CTR and MSE for Different Algorithms (Recommendation Size: 20%)") 
+g
 ggsave(paste(imageLocation, paste(campaign_id, "_AllAlgorithms.png", sep="")), plot=g, width = 20, height = 11, units = "cm")
 ```
 \newpage

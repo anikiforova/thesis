@@ -22,15 +22,21 @@ import SimulationMetrics
 import TestBuilder
 import Util
 
-campaign_id = 722100 # 597165 # 837817
+campaign_id = 809153 # 837817# 809153 # 597165 # 837817
 meta = Metadata(campaign_id)
+
+simulated = False
+simulation_id = 0
 
 algoName = "LinUCB_Disjoint"
 algo = Regression(meta)
 
-testsMeta = TestBuilder.get_lin_tests_mini(meta)
+testsMeta = TestBuilder.get_lin_tests_mini(meta, 4)
 
-output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, algoName)
+output_path = "./Results/{0}/{1}{2}_Metrics.csv".format(meta.campaign_id, algoName)
+if simulated:
+	output_path = "./Results/{0}/Simulated/{1}/{2}.csv".format(meta.campaign_id, simulation_id, algoName)
+
 output_column_names = False
 if not Path(output_path).is_file():
 	output = open(output_path, "w")	
@@ -62,19 +68,25 @@ for testMeta in testsMeta:
 
 	print("Starting evaluation of {} with {}".format(algoName, testMeta.get_additional_info()))
 
-	input = open("{0}//sorted_time_impressions.csv".format(meta.path), "r")
+	file_name = "{0}/sorted_time_impressions.csv".format(meta.path)
+	if simulated:
+		file_name = "{0}/simulated_time_impressions_s{1}.csv".format(meta.path, simulation_id)
+	
+	input = open(file_name, "r")
+
 	input.readline() # get rid of header
 	_, _, _, hour_begin_timestamp = Util.get_line_info(input.readline())
 	
+	print("Time between :{0}".format(testMeta.get_time_between_updates_in_seconds()))
 	for total_impressions, line in enumerate(input):
 		user_id, click, timestamp_raw, timestamp = Util.get_line_info(line)
 		
-		if warmup and (timestamp - hour_begin_timestamp).seconds < testMeta.time_between_updates_in_seconds: 
+		if warmup and (timestamp - hour_begin_timestamp).seconds < testMeta.get_time_between_updates_in_seconds(): 
 			batch_users.append(user_id)
 			batch_clicks.append(click)
 			continue	
 
-		if (timestamp - hour_begin_timestamp).seconds >= testMeta.time_between_updates_in_seconds:			
+		if (timestamp - hour_begin_timestamp).seconds >= testMeta.get_time_between_updates_in_seconds():			
 			algo.update(batch_users, batch_clicks)
 			recommended_users = algo.get_recommendations(testMeta.recommendation_part)
 

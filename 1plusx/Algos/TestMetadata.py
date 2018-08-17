@@ -23,7 +23,6 @@ class TestMetadata:
 	alpha							= 0.0
 
 	hours 							= 12
-	time_between_updates_in_seconds = 60 * 60 * hours # 1 hour
 
 	train_part 						= 0.2
 	recommendation_part 			= 0.2
@@ -31,6 +30,9 @@ class TestMetadata:
 	def __init__(self, meta):
 		self.meta 			= meta
 		self.length_scale	= self.meta.dimensions
+
+	def get_time_between_updates_in_seconds(self):
+		return 60 * 60 * self.hours
 
 	def get_additional_info(self):
 		info = "H:{},Train:{},Rec:{},Alpha:{},ClickPercent:{:.2}".format(self.hours, self.train_part, self.recommendation_part, self.alpha, self.click_percent)

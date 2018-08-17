@@ -1,4 +1,4 @@
-Clicks,Impressions,TotalImpressions,Method,RecommendationSizePercent,Timestamp,Alpha,TrainPart,MSE,CumulativeMSE
+Clicks,Impressions,TotalImpressions,Method,RecommendationPart,Timestamp,Alpha,TrainPart,MSE,CumulativeMSE
 0.0,37.0,460000,Random,0.02,1529485209.0,0.001,0.02,0.14463130200300403,0.0012260878740358618
 0.0,232.0,470000,Random,0.02,1529485282.0,0.001,0.02,0.5099,0.012048937068205312
 1.0,431.0,480000,Random,0.02,1529485354.0,0.001,0.02,0.5029,0.022275000879284367

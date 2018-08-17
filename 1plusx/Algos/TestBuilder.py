@@ -42,18 +42,18 @@ def build_lin_test(meta, click_percent = 0.2, alpha = 0.1, h = 12, rec_part = 0.
 
 def get_lin_tests(meta):
 	tests = list()
-	for alpha in [0.1, 0.01, 0.001]:
+	for alpha in [0.01, 0.001]: # 0.1, 
 		for rec_part in [0.02, 0.05, 0.1, 0.2, 0.5]:
 			for click_percent in [0.0, 0.2, 0.5]:
 				tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
 	return tests
 
-def get_lin_tests_mini(meta):
+def get_lin_tests_mini(meta, hours = 12):
 	tests = list()
 	click_percent 	= 0.0
 	for rec_part in [0.02, 0.05, 0.1, 0.2, 0.5]:
 		for alpha in [0.1, 0.01, 0.001]:
-			tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = 12, rec_part = rec_part))
+			tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = hours, rec_part = rec_part))
 	return tests
 
 # DONE

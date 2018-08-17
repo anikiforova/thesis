@@ -51,7 +51,7 @@ formatterDensity <- function(){
 library(scales)
 
 g1 = ggplot(data, aes(data$Timestamp, fill=Click)) + 
-  geom_histogram(bins=200)+
+  geom_histogram(bins=200, color="darkblue")+
   #xlab("Time") + 
   ylab("# Impressions") +
   theme_bw() + 
@@ -88,8 +88,8 @@ df$time = as.POSIXct( time , origin="1970-01-01")
 df = subset(df, df$ratio < 1)
 
 g1 = ggplot(df, aes(x=time,y=ratio)) + 
-  stat_smooth(aes(x=time,y=ratio), method = "lm", formula = y ~ poly(x, 20), se = FALSE) +
-  geom_line()+
+  stat_smooth(aes(x=time,y=ratio), method = "lm", formula = y ~ poly(x, 20), se = FALSE, color="darkorange", size=2) +
+  geom_line(color="darkblue", size=1)+
   #geom_point() +
   expand_limits(y=c(0,0.01)) + 
   #xlab("Time") + 
