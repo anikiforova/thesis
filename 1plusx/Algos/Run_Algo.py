@@ -18,7 +18,7 @@ from TS_Lin import TS_Lin
 from GP_Clustered import GP_Clustered
 from NN import NN
 
-import SimulationMetrics
+import MetricsCalculator
 import TestBuilder
 import Util
 
@@ -109,9 +109,9 @@ for testMeta in testsMeta:
 
 		# print('.', end='', flush=True)	
 		if total_impressions % 10000 == 0:
-			iterative_metrics = SimulationMetrics.get_iterative_model_metrics(all_impressions, all_prediction_values,all_model_impressions, batch_clicks)
-			full_metrics 	= SimulationMetrics.get_full_model_metrics(all_impressions, all_prediction_clicks)
-			entropy_metrics = SimulationMetrics.get_entropy_metrics(all_prediction_clicks, all_prediction_values, np.mean(all_impressions))
+			iterative_metrics = MetricsCalculator.get_iterative_model_metrics(all_impressions, all_prediction_values,all_model_impressions, batch_clicks)
+			full_metrics 	= MetricsCalculator.get_full_model_metrics(all_impressions, all_prediction_clicks)
+			entropy_metrics = MetricsCalculator.get_entropy_metrics(all_prediction_clicks, all_prediction_values, np.mean(all_impressions))
 
 			print('{:.2%} Clicks:{} Imp:{} BatchCTR:{:.3%} CumCTR:{:.3%} CumMSE:{:.03} CumMMSE:{:.03} TPR:{:.03}'.format(
 				total_impressions/meta.total_lines[campaign_id], 

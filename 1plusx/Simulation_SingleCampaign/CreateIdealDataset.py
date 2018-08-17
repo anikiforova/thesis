@@ -13,7 +13,7 @@ from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
 import Algos.Util as Util
-import Algos.SimulationMetrics as Metrics
+import Algos.MetricsCalculator as Metrics
 from Algos.AlgoBase import AlgoBase
 from Algos.Metadata import Metadata 
 from Algos.Regression import Regression 
