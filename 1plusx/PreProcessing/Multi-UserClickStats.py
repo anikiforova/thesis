@@ -6,7 +6,7 @@ import pyarrow.parquet as pq
 from datetime import datetime
 from pandas import read_csv
 
-a = pd.date_range(start='15/8/2018', end='28/08/2018')
+a = pd.date_range(start='26/8/2018', end='26/08/2018')
 
 printHeader = True
 for date in a:
@@ -16,6 +16,8 @@ for date in a:
 	path = "../../RawData/Multi-Campaign/Impressions/{0}/"
 	
 	data = read_csv( "../../RawData/Multi-Campaign/Processed/5_Impressions_{0}.csv".format(date), sep=",")
+
+	clickers = np.unique(np.array(data.loc[result['Click'] == 1]["UserHash"]))
 
 	# group = data.groupby(["UserHash"]).agg({"CampaignId": pd.Series.nunique, "Click": np.size})
 	group = data.groupby(["UserHash"])["CampaignId"].agg( [("CampaignCount", pd.Series.nunique), 
@@ -53,10 +55,10 @@ for date in a:
 	if printHeader:
 		mode = "w"
 
-	joined.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignStats.csv", mode=mode, sep=",", \
+	joined.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignClickStats.csv", mode=mode, sep=",", \
 		header=printHeader, index=False, columns=["CampaignId", "NonJoinedUserCount", "TotalDistinctUserCount", "Date"])	
 	
-	userGroup.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignUserStats.csv", mode=mode, sep=",", \
+	userGroup.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignUserClickStats.csv", mode=mode, sep=",", \
 		header=printHeader, index=False, columns=["CampaignCount", "UserCount", "PercentFromTotalUserCount", "Date"])	
 	
 	printHeader = False

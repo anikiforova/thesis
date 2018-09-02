@@ -21,12 +21,18 @@ data <- read.csv(file=path, header=TRUE, sep=",")
 data$Timestamp = data$Timestamp / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
 
-ggplot(data, aes(fill=factor(CampaignId), y=Impressions, x=Timestamp)) +
+g = ggplot(data, aes(fill=factor(CampaignId), y=Impressions, x=Timestamp)) +
   geom_bar( stat="identity") +
   theme_bw() +
-   scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+  scale_fill_discrete(name="CampaignId") +
+  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
-        axis.title.x=element_blank())
+        axis.title.x=element_blank()) +
+  ggtitle("Impressions per Campaign")
+
+ggsave(paste(imageLocation, "ImpressionsPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
+g
+
 ```
 
 ```{r include=TRUE, echo=FALSE}
@@ -35,21 +41,26 @@ path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Multi-Campaign/Processed/5_al
 data <- read.csv(file=path, header=TRUE, sep=",")
 data$Timestamp = data$Timestamp / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
-ggplot(data, aes(color=factor(CampaignId), y=CTR, x=Timestamp)) +
+g = ggplot(data, aes(color=factor(CampaignId), y=CTR, x=Timestamp)) +
   #geom_bar( stat="identity") +
   stat_smooth(aes(color=factor(CampaignId), y=CTR, x=Timestamp), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=2) +
   #geom_line()+
+  scale_color_discrete(name="CampaignId") +
   theme_bw() +
-   scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
-        axis.title.x=element_blank())
+        axis.title.x=element_blank()) +
+  ggtitle("CTR per Campaign")
+
+ggsave(paste(imageLocation, "CTRPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
+g
 ```
 ```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
 
 columnNames = c("CampaignId", "Method", "RecommendationPart", "CTR", "Clicks", "Impressions", "FullFNR", "FullTPR", "BaseCTR", "Ratio")
 all = data.frame(matrix(vector(), 0, length(columnNames), dimnames=list(c(), columnNames)), stringsAsFactors=F)
 campaignIds = c(866128, 856805, 847460, 858140, 865041)
-alphas = c(0.1, 0.01, 0.1, 0.1, 0.1)#, 856805, 847460, 858140, 865041)
+alphas = c(0.1, 0.01, 0.1, 0.1, 0.1)
 index = 1
 for (campaignId in campaignIds)
 {
@@ -70,186 +81,50 @@ g1 = getBarPlotCampaigns(ratioData, yLabel = "CTR Ratio", title="")
 g2 = getBarPlotCampaigns(fprData, yLabel = "TPR Ratio", title="")
 
 g = plotGroupNoLegend(g1, g2, "CTR and TPR Ratio for Campaigns Used in Multi-Campaign Experiment") 
-#ggsave(paste(imageLocation, paste(campaign_id, "_RecommendationSize.png", sep="")), plot=g, width = 20, height = 11, units = "cm")
+ggsave(paste(imageLocation, "CTRRationPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
 g
 ```
-
 ```{r include=TRUE, echo=FALSE}
-source("~/Documents/ETH/Thesis/1plusX/Data/thesis/R/ManageCampaignsLib.R")
-
-files =  c("LinUCB_Disjoint_Metrics")
-
-campaignIds = c(865041)#, 847460, 858140, 865041)
-
-columnNames = c("Clicks","Impressions","TotalImpressions","Method","Timestamp","BatchCTR","ModelCTR","MSE","MMSE","FullMSE","FullROC","FullTPR","FullFPR","FullFNR","FullPPR","ModelCalibration","ModelNE","ModelRIG","Hours","TrainPart","RecommendationPart","Alpha", "EqClicks", "CampaignId")
-all = data.frame(matrix(vector(), 0, length(columnNames), dimnames=list(c(), columnNames)), stringsAsFactors=F)
-
-files =  c("LinUCB_Disjoint_Metrics")
-for (campaignId in campaignIds) {
-  path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaignId, "/", sep="")
-  data = prepData(files, path)  
-  data$CampaignId = campaignId 
-  all = rbind(all, data)
-}
-
-#files = c("Regression_Test")
-
-data = subset(all, Impressions > 1000 & RecommendationPart == 0.2 )
-
-head(data)
-#levels(data$Factor) <- c("GP (Clustered)","NN","LinUCB (Disjoint)", "Linear Regression", "Baseline", "Thompson Sampling (Lin)")
- 
-g1 = getCTRPlot(data, c(0,0.75), scaleName = "Algorithms")  
-g1
-#g2 = getMSEPlot(data, c(0,0.003), "Algorithms:")
-
-#g = plotGroup(g1, g2, "CTR and MSE for Different Algorithms (Recommendation Size: 20%)") 
-#g
-#ggsave(paste(imageLocation, paste(campaign_id, "_AllAlgorithms.png", sep="")), plot=g, width = 20, height = 11, units = "cm")
-```
-
-```{r include=TRUE, echo=FALSE}
-all_impressions = hist(data$Timestamp, breaks = "hours", 
-     col="blue", main = "Histogramm of Impressions for Campaign",  
-     xlab = "Timestamp", ylab = "Frequency", freq=TRUE, plot = FALSE)
-
-click_data = data[data$Click == 1, ]
-click_impressions = hist(click_data$Timestamp, breaks = "hours", 
-     col="blue", main = "Histogramm of Clicks for Campaign",  
-     xlab = "Timestamp", ylab = "Frequency", freq=TRUE, plot = FALSE)
-
-all_impressions$counts[all_impressions$counts == 0] = 1 
-ratio = (click_impressions$counts/all_impressions$counts) 
-time = subset(click_impressions$breaks, click_impressions$breaks != 1532300400)
-
-df = data.frame(ratio, time = time) 
-df$time = as.POSIXct( time , origin="1970-01-01")
-df = subset(df, df$ratio < 1)
-
-g1 = ggplot(df, aes(x=time,y=ratio)) + 
-  stat_smooth(aes(x=time,y=ratio), method = "lm", formula = y ~ poly(x, 20), se = FALSE, color="darkorange", size=2) +
-  geom_line(color="darkblue", size=1)+
-  #geom_point() +
-  expand_limits(y=c(0,0.01)) + 
-  #xlab("Time") + 
-  ylab("CTR") +
-  theme_bw() + 
+library(scales)
+path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Multi-Campaign/Processed/MultiCampaignStats.csv"
+data <- read.csv(file=path, header=TRUE, sep=",")
+data$PercentUniqueUsers = (data$NonJoinedUserCount / data$TotalDistinctUserCount) * 100
+data$Date = as.Date(data$Date)
+g = ggplot(data, aes(color=factor(CampaignId), y=PercentUniqueUsers, x=Date)) +
+  #geom_bar( stat="identity") +
+  #stat_smooth( aes(color=factor(CampaignId), y=PercentUniqueUsers, x=Date), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=2) +
+  geom_line()+
+  scale_color_discrete(name="CampaignId") +
+  theme_bw() +
+  ylab("User Percent") +
   scale_y_continuous(labels=formatterPercent()) + 
-  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+ # scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
-        axis.title.x=element_blank())
+        axis.title.x=element_blank()) +
+  ggtitle("Percentage of Users Uniquely Seen by Campaign per Day")
 
-ggsave(paste(imageLocation,paste(campaign_id, "_CTR.png", sep="")), plot=g1, width = 14, height = 10, units = "cm")
-
-g1
+ggsave(paste(imageLocation, "UniqueUsersPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
+g
 ```
-
-```{r simulated, include=TRUE, echo=FALSE}
-change = 1
-if(change) {
-  sdata <- read.csv(file=simulated_path, header=TRUE, sep=",")
-  sdata$Timestamp = sdata$Timestamp 
-  sdata$Timestamp = as.POSIXct(sdata$Timestamp, origin="1970-01-01")
-}
-all_impressions = hist(sdata$Timestamp, breaks = "hours", 
-     col="blue", main = "Histogramm of Impressions for Campaign",  
-     xlab = "Timestamp", ylab = "Frequency", freq=TRUE, plot = FALSE)
-
-click_data = sdata[sdata$Click == 1, ]
-click_impressions = hist(click_data$Timestamp, breaks = "hours", 
-     col="blue", main = "Histogramm of Clicks for Campaign",  
-     xlab = "Timestamp", ylab = "Frequency", freq=TRUE, plot = FALSE)
-
-all_impressions$counts[all_impressions$counts == 0] = 1 
-ratio = (click_impressions$counts/all_impressions$counts) 
-time = subset(click_impressions$breaks, click_impressions$breaks != 1532300400)
-
-df = data.frame(ratio, time = time) 
-df$time = as.POSIXct( time , origin="1970-01-01")
-df = subset(df, df$ratio < 1)
-
-ggplot(df, aes(x=time,y=ratio)) + 
-  stat_smooth(aes(x=time,y=ratio), method = "lm", formula = y ~ poly(x, 20), se = FALSE) +
-  #geom_line()+
-  geom_point() +
- expand_limits(y=c(0,0.01)) + 
-  xlab("Time progression") + ylab("CTR") +
-  theme_bw() + ggtitle("CTR for the duration of the campaign") +
-  scale_y_continuous(labels=formatterPercent()) 
-
-```
-
 ```{r include=TRUE, echo=FALSE}
+library(scales)
+path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Multi-Campaign/Processed/MultiCampaignUserStats.csv"
+data <- read.csv(file=path, header=TRUE, sep=",")
+data$Date = as.Date(data$Date)
 
-stats_path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/837817/Processed/user_statistics.csv"
-users <- read.csv(file=stats_path, header=TRUE, sep=",")
-cat(paste("Total Users", nrow(users), "\n"))
-cat(paste("Total Impressions", sum(users$TotalImpressions), "\n"))
-click_users = users[users$ClickCount > 0, ]
-click_users$CTR = click_users$ClickCount/click_users$TotalImpressions
-click_users$TimeOfFirstClick = click_users$FirstClickIndex/click_users$TotalImpressions
-# 24438 unique users that clicked 
-cat(paste("Number of unique users that have clicks:", nrow(click_users), "\n"))
-# 285379 impressions for users that clicked 
+g = ggplot(data, aes(fill=factor(CampaignCount), y=UserCount, x=Date)) +
+  geom_bar( stat="identity") +
+  theme_bw() +
+  ylab("User Count") +
+  scale_y_continuous(labels=formatterK()) + 
+  scale_fill_discrete(name="# Observed Campaigns") +
+  #scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+  theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
+        axis.title.x=element_blank()) +
+  ggtitle("% Users grouped by # Observed Campaigns")
 
-cat(paste("Total number of impressions for the users that have clicks:", sum(click_users$TotalImpressions), "\n"))
+ggsave(paste(imageLocation, "UsersGroupsPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
+g
 
-# 143800 impressions to discard if discarding impressions past click
-
-cat(paste("Total number of impressions that could be discarded past first clicks:", sum(click_users$TotalImpressions - click_users$FirstClickIndex), "\n"))
-
-
-
-```
-
-```{r include=TRUE, echo=FALSE}
-ggplot(data=click_users, aes(CTR)) + 
-  geom_histogram(bins = 50, color="blue") +
-  theme_bw() + xlab("CTR") + ylab("User Count") + ggtitle("CTR for the users that have click activity.")
-```
-
-```{r, include=TRUE, echo=FALSE}
-g1 = ggplot(data=click_users, aes(ActiveTime)) + 
-  geom_histogram(bins=30, color="blue") +
-  theme_bw() + xlab("Time in Hours") + ylab("Density") + ggtitle("Total Active Time") + 
-  scale_x_continuous(labels=formatterTimeInHour()) + expand_limits(y=c(0, 15e3))
-
-g2 = ggplot(data=click_users, aes(TimeUntilClickSec)) + 
-  geom_histogram(bins=30, color="blue") +
-  theme_bw() + xlab("Time in Hours") + ylab("Density") + ggtitle("Active Time before First Click") + 
-  scale_x_continuous(labels=formatterTimeInHour()) + expand_limits(y=c(0, 15e3)) 
-
-grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(7, 7),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(14, "cm"), heights=unit(c(9, 1), "cm"))
-```
-Clearly the total active time is more evenly distributed compared to the time of the time until first click. The time until first click is almost always within 
-```{r include=TRUE, echo=FALSE}
-g1 = ggplot(data=users[users$TotalImpressions < 50,], aes(TotalImpressions)) + 
-  geom_histogram(bins = 50, color="blue", aes(y=..density..)) +
-  theme_bw() + xlab("# Impressions") + ylab("Density") + 
-  ggtitle("Density per #Impressions for All Users (bound by 50)") +
-  expand_limits(y=c(0, 0.30))+ theme(plot.title=element_text(size=12))
-  
-g2 = ggplot(data=click_users[click_users$TotalImpressions < 50,], aes(TotalImpressions)) + 
-  geom_histogram(bins = 50, color="blue", aes(y=..density..)) +
-  theme_bw() + xlab("# Impressions") + ylab("Density") + ggtitle("Density for #Impressions for Click Users (bound by 50)") +
-  expand_limits(y=c(0, 0.30)) + theme(plot.title=element_text(size=12))
-  
-
-grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(7, 7),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(14, "cm"), heights=unit(c(9, 1), "cm"))
-```
-
-```{r include=TRUE, echo=FALSE}
-
-g1 = ggplot(data=click_users, aes(TotalImpressions)) + 
-  geom_histogram(bins = 50, color="blue", aes(y=..density..)) +
-  theme_bw() + xlab("# Total Impressions") + ylab("Density") + ggtitle("Density for #Impressions (Click Users)") +
-  expand_limits(y=c(0, 0.25)) + theme(plot.title=element_text(size=12))
-  
-g2 = ggplot(data=click_users, aes(FirstClickIndex)) + 
-  geom_histogram(bins = 50, color="blue", aes(y=..density..)) +
-  theme_bw() + xlab("First Click Index") + ylab("Density") + ggtitle("Density for First Click Index (Click Users)") +
-  expand_limits(y=c(0, 0.25)) + theme(plot.title=element_text(size=12))
-
-grid.arrange(arrangeGrob(g1, g2, nrow=1, ncol=2, widths=unit(c(7, 7),"cm"), heights=unit(9, "cm")), nrow=2, widths=unit(14, "cm"), heights=unit(c(9, 1), "cm"))
 ```
 
