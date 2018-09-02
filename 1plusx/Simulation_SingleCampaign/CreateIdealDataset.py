@@ -102,7 +102,7 @@ simulation_values = simulation_values.reshape([simulation_count, total_count])
 # input.close()
 # print("Done with output..")
 
-ctr_multipliers = [1, 2, 5, 10, 20, 50, 100, 200, 99.0/ctr]
+ctr_multipliers = [1, 2, 5, 10, 20, 50, 100, 200, int(1/ctr)]
 
 output_stats = open("./Results/{0}/Simulated/SimulationDetails.csv".format(campaign_id), "w")
 output_stats.write("CampaignId,SimulationId,Cutoff,CTR,MSE,Calibration,NE,RIG,TPR,FPR,FNR,PPR,ROC\n")
@@ -110,14 +110,26 @@ output_stats.write("CampaignId,SimulationId,Cutoff,CTR,MSE,Calibration,NE,RIG,TP
 for index in np.arange(0, simulation_count):
 	for multiplier in ctr_multipliers:
 		cutoff_value = np.percentile(simulation_values[index], 100 - multiplier * ctr * 100)
-		print("Simulation:{} Multiplier:{} CTR:{:.04} Cutoff:{:.04}".format(i, multiplier, multiplier * ctr, cutoff_value))
+		print("Simulation:{} Multiplier:{} CTR:{:.04} Cutoff:{:.04}".format(index, multiplier, multiplier * ctr, cutoff_value))
 
 		simulation_impressions = np.array(simulation_values[index] > cutoff_value, dtype=int)
 		metrics = Metrics.get_full_model_metrics(impressions, simulation_impressions)
 		
-		cur_ctr, Calibration, NE, RIG = Metrics.get_entropy_metrics(simulation_impressions, simulation_values[index], ctr)
+		entropy_metrics = Metrics.get_entropy_metrics(simulation_impressions, simulation_values[index], ctr)
 
-		output_stats.write("{},{},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04}\n".format(campaign_id, index, cutoff_value, cur_ctr, metrics["MSE"], Calibration, NE, RIG, metrics["TPR"], metrics["FPR"], metrics["FNR"], metrics["PPR"], metrics["ROC"]))
+		output_stats.write("{},{},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04}\n".format(campaign_id, 
+			index, 
+			cutoff_value, 
+			entropy_metrics["CTR"], 
+			metrics["MSE"], 
+			entropy_metrics["Calibration"], 
+			entropy_metrics["NE"],
+			entropy_metrics["RIG"], 
+			metrics["TPR"], 
+			metrics["FPR"], 
+			metrics["FNR"], 
+			metrics["PPR"], 
+			metrics["ROC"]))
 	
 output_stats.close()
 #outputs[index].close()

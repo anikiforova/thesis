@@ -98,9 +98,10 @@ getCTRPlot <- function(data, limits = c(0,1.5), scaleName="", pos="bottom") {
 getMSEPlot <- function(data, xLimit, scaleName, pos = "bottom") {
   g2 = ggplot(data, aes(x=TotalImpressions, y=MSE, colour=Factor)) + 
   stat_smooth(aes(y=MSE, colour=Factor), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=1) +
-    xlab("Impressions") + ylab("MSE") +
+    xlab("Impressions") + ylab("Log MSE") +
     expand_limits(y=xLimit) + 
     scale_x_continuous(labels=formatterM()) +
+    scale_y_log10() +
     theme_bw() +
      theme(plot.title = element_text(size = 10, face = "bold"), 
           legend.title=element_text(size=12), 
@@ -168,7 +169,7 @@ source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
 # 809153 - to rerun entirely
 columnNames = c("CampaignId", "Method", "RecommendationPart", "CTR", "Clicks", "Impressions", "FullFNR", "FullTPR", "BaseCTR", "Ratio")
 all = data.frame(matrix(vector(), 0, length(columnNames), dimnames=list(c(), columnNames)), stringsAsFactors=F)
-campaignIds = c(597165, 837817, 722100) # 809153
+campaignIds = c(597165, 837817, 722100, 809153)
 files =  c("Random")
 for (campaignId in campaignIds)
 {
@@ -193,24 +194,25 @@ g
 ```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
 
 #files = c("Regression_Test")
-files =  c("GP_Clustered", "NN", "LinUCB_Disjoint", "Regression", "Random","TS_Lin")
+files =  c("GP_Clustered_Metrics", "NN_Metrics", "LinUCB_Disjoint_Metrics", "Regression_Metrics", "Random_Metrics","TS_Lin_Metrics")
 data = prepData(files)
 
 #files = c("Regression_Test")
-data$Factor = factor(data$Method)
+
 data = subset(data, Impressions > 1000 & RecommendationPart == 0.2 )
 
 data = subset(data, (Method == "GP_Clustered" & EqClicks == 0 & ClusterCount == 10 & Hours == 12 & LengthScale == 100 & Nu == 2.5 ) |
-                (Method == "NN" & EqClicks == 0.5 & LearningRate == 0.01 ) |
+                (Method == "NN" & EqClicks == 0.2 & LearningRate == 0.001 ) |
                 (Method == "Regression" & EqClicks == 0 & Alpha == 0.01) |
                 (Method == "LinUCB_Disjoint" & EqClicks == 0 & Alpha == 0.01)|
                 (Method == "TS_Lin" & EqClicks == 0 & Alpha == 0.001)|
-                (Method == "Random" ) 
+                (Method == "Baseline" ) 
                 )
-
-g1 = getCTRPlot(data, c(0,0.75), scaleName = "Alrigithm")  
-
-g2 = getMSEPlot(data, c(0,0.003), "Alrigithms:")
+data$Factor = factor(data$Method)
+levels(data$Factor) <- c("GP (Clustered)","NN","LinUCB (Disjoint)", "Linear Regression", "Baseline", "Thompson Sampling (Lin)")
+ 
+g1 = getCTRPlot(data, c(0,0.75), scaleName = "Algorithms")  
+g2 = getMSEPlot(data, c(0,0.003), "Algorithms:")
 
 g = plotGroup(g1, g2, "CTR and MSE for Different Algorithms (Recommendation Size: 20%)") 
 g
@@ -371,9 +373,9 @@ grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), he
 
 \newpage
 \section*{\centering NN CTR and modified MSE}
-```{r NN, include=TRUE, echo=FALSE, fig.width = 10, fig.asp = 1}
-
-files =  c("NN")
+```{r NN, include=TRUE, echo=FALSE}
+#, fig.width = 10, fig.asp = 1
+files =  c("NN_Metrics")
 data = prepData(files)
 data = subset(data, Impressions > 1000)
 
@@ -388,7 +390,7 @@ data3$Factor = factor(paste(data3$LearningRate, sep = ""))
 
 g1 = getCTRPlot(data1, c(0,1), "Rec:")  + ggtitle("Rec Change-EQ:0.2")
 g2 = getCTRPlot(data2, c(0,1), "LRate:")+ ggtitle("LRate Change")
-g3 = getCTRPlot(data3, c(0,1), "LRate:")+ ggtitle("LRate Change-EQ:0.5")
+g3 = getCTRPlot(data3, c(0,1), "LRate:")+ ggtitle("LRate Change-EQ:0.2")
 grid.arrange(g1, g2, g3, nrow=1, ncol=3, widths=unit(c(6.2, 6.2, 6.2), "cm"), heights=unit(8, "cm"), top="NN results")
 
 ```

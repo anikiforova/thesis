@@ -1,8 +1,3 @@
-
-
-
-
-
 import pandas as pd
 import os 
 import glob
@@ -18,9 +13,23 @@ from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
 import Algos.Util as Util
-import Algos.MetricsCalculator as Metrics
 from Algos.Metadata import Metadata 
 
+campaign_ids = [597165, 837817, 722100] #809153
 
-meta = Metadata(campaign_id)
-file_name = "{0}/sorted_time_impressions.csv".format(meta.path)
+output = open("{}/CampaignStats.csv".format(Metadata.base_path), "w")
+output.write("CampaignId,CTR,Impressions,UserCount\n")
+for campaign_id in campaign_ids:
+	print("Starting campaign: {}...".format(campaign_id))
+	meta = Metadata(campaign_id)
+	file_name = "{0}/sorted_time_impressions.csv".format(meta.path)
+	impressions = read_csv(file_name, sep=",", header=0, dtype={"UserHash": str, "Click": np.int32, "Timestamp": np.int32})
+
+	click_info = impressions["Click"].values
+	ctr = np.mean(click_info)
+	impression_count = len(click_info)
+	distinct_users = impressions.UserHash.unique()
+	count_distinct_users = len(distinct_users)
+	output.write("{},{:.04},{},{}\n".format(campaign_id, ctr, impression_count, count_distinct_users))
+
+output.close()

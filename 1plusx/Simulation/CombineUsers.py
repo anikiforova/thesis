@@ -5,8 +5,8 @@ import numpy as np
 import pyarrow.parquet as pq
 from pandas import read_csv
 
-campaign_ids = [722100, 597165, 837817, 809153]
-folder_name = 1
+campaign_ids = [722100, 597165, 837817]#, 809153]
+folder_name = 0
 
 path = "../../RawData/Campaigns/"
 user_file_path_extension = "/Processed/all_users.csv"
