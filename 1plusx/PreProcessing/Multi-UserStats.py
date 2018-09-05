@@ -13,9 +13,9 @@ for date in a:
 	date = date.strftime("%Y-%m-%d")
 
 	print(date)
-	path = "../../RawData/Multi-Campaign/Impressions/{0}/"
+	path = "../../RawData/Campaigns/5/Impressions/{0}/"
 	
-	data = read_csv( "../../RawData/Multi-Campaign/Processed/5_Impressions_{0}.csv".format(date), sep=",")
+	data = read_csv( "../../RawData/Campaigns/5/Processed/sorted_time_impressions_{0}.csv".format(date), sep=",")
 
 	# group = data.groupby(["UserHash"]).agg({"CampaignId": pd.Series.nunique, "Click": np.size})
 	group = data.groupby(["UserHash"])["CampaignId"].agg( [("CampaignCount", pd.Series.nunique), 
@@ -53,10 +53,10 @@ for date in a:
 	if printHeader:
 		mode = "w"
 
-	joined.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignStats.csv", mode=mode, sep=",", \
+	joined.to_csv("../../RawData/Campaigns/5/Processed/MultiCampaignStats.csv", mode=mode, sep=",", \
 		header=printHeader, index=False, columns=["CampaignId", "NonJoinedUserCount", "TotalDistinctUserCount", "Date"])	
 	
-	userGroup.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignUserStats.csv", mode=mode, sep=",", \
+	userGroup.to_csv("../../RawData/Campaigns/5/Processed/MultiCampaignUserStats.csv", mode=mode, sep=",", \
 		header=printHeader, index=False, columns=["CampaignCount", "UserCount", "PercentFromTotalUserCount", "Date"])	
 	
 	printHeader = False

@@ -9,7 +9,7 @@ a = pd.date_range(start='22/8/2018', end='28/08/2018')
 for date in a:
 	date = date.strftime("%Y-%m-%d")
 
-	path = "../../RawData/Multi-Campaign/Users/{0}/"
+	path = "../../RawData/Campaigns/10/Users/{0}/"
 	
 	full_path = path.format(date)
 	file_path = full_path + "/{0}"
@@ -17,7 +17,7 @@ for date in a:
 	all_files = glob.glob(full_path + "*.parquet")
 	all_files.sort()
 
-	output = open("../../RawData/Multi-Campaign/Processed/Users_{0}.csv".format(date), "w")
+	output = open("../../RawData/Campaigns/10/Processed/Users_{0}.csv".format(date), "w")
 	output.write("UserEmbedding,UserHash\n")
 
 	for file_name in all_files:

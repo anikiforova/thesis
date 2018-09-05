@@ -13,9 +13,9 @@ for date in a:
 	date = date.strftime("%Y-%m-%d")
 
 	print(date)
-	path = "../../RawData/Multi-Campaign/Impressions/{0}/"
+	path = "../../RawData/Campaigns/5/Impressions/{0}/"
 	
-	data = read_csv( "../../RawData/Multi-Campaign/Processed/5_Impressions_{0}.csv".format(date), sep=",")
+	data = read_csv( "../../RawData/Campaigns/5/Processed/sorted_time_impressions_{0}.csv".format(date), sep=",")
 	click_data = data.loc[data['Click'] == 1]
 	clickers = np.unique(np.array(click_data["UserHash"]))
 	# print(click_data)
@@ -58,11 +58,11 @@ for date in a:
 	if printHeader:
 		mode = "w"
 
-	user_stats.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignClickStats.csv", mode=mode, sep=",", \
+	user_stats.to_csv("../../RawData/Campaigns/5/Processed/MultiCampaignClickStats.csv", mode=mode, sep=",", \
 		header=printHeader, index=False, columns=["CampaignCount", "ClickedCampaignsCount", "UserCount", "Date"])	
 	
 	# Users that clicked on more than 1 campaign
-	userGroup.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignUserClickStats.csv", mode=mode, sep=",", \
+	userGroup.to_csv("../../RawData/Campaigns/5/Processed/MultiCampaignUserClickStats.csv", mode=mode, sep=",", \
 		header=printHeader, index=False, columns=["CampaignCount", "ClickUserCount", "PercentFromTotalClickUserCount", "Date"])	
 	
 	printHeader = False

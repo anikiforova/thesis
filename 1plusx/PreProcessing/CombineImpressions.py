@@ -13,13 +13,13 @@ all_impressions = pd.DataFrame(columns=list(["CampaignId", "UserHash", "Click", 
 for date in range_of_dates:
 	date = date.strftime("%Y-%m-%d")
 	print(date)
-	file_name = "../../RawData/Multi-Campaign/Processed/Impressions_{0}.csv".format(date)
+	file_name = "../../RawData/Campaigns/5/Processed/sorted_time_impressions_{0}.csv".format(date)
 	
 	data = read_csv(file_name, ",")
 	all_impressions = all_impressions.append(data, ignore_index=True)
 	
 all_impressions = all_impressions.sort_values(by=['Timestamp'])
-all_impressions.to_csv("../../RawData/Multi-Campaign/Processed/all_impressions.csv", mode="w", sep=",", header=True, index=False, \
+all_impressions.to_csv("../../RawData/Campaigns/5/Processed/all_impressions.csv", mode="w", sep=",", header=True, index=False, \
 		columns=["CampaignId", "UserHash", "Click", "Timestamp"])
 
 # there are aparently NAN values in timestamp for some campaigns

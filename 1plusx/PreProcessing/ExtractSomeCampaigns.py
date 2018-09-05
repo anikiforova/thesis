@@ -14,11 +14,11 @@ add_global_header = True
 for date in a:
 	date = date.strftime("%Y-%m-%d")
 	print("Starting Date: {}.".format(date))
-	input_impression_file_name = "../../RawData/Multi-Campaign/Processed/Impressions_{0}.csv".format(date)
-	output_impression_file_name = "../../RawData/Multi-Campaign/Processed/5_Impressions_{0}.csv".format(date)
+	input_impression_file_name = "../../RawData/Campaigns/10/Processed/sorted_time_impressions_{0}.csv".format(date)
+	output_impression_file_name = "../../RawData/Campaigns/5/Processed/sorted_time_impressions_{0}.csv".format(date)
 	
-	input_users_file_name = "../../RawData/Multi-Campaign/Processed/Users_{0}.csv".format(date)
-	output_users_file_name = "../../RawData/Multi-Campaign/Processed/5_Users_{0}.csv".format(date)
+	input_users_file_name = "../../RawData/Campaigns/10/Processed/all_users_{0}.csv".format(date)
+	output_users_file_name = "../../RawData/Campaigns/5/Processed/all_users_{0}.csv".format(date)
 	
 	print("\tReading impressions...")	
 	impressions = read_csv(input_impression_file_name, header=0)
