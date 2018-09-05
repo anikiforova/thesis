@@ -15,7 +15,7 @@ sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 import Algos.Util as Util
 from Algos.Metadata import Metadata 
 
-campaign_ids = [597165, 837817, 722100] #809153
+campaign_ids = [866128, 856805, 847460, 858140, 865041] #809153
 
 output = open("{}/CampaignStats.csv".format(Metadata.base_path), "w")
 output.write("CampaignId,CTR,Impressions,UserCount\n")

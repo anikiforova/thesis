@@ -6,7 +6,7 @@ import pyarrow.parquet as pq
 from datetime import datetime
 from pandas import read_csv
 
-a = pd.date_range(start='26/8/2018', end='26/08/2018')
+a = pd.date_range(start='15/8/2018', end='28/08/2018')
 
 printHeader = True
 for date in a:
@@ -16,50 +16,54 @@ for date in a:
 	path = "../../RawData/Multi-Campaign/Impressions/{0}/"
 	
 	data = read_csv( "../../RawData/Multi-Campaign/Processed/5_Impressions_{0}.csv".format(date), sep=",")
-
-	clickers = np.unique(np.array(data.loc[result['Click'] == 1]["UserHash"]))
+	click_data = data.loc[data['Click'] == 1]
+	clickers = np.unique(np.array(click_data["UserHash"]))
+	# print(click_data)
 
 	# group = data.groupby(["UserHash"]).agg({"CampaignId": pd.Series.nunique, "Click": np.size})
-	group = data.groupby(["UserHash"])["CampaignId"].agg( [("CampaignCount", pd.Series.nunique), 
-				("Impressions", np.size), 
+	group = click_data.groupby(["UserHash"])["CampaignId"].agg( [("CampaignCount", pd.Series.nunique), 
 				("CampaignIds", lambda x: "{%s}" % ', '.join(str(a) for a in np.unique(x)))])
 	
 	group.reset_index(level=0, inplace=True)
 	result = group.groupby(["CampaignIds", "CampaignCount"])["UserHash"].agg([("DistinctUserCount", np.size)])
 	result.reset_index(level=0, inplace=True)
 	result.reset_index(level=0, inplace=True)
-	
-	userGroup = result.groupby(["CampaignCount"])["DistinctUserCount"].agg([("UserCount", np.sum)])
-	total_users = userGroup["UserCount"].sum()
-	userGroup["PercentFromTotalUserCount"] = userGroup["UserCount"] / total_users
+	#print(result)
+
+	userGroup = result.groupby(["CampaignCount"])["DistinctUserCount"].agg([("ClickUserCount", np.sum)])
 	userGroup.reset_index(level=0, inplace=True)
+	total_users = userGroup["ClickUserCount"].sum()
+	userGroup["PercentFromTotalClickUserCount"] = userGroup["ClickUserCount"] / total_users
 	userGroup["Date"] = date
-	# print(userGroup)
-	# break
+	print(userGroup)
+		
+	# # 2. User, # campaigns that it observed, # campaigns they clicked
+	clickers_data = data[data["UserHash"].isin(clickers)]
+
+	clickers_group = clickers_data.groupby(["UserHash", "CampaignId"]).agg( {"Click":np.sum})
+	clickers_group.reset_index(level=0, inplace=True)
+	clickers_group.reset_index(level=0, inplace=True)
+	clickers_group["HasClick"] = clickers_group["Click"].apply(lambda a: int(a > 0))
 	
-	campaignUniqueUserCounts = data.groupby(["CampaignId"])["UserHash"].agg( [("TotalDistinctUserCount", pd.Series.nunique)])
-	campaignUniqueUserCounts.reset_index(level=0, inplace=True)
-	# print(campaignUniqueUserCounts)
-
-	singleCampaignCounts = result.loc[result['CampaignCount'] == 1]
-	singleCampaignCounts["CampaignId"] = singleCampaignCounts["CampaignIds"].apply(lambda c: int(c[1:-1]))
-	# print(singleCampaignCounts)
-
-	joined = singleCampaignCounts.set_index('CampaignId').join(campaignUniqueUserCounts.set_index('CampaignId'), lsuffix='_caller', rsuffix='_other')
-	joined = joined.rename(index=str, columns={"DistinctUserCount": "NonJoinedUserCount"})
-	joined.reset_index(level=0, inplace=True)
-	joined["Date"] = date
-
-	# print(joined)
+	user_campaign_clicks = clickers_group.groupby(["UserHash"]).agg( {"CampaignId": pd.Series.nunique, "HasClick": np.sum})
+	user_campaign_clicks.reset_index(level=0, inplace=True)
+	user_campaign_clicks.reset_index(level=0, inplace=True)
+	user_stats = user_campaign_clicks.groupby(["CampaignId", "HasClick"]).agg({"UserHash":np.size})
+	user_stats.reset_index(level=0, inplace=True)
+	user_stats.reset_index(level=0, inplace=True)
+	user_stats = user_stats.rename(index=str, columns={"HasClick": "ClickedCampaignsCount", "UserHash":"UserCount", "CampaignId": "CampaignCount"})
+	user_stats["Date"] = date
+	print(user_stats)
 	mode = "a"
 	if printHeader:
 		mode = "w"
 
-	joined.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignClickStats.csv", mode=mode, sep=",", \
-		header=printHeader, index=False, columns=["CampaignId", "NonJoinedUserCount", "TotalDistinctUserCount", "Date"])	
+	user_stats.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignClickStats.csv", mode=mode, sep=",", \
+		header=printHeader, index=False, columns=["CampaignCount", "ClickedCampaignsCount", "UserCount", "Date"])	
 	
+	# Users that clicked on more than 1 campaign
 	userGroup.to_csv("../../RawData/Multi-Campaign/Processed/MultiCampaignUserClickStats.csv", mode=mode, sep=",", \
-		header=printHeader, index=False, columns=["CampaignCount", "UserCount", "PercentFromTotalUserCount", "Date"])	
+		header=printHeader, index=False, columns=["CampaignCount", "ClickUserCount", "PercentFromTotalClickUserCount", "Date"])	
 	
 	printHeader = False
 	# break

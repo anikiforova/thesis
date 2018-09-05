@@ -48,7 +48,7 @@ for date in a:
 	joined.reset_index(level=0, inplace=True)
 	joined["Date"] = date
 
-	# print(joined)
+	print(joined)
 	mode = "a"
 	if printHeader:
 		mode = "w"

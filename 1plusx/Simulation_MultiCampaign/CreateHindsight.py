@@ -5,7 +5,6 @@ import math
 import numpy as np
 import pyarrow.parquet as pq
 from pandas import read_csv
-#import matplotlib.pyplot as plt
 
 import sys
 from os import path
@@ -50,17 +49,17 @@ def get_simulated_value(simulation_index, prediction, var, ctr):
 
 path = "../../RawData/Campaigns/"
 impressions_file_path_extension = "/Processed/sorted_time_impressions.csv"
-simulated_impressions_file_path_extension = "/Processed/simulated_time_impressions_s"
+hindsight_multi_campaign_path = "../../RawData/Multi-Campaign/Processed/SimulationHindsight"
+real_multi_campaign_path = "../../RawData/Multi-Campaign/Processed/FiveCampaigns"
 
 simulation_index = 2
-total_lines = 16143123
 
-campaign_ids = [597165, 837817, 722100]#, 809153]
+campaign_ids = [866128, 856805, 847460, 858140, 865041]#, 809153]
 algos = dict([])
 ctr = dict([])
 var = dict([])
 calibration = dict([])
-all_meta = Metadata(0)
+
 for campaign_id in campaign_ids:
 	print ("Starting building model for {}..".format(campaign_id))
 	print("Reading impressions for campaign {}..".format(campaign_id))
@@ -71,13 +70,13 @@ for campaign_id in campaign_ids:
 	campaign_impressions = data["Click"].values
 	
 	print("Setting up regression for all users...")
-	algo = Regression(all_meta)
-	testMeta = TestMetadata(all_meta)
+	algo = Regression(meta)
+	testMeta = TestMetadata(meta)
 	testMeta.click_percent = 0.0
 	algo.setup(testMeta)
 	
 	print("Fitting only campaign {} impressions...".format(campaign_id))
-	#algo.update(campaign_users, campaign_impressions)
+	algo.update(campaign_users, campaign_impressions)
 	prediction = np.array([algo.getPrediction(user_hash) for user_hash in campaign_users])
 
 	ctr[campaign_id] = np.mean(campaign_impressions)
@@ -89,34 +88,48 @@ for campaign_id in campaign_ids:
 	algos[campaign_id] = algo
 	print("Campaign:{} Original CTR:{:.04} New CTR:{:.04} Calibration:{:.04}".format(campaign_id, ctr[campaign_id], simulated_prediction_ctr, calibration[campaign_id]))
 
-input = open("{0}/sorted_time_impressions.csv".format(all_meta.path), "r")
-input.readline()
+a = pd.date_range(start='15/8/2018', end='28/08/2018')
 
-output = open("{0}/multi_hindsight_sorted_time_impressions.csv".format(all_meta.path), "w")
-output.write("UserHash,Timestamp,{}\n".format(",".join(str(c) for c in campaign_ids)))
-print("Starting output to click file...")
-for line_index, line in enumerate(input):
-	line_parts = line.split(",")
-	oritinal_campaign_id = int(line_parts[3])
+printHeader = True
+for date in a:
+	date = date.strftime("%Y-%m-%d")
+	print("\nDate {}...".format(date))
 
-	output_line = "{0},{1}".format(line_parts[0], line_parts[2])
-	for campaign_id in campaign_ids:
-		algo = algos[campaign_id]
-		impression = line_parts[1]
-		if campaign_id != oritinal_campaign_id:
-			user_hash = int(line_parts[0])
-			simulated_value = get_simulated_value(simulation_index, algo.getPrediction(user_hash), var[campaign_id], ctr[campaign_id]) 
-			calibrated_simulated_value = simulated_value * calibration[campaign_id]
-			impression = 0 if calibrated_simulated_value < np.random.uniform(0,1) else 1
-		
-		output_line = "{},{}".format(output_line, impression)
+	input = open("{0}/sorted_time_impressions_{1}.csv".format(real_multi_campaign_path, date), "r")
+	input.readline()
 
-	output.write("{}\n".format(output_line))
-	if line_index % 10000 == 0:
-		print(".", end='', flush=True)	
-		output.flush()
+	output = open("{0}/sorted_time_impressions_{1}.csv".format(hindsight_multi_campaign_path, date), "w")
+	output.write("UserHash,Timestamp,{}\n".format(",".join(str(c) for c in campaign_ids)))
 	
-output.close()
+	user_ids, user_embeddings = Metadata.read_user_embeddings_by_path("{0}/all_users_{1}.csv".format(real_multi_campaign_path, date))
+	dictionary = dict(zip(user_ids, user_embeddings))
+	random_values = np.random.uniform(0, 1, 10000 * len(campaign_ids)).reshape([10000, len(campaign_ids)])
+	for line_index, line in enumerate(input):
+		line_parts = line.split(",")
+		oritinal_campaign_id = int(line_parts[0])
+		user_hash = int(line_parts[1])
+		click = line_parts[2]
+		timestamp = line_parts[3][0:-1]
+
+		results = list()
+		for campaign_index, campaign_id in enumerate(campaign_ids):
+			algo = algos[campaign_id]
+			if campaign_id != oritinal_campaign_id:
+				user_embedding = dictionary[user_hash]
+				predicted_value = algo.predict_now(user_embedding)
+
+				simulated_value = get_simulated_value(simulation_index, predicted_value, var[campaign_id], ctr[campaign_id]) 
+				calibrated_simulated_value = simulated_value * calibration[campaign_id]
+				click = "0" if calibrated_simulated_value < random_values[line_index%10000][campaign_index] else "1"
+			results.append(click)
+
+		output.write("{0},{1},{2}\n".format(user_hash, timestamp, ",".join(results)))
+		if line_index % 10000 == 0:
+			random_values = np.random.uniform(0, 1, 10000 * len(campaign_ids)).reshape([10000, len(campaign_ids)])
+			print(".", end='', flush=True)	
+			output.flush()
+		
+	output.close()
 #outputs[index].close()
 
 

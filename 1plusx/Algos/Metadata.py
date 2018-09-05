@@ -28,14 +28,29 @@ class Metadata:
 		self.campaign_id = campaign_id
 		self.path = "{0}/{1}/Processed".format(self.base_path, self.campaign_id)
 
-	def normalize_array(self, array):
+	def normalize_array(array):
 		min_value = np.min(array)
 		max_value = np.max(array)
 		return (array - min_value)/(max_value - min_value)
 
 	def read_user_embeddings(self):
-		print("Reading users.. ", end='', flush=True)	
+		print("Reading users.. ", end='', flush=True)
 		filePath = "{0}/all_users{1}.csv".format(self.path, self.cluster_name_postfix)
+		return Metadata.read_user_embeddings_by_path(filePath)
+		# print("({})".format(filePath))
+		# users = read_csv(filePath, header=0)
+		
+		# print("Parsing users.. ", end='', flush=True)	
+		# user_ids = np.array(users["UserHash"])
+		# user_count = len(user_ids)
+		# user_embeddings = np.array(users["UserEmbedding"])
+		# user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([user_count, self.dimensions])
+		
+		# print("Normalizing users.. ", end='', flush=True)	
+		# user_embeddings = np.apply_along_axis(lambda e: self.normalize_array(e), 0, user_embeddings)
+		# return user_ids, user_embeddings
+
+	def read_user_embeddings_by_path(filePath):
 		print("({})".format(filePath))
 		users = read_csv(filePath, header=0)
 		
@@ -43,10 +58,10 @@ class Metadata:
 		user_ids = np.array(users["UserHash"])
 		user_count = len(user_ids)
 		user_embeddings = np.array(users["UserEmbedding"])
-		user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([user_count, self.dimensions])
+		user_embeddings = np.array([np.fromstring(x, sep=" ") for x in user_embeddings]).reshape([user_count, Metadata.dimensions])
 		
 		print("Normalizing users.. ", end='', flush=True)	
-		user_embeddings = np.apply_along_axis(lambda e: self.normalize_array(e), 0, user_embeddings)
+		user_embeddings = np.apply_along_axis(lambda e: Metadata.normalize_array(e), 0, user_embeddings)
 		return user_ids, user_embeddings
 
 
