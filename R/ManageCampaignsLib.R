@@ -78,11 +78,11 @@ plotGroup <- function(g1, g2, title) {
 }
 
 library(grid)
-plotGroupNoLegend <- function(g1, g2, title) {
+plotGroupNoLegend <- function(g1, g2, title, width) {
   grid.arrange(g1 + theme(legend.position="none"),
                g2 + theme(legend.position="none"),
-               nrow=1, ncol=2, widths=unit(c(10, 10), "cm"), heights=unit(9, "cm"),
-               top = textGrob(title, gp=gpar(fontsize=15)))
+               nrow=1, ncol=2, widths=unit(c(width, width), "cm"), heights=unit(9, "cm"),
+               top = textGrob(title, gp=gpar(fontsize=15,fontface=2)))
   
 }
 
