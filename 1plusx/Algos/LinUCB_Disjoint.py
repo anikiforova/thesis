@@ -16,6 +16,7 @@ class LinUCB_Disjoint(AlgoBase):
 		self.A 		= np.identity(self.meta.dimensions)
 		self.A_i	= np.identity(self.meta.dimensions)
 		self.b 		= np.zeros(self.meta.dimensions)
+		self.theta  = np.zeros(self.meta.dimensions)
 			
 	def update(self, users, clicks):
 		print("Starting Update.. ", end='', flush=True)
@@ -29,13 +30,21 @@ class LinUCB_Disjoint(AlgoBase):
 				self.b += embedding
 
 		self.A_i = inv(self.A)
-		theta = self.A_i.dot(self.b) # [self.d, self.d] x [self.d, 1] = [self.d, 1]
+		self.theta = self.A_i.dot(self.b) # [self.d, self.d] x [self.d, 1] = [self.d, 1]
 
-		for index, embedding in enumerate(self.user_embeddings):
-			mean = embedding.dot(theta)
-			var = math.sqrt(embedding.reshape([1, self.meta.dimensions]).dot(self.A_i).dot(embedding))
-
-			self.prediction[index] = mean + self.testMeta.alpha * var
+		self.update_prediction()
 
 		self.predictionPosprocessing(users, clicks)		
 		print(" Done.")
+
+	def update_prediction(self):
+		print("Updating predictions..")
+		for index, embedding in enumerate(self.user_embeddings):
+			mean = embedding.dot(self.theta)
+			var = math.sqrt(embedding.reshape([1, self.meta.dimensions]).dot(self.A_i).dot(embedding))
+
+			self.prediction[index] = mean + self.testMeta.alpha * var		
+
+		
+
+

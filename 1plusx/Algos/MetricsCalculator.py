@@ -41,7 +41,7 @@ def get_iterative_model_metrics(background_impressions, model_background_predict
 	background_no_clicks_filter = bi == 0
 
 	MMSE_1 = np.mean((bi[background_clicks_filter]-mbpv[background_clicks_filter])**2)
-	MMSE_0 = np.mean(((bi[background_no_clicks_filter]-mbpv[background_no_clicks_filter]) * 300)**2)
+	MMSE_0 = np.mean(((bi[background_no_clicks_filter]-mbpv[background_no_clicks_filter]) * math.sqrt(300))**2)
 	MMSE = MMSE_0 + MMSE_1
 
 	return {"ModelCTR"		: model_ctr,
@@ -72,9 +72,15 @@ def get_full_model_metrics(background_impressions, model_impressions):
 	TPR = TP / P # true positive rate
 	FNR = FN / P # true positive rate
 	FPR = FP / N # false positive rate
-	PPR = TP / (TP + FP) # positive prediction rate
+	
+	PPR = np.nan
+	FPR = np.nan
 
-	ROC = TPR / FPR
+	if TP+FP != 0:
+		PPR = TP / (TP + FP) # positive prediction rate
+
+	if FPR != 0:
+		ROC = TPR / FPR
 
 	MSE = np.mean((bi-mi)**2)
 	# here multiplication by 300 is enough since it's 0/1 values

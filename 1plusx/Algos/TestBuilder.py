@@ -58,11 +58,28 @@ def get_lin_tests_mini(meta, hours = 12):
 			tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = hours, rec_part = rec_part))
 	return tests
 
+def get_lin_test(meta, hours = 12):
+	tests = list()
+	tests.append(build_lin_test(meta, click_percent = 0.0, alpha = 0.001, h = hours, rec_part = 0.2))
+	return tests
+
+
+def get_lin_target_test(meta, hours = 12):
+	tests = list()
+	for alpha in [0.1, 0.01, 0.001]:
+		for target_percent in [0.6, 0.8, 1]:
+			test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.0)
+			test.target_percent = target_percent
+			test.target_algo = True
+			tests.append(test)
+	return tests
+
 # DONE
 def get_random_tests(meta, hours):
 	t = TestMetadata(meta)
 	t.recommendation_part 	= 0.2
 	t.hours 				= hours
+	t.click_percent			= 0.0
 
 	return [t]
 

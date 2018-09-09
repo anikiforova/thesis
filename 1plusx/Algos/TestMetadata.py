@@ -27,6 +27,9 @@ class TestMetadata:
 	train_part 						= 0.2
 	recommendation_part 			= 0.2
 
+	target_algo						= False
+	target_percent					= 0.8
+
 	def __init__(self, meta):
 		self.meta 			= meta
 		self.length_scale	= self.meta.dimensions
@@ -34,8 +37,13 @@ class TestMetadata:
 	def get_time_between_updates_in_seconds(self):
 		return 60 * 60 * self.hours
 
-	def get_additional_info(self):
-		info = "H:{},Train:{},Rec:{},Alpha:{},ClickPercent:{:.2}".format(self.hours, self.train_part, self.recommendation_part, self.alpha, self.click_percent)
+	def get_algo_info(self):
+		info = "{},H:{},Alpha:{},ClickPercent:{:.2}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
+
+		if self.target_algo:
+			info = "{},TargetPercent:{}".format(info, self.target_percent)
+		else:
+			info = "{},Train:{},Rec:{}".format(info, self.train_part, self.recommendation_part)
 
 		if self.gp_running_algo:
 			info =  "{},#Clusters:{},LengthScale:{},Nu:{:.2},Kernel:{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
@@ -45,8 +53,13 @@ class TestMetadata:
 				
 		return info
 
-	def get_additional_column_info(self):
-		info = "{},{},{},{},{}".format(self.hours, self.train_part, self.recommendation_part, self.alpha, self.click_percent)
+	def get_algo_column_info(self):
+		info = "{},{},{},{}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
+		
+		if self.target_algo:
+			info = "{},{}".format(info, self.target_percent)
+		else:
+			info = "{},{},{}".format(info, self.train_part, self.recommendation_part)
 
 		if self.gp_running_algo:
 			info =  "{},{},{},{:.2},{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
@@ -56,8 +69,13 @@ class TestMetadata:
 
 		return info
 
-	def get_additional_column_names(self):
-		info = ",Hours,TrainPart,RecommendationPart,Alpha,EqClicks"
+	def get_algo_column_names(self):
+		info = "Method,Hours,Alpha,EqClicks"
+
+		if self.target_algo:
+			info = info + ",TargetPercent"
+		else:
+			info = info + ",TrainPart,RecommendationPart"
 
 		if self.gp_running_algo:
 			info =  info + ",ClusterCount,LengthScale,Nu,Kernel"

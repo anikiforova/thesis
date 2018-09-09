@@ -9,11 +9,36 @@ class AlgoBase:
 	
 	def __init__(self, meta):
 		self.meta = meta
-		user_ids, user_embeddings = self.meta.read_user_embeddings()
+		self.testMeta = ""
+		if self.meta.initialize_user_embeddings:
+			self.update_user_embeddings()
+
+	# to ensure inheritance of the method
+	def update_single_prediction(self, embedding, campaign_id):
+		pass
+
+	def update_multi_campaign_predictions(self):
+		print("Updating predictions..")
+		for index, embedding in enumerate(self.user_embeddings):
+			
+			best_normalized_estimate = 0
+
+			for campaign_id in self.campaign_ids:
+				ctr_estimate, normalized_estimate = self.update_single_prediction(embedding, campaign_id)
+
+				if normalized_estimate > best_normalized_estimate:
+					best_normalized_estimate = normalized_estimate
+
+					self.prediction[index] = ctr_estimate
+					self.campaign_assignment[index] = campaign_id
+
+	def update_user_embeddings(self, embeddings_file_name_postfix = ""):
+		print("Updating user embeddings..")
+		user_ids, user_embeddings = self.meta.read_user_embeddings(embeddings_file_name_postfix)
 		
 		self.user_count 	 = len(user_ids)
 
-		arrangement = np.arange(self.user_count)
+		arrangement 	= np.arange(self.user_count)
 		user_ids 		= user_ids[arrangement]
 		user_embeddings = user_embeddings[arrangement]
 
@@ -22,15 +47,19 @@ class AlgoBase:
 		self.user_id_to_hash = dict(zip(range(0, len(user_ids)), user_ids))
 		
 		self.user_embeddings = user_embeddings
-		self.testMeta = ""
+
+	def reset_predictions(self):
+		print("Resetting predictions..")
+		self.prediction = np.ones(self.user_count) * 0.002 + np.random.uniform(0, 0.001, self.user_count)		
+		self.campaign_assignment = np.zeros(self.user_count)		
 		
 	def setup(self, testMetadata):
 		self.testMeta = testMetadata
 		self.clickers = set()
-		self.prediction = np.ones(self.user_count) * 0.02 + np.random.uniform(0, 0.001, self.user_count)
-
-		if self.meta.soft_click:
-			self.user_impressions 	= np.zeros(self.user_count)
+		if self.meta.initialize_user_embeddings:
+			self.reset_predictions()
+			if self.meta.soft_click:
+				self.user_impressions = np.zeros(self.user_count)
 		
 	def prepareClicks(self, users, clicks):
 		new_users = np.array([ self.user_hash_to_id[x] for x in users ])
@@ -96,6 +125,10 @@ class AlgoBase:
 	def getPrediction(self, user_hash):
 		user_id = self.user_hash_to_id[user_hash]
 		return self.prediction[user_id]
+
+	def getAssignment(self, user_hash):
+		user_id = self.user_hash_to_id[user_hash]
+		return self.campaign_assignment[user_id]
 
 	def get_recommendations(self, percent):
 		count = int(self.user_count * percent)

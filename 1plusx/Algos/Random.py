@@ -12,7 +12,7 @@ class Random(AlgoBase):
 
 	def update(self, users, clicks):
 		self.prediction = np.random.uniform(0, 1, self.user_count)
-		# self.prediction = np.random.randint(0, 2, self.user_count)
 		
-
+	def update_prediction(self):		
+		self.prediction = np.random.uniform(0, 1, self.user_count)
 

@@ -3,6 +3,7 @@ import random
 import math
 import time
 import datetime
+import pandas as pd
 from pandas import read_csv
 from pandas import DataFrame
 from numpy import genfromtxt
@@ -22,57 +23,67 @@ import MetricsCalculator
 import TestBuilder
 import Util
 
-campaign_ids = [866128, 856805, 847460, 858140, 865041] 
-for campaign_id in campaign_ids:
-	meta = Metadata("Random", campaign_id)
-	algo = Random(meta)
+# this runs a one campaign LinUCB on multiple campaigns at the same time to see how we can estimate click users
+meta = Metadata("LinUCB_Disjoint", campaign_id = 5, initialize_user_embeddings = False)
+algo = LinUCB_Disjoint(meta)
 
-	testsMeta = TestBuilder.get_random_tests(meta, 12)
-	output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
+testsMeta = TestBuilder.get_lin_test(meta, 12)
 
-	output_column_names = False
-	if not Path(output_path).is_file():
-		output = open(output_path, "w")	
-		output_column_names = True;
-	else:
-		output = open(output_path, "a")
+output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
+if simulated:
+	output_path = "./Results/{0}/Simulated/{1}/{2}.csv".format(meta.campaign_id, simulation_id, meta.algo_name)
 
-	# specials = read_csv("{0}//special_users.csv".format(meta.path), header=0)
-	# specials = set(specials["UserHash"].values)
-	# specials_count = len(specials)
+output_column_names = False
+if not Path(output_path).is_file():
+	output = open(output_path, "w")	
+	output_column_names = True;
+else:
+	output = open(output_path, "a")
 
-	for testMeta in testsMeta:
-		algo.setup(testMeta)
+for testMeta in testsMeta:
+	algo.setup(testMeta)
 
-		if output_column_names:
-			output.write("Clicks,Impressions,TotalImpressions,Timestamp,BatchCTR,ModelCTR,MSE,MMSE,FullMSE,FullROC,FullTPR,FullFPR,FullFNR,FullPPR,ModelCalibration,ModelNE,ModelRIG{}\n".format(testMeta.get_algo_column_names()))
-			output_column_names = False
+	if output_column_names:
+		output.write("Clicks,Impressions,TotalImpressions,Timestamp,BatchCTR,ModelCTR,MSE,MMSE,FullMSE,FullROC,FullTPR,FullFPR,FullFNR,FullPPR,ModelCalibration,ModelNE,ModelRIG{}\n".format(testMeta.get_algo_column_names()))
+		output_column_names = False
 
-		warmup = True
+	all_model_impressions = list()
+	all_prediction_values = list()
+	all_prediction_clicks = list()
+	all_impressions = list()
+	batch_users = list()
+	batch_clicks = list()
 
-		all_model_impressions = list()
-		all_prediction_values = list()
-		all_prediction_clicks = list()
-		all_impressions = list()
-		batch_users = list()
-		batch_clicks = list()
+	recommended_users = list()
 
-		recommended_users = list()
+	print("Starting evaluation of {}".format(testMeta.get_algo_info()))
+	
+	days = pd.date_range(start='15/8/2018', end='20/08/2018')
 
-		print("Starting evaluation of {}".format(testMeta.get_algo_info()))
+	total_impressions = 0
+	warmup = True # it's important it stays outside of the day loop, so it does warmup only one time.
+	for date in days:
+		print("Starting {}..".format(date))
+		date = date.strftime("%Y-%m-%d")
 
-		file_name = "{0}/sorted_time_impressions.csv".format(meta.path)
+		algo.update_user_embeddings("_" + date)
+		algo.reset_predictions()
+		if not warmup:
+			algo.update_prediction()
+			recommended_users = algo.get_recommendations(testMeta.recommendation_part)
+
+		file_name = "{0}/sorted_time_impressions_{1}.csv".format(meta.path, date)
 		if simulated:
-			file_name = "{0}/simulated_time_impressions_s{1}.csv".format(meta.path, simulation_id)
+			file_name = "{0}/Simulated/sorted_time_impressions_{1}.csv".format(meta.path, date)
 		
 		input = open(file_name, "r")
-
 		input.readline() # get rid of header
-		_, _, _, hour_begin_timestamp = Util.get_line_info(input.readline())
+		_, _, _, _, hour_begin_timestamp = Util.get_campaign_line_info(input.readline())
 		
-		print("Time between updates:{0}".format(testMeta.get_time_between_updates_in_seconds()))
-		for total_impressions, line in enumerate(input):
-			user_id, click, timestamp_raw, timestamp = Util.get_line_info(line)
+		#print("Time between updates:{0}".format(testMeta.get_time_between_updates_in_seconds()))
+		for cur_file_impressions, line in enumerate(input):
+			total_impressions += 1
+			displayed_campaign, user_id, click, timestamp_raw, timestamp = Util.get_campaign_line_info(line)
 			
 			if warmup and (timestamp - hour_begin_timestamp).seconds < testMeta.get_time_between_updates_in_seconds(): 
 				batch_users.append(user_id)
@@ -101,13 +112,14 @@ for campaign_id in campaign_ids:
 				all_prediction_clicks.append(0)
 
 			# print('.', end='', flush=True)	
-			if total_impressions % 10000 == 0:
+			if total_impressions % 100000 == 0:
 				iterative_metrics = MetricsCalculator.get_iterative_model_metrics(all_impressions, all_prediction_values,all_model_impressions, batch_clicks)
 				full_metrics 	= MetricsCalculator.get_full_model_metrics(all_impressions, all_prediction_clicks)
 				entropy_metrics = MetricsCalculator.get_entropy_metrics(all_prediction_clicks, all_prediction_values, np.mean(all_impressions))
 
-				print('{:.2%} Clicks:{} Imp:{} BatchCTR:{:.3%} CumCTR:{:.3%} CumMSE:{:.03} CumMMSE:{:.03} TPR:{:.03}'.format(
-					total_impressions/meta.total_lines[campaign_id], 
+				print('{} {:.2%} Clicks:{} Imp:{} BatchCTR:{:.3%} CumCTR:{:.3%} CumMSE:{:.03} CumMMSE:{:.03} TPR:{:.03}'.format(
+					date,
+					cur_file_impressions/meta.total_lines[meta.campaign_id][date], 
 					iterative_metrics["Clicks"],
 					iterative_metrics["Impressions"],
 					iterative_metrics["ModelBatchCTR"],
@@ -138,8 +150,11 @@ for campaign_id in campaign_ids:
 				output.flush()
 				
 		input.close()
+		algo.update(batch_users, batch_clicks)
+		batch_users = list()
+		batch_clicks = list()
 					
-	output.close()
+output.close()
 
 
 

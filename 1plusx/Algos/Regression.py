@@ -5,7 +5,8 @@ from random import randint
 from sklearn import linear_model
 from enum import Enum
 
-from .AlgoBase import AlgoBase
+# from .AlgoBase import AlgoBase
+from AlgoBase import AlgoBase
 
 class Regression(AlgoBase):
 	
