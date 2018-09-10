@@ -2,6 +2,8 @@ import numpy as np
 from pandas import read_csv
 from pandas import DataFrame
 
+from TargetSplitType import TargetSplitType
+
 class TestMetadata:
 
 	click_percent					= 0.2
@@ -29,6 +31,8 @@ class TestMetadata:
 
 	target_algo						= False
 	target_percent					= 0.8
+	target_split					= TargetSplitType.NO_SPLIT
+	target_alpha					= 1
 
 	def __init__(self, meta):
 		self.meta 			= meta
@@ -41,7 +45,7 @@ class TestMetadata:
 		info = "{},H:{},Alpha:{},ClickPercent:{:.2}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
 
 		if self.target_algo:
-			info = "{},TargetPercent:{}".format(info, self.target_percent)
+			info = "{},TargetPercent:{},TargetSplit:{},TargetAlpha:{}".format(info, self.target_percent, self.target_split.name, self.target_alpha)
 		else:
 			info = "{},Train:{},Rec:{}".format(info, self.train_part, self.recommendation_part)
 
@@ -57,7 +61,7 @@ class TestMetadata:
 		info = "{},{},{},{}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
 		
 		if self.target_algo:
-			info = "{},{}".format(info, self.target_percent)
+			info = "{},{},{},{}".format(info, self.target_percent, self.target_split.name, self.target_alpha)
 		else:
 			info = "{},{},{}".format(info, self.train_part, self.recommendation_part)
 
@@ -73,7 +77,7 @@ class TestMetadata:
 		info = "Method,Hours,Alpha,EqClicks"
 
 		if self.target_algo:
-			info = info + ",TargetPercent"
+			info = info + ",TargetPercent,TargetSplit,TargetAlpha"
 		else:
 			info = info + ",TrainPart,RecommendationPart"
 

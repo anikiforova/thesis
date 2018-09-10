@@ -74,7 +74,7 @@ def get_full_model_metrics(background_impressions, model_impressions):
 	FPR = FP / N # false positive rate
 	
 	PPR = np.nan
-	FPR = np.nan
+	ROC = np.nan
 
 	if TP+FP != 0:
 		PPR = TP / (TP + FP) # positive prediction rate
@@ -84,7 +84,7 @@ def get_full_model_metrics(background_impressions, model_impressions):
 
 	MSE = np.mean((bi-mi)**2)
 	# here multiplication by 300 is enough since it's 0/1 values
-	MMSE = np.mean((bi-mi * 300)**2)
+	MMSE = np.mean((bi-mi * math.sqrt(300))**2)
 
 	return {"MSE": MSE,
 			"MMSE":MMSE, 

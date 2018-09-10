@@ -3,6 +3,9 @@ import math
 import datetime as dt
 from pandas import read_csv
 from pandas import DataFrame
+from termcolor import colored
+
+from TargetSplitType import TargetSplitType
 
 class TargetBase:
 	
@@ -15,22 +18,23 @@ class TargetBase:
 		self.start_date = start_date
 		self.end_date = end_date
 
+		self.total_impressions = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
 		self.target_budgets = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
 		self.normalization_values = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
 		self.consumed_budget = dict(zip(self.campaign_ids, np.zeros(len(self.campaign_ids))))
 		self.initialize_daily_impressions()
 
 	def initialize_daily_impressions(self):
-		self.daily_impressions = read_csv("{0}/{1}/Processed/daily_impression_breakdown.csv".format(self.meta.base_path, self.meta.campaign_id), sep=",")
+		daily_impressions = read_csv("{0}/{1}/Processed/daily_impression_breakdown.csv".format(self.meta.base_path, self.meta.campaign_id), sep=",")
 		
-		self.daily_impressions["Date"] = self.daily_impressions["Timestamp"].apply(lambda a: dt.datetime.fromtimestamp(a/1000))
+		daily_impressions["Date"] = daily_impressions["Timestamp"].apply(lambda a: dt.datetime.fromtimestamp(a/1000))
 
-		self.daily_impressions = self.daily_impressions.loc[self.daily_impressions['Date'] >= self.start_date]
-		self.daily_impressions = self.daily_impressions.loc[self.daily_impressions['Date'] <= self.end_date]
-		self.daily_impressions = self.daily_impressions.groupby(["CampaignId"]).agg({"Impressions":np.sum})
-		self.daily_impressions.reset_index(level=0, inplace=True)
+		daily_impressions = daily_impressions.loc[daily_impressions['Date'] >= self.start_date]
+		daily_impressions = daily_impressions.loc[daily_impressions['Date'] <= self.end_date]
+		daily_impressions = daily_impressions.groupby(["CampaignId"]).agg({"Impressions":np.sum})
+		daily_impressions.reset_index(level=0, inplace=True)
 		
-		self.total_impressions = dict(zip(self.daily_impressions["CampaignId"].values, self.daily_impressions["Impressions"].values))
+		self.absolute_total_impressions = dict(zip(daily_impressions["CampaignId"].values, daily_impressions["Impressions"].values))
 
 	def setup(self, testMeta):
 		# dividing by the #campaigns since exploration scavanging will reduce the number
@@ -39,10 +43,12 @@ class TargetBase:
 		self.elapsed_days = 0
 
 		for campaign_id in self.total_impressions.keys():
-			self.total_impressions[campaign_id] = int((self.testMeta.target_percent * self.total_impressions[campaign_id] )/(2*self.campaign_count))
+			self.consumed_budget[campaign_id] = 0
+			self.total_impressions[campaign_id] = int((self.testMeta.target_percent * self.absolute_total_impressions[campaign_id] )/(2*self.campaign_count))
+			self.target_budgets[campaign_id] = self.total_impressions[campaign_id]
 		
 	def calculate_normalization_value(self, target):
-		return round(((math.log(target + 1) + 1)), 2)
+		return round(((math.log(target + 1) + 1)) ** self.testMeta.target_alpha, 2)
 
 	def update_target_budgets(self, consumed_budget):
 		for campaign_id in self.campaign_ids:
@@ -62,8 +68,17 @@ class TargetBase:
 		print("Updating budgets...")
 		for campaign_id in self.campaign_ids:
 			campaign_remaining_budget = self.total_impressions[campaign_id] - self.consumed_budget[campaign_id]
-			daily_remaining_budget_estimate = int(campaign_remaining_budget / (self.total_days - self.elapsed_days))
-			self.target_budgets[campaign_id] = daily_remaining_budget_estimate
+
+			if self.testMeta.target_split == TargetSplitType.NO_SPLIT:
+				self.target_budgets[campaign_id] = campaign_remaining_budget
+
+			elif self.testMeta.target_split == TargetSplitType.DAILY:
+				self.target_budgets[campaign_id] = int(campaign_remaining_budget / (self.total_days - self.elapsed_days))
+			
+			else:
+				print(colored("WARNING: No target budget split type defined.", "yellow")) 
+				self.target_budgets[campaign_id] = campaign_remaining_budget
+
 			if self.target_budgets[campaign_id] < 0:
 				self.target_budgets[campaign_id] = 0
 			self.normalization_values[campaign_id] = self.calculate_normalization_value(self.target_budgets[campaign_id])

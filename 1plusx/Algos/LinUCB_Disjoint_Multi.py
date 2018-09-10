@@ -21,9 +21,6 @@ class LinUCB_Disjoint_Multi(AlgoBase, TargetBase):
 		self.b 		= dict()
 		self.theta  = dict()
 
-		self.clicks = dict(zip(self.campaign_ids, np.zeros(len(self.campaign_ids))))
-		self.impressions = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
-
 		for campaign_id in self.campaign_ids:
 			self.A[campaign_id] 	= np.identity(self.meta.dimensions)
 			self.A_i[campaign_id]	= np.identity(self.meta.dimensions)
@@ -43,9 +40,6 @@ class LinUCB_Disjoint_Multi(AlgoBase, TargetBase):
 			if clicks[index] == 1 :
 				self.b[campaign_id] += embedding
 
-			self.clicks[campaign_id] += clicks[index]
-			self.impressions[campaign_id] += 1
-
 		for campaign_id in self.campaign_ids:
 			self.A_i[campaign_id] = inv(self.A[campaign_id])
 			self.theta[campaign_id] = self.A_i[campaign_id].dot(self.b[campaign_id]) # [self.d, self.d] x [self.d, 1] = [self.d, 1]
@@ -57,11 +51,6 @@ class LinUCB_Disjoint_Multi(AlgoBase, TargetBase):
 		
 		if not discard_target_impressions:
 			self.recalculate_budgets()
-
-		print("\nCTR: ", end='', flush=True)
-		for campaign_id in self.campaign_ids:
-			print("{}:{:.04} ".format(campaign_id, self.clicks[campaign_id]/ self.impressions[campaign_id]), end='', flush=True)
-		print("")
 
 	def update_single_prediction(self, embedding, campaign_id):
 		mean = max(0.00000001, embedding.dot(self.theta[campaign_id]))

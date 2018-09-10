@@ -3,6 +3,7 @@ import numpy as np
 
 from Metadata import Metadata
 from TestMetadata import TestMetadata
+from TargetSplitType import TargetSplitType
 
 def build_gp_test(meta, click_percent = 0.2, kernel = "Matern", nu = 1.5, length_scale = 100, cluster_count = 10, alpha = 1, h = 12, rec_part = 0.2):
 	t = TestMetadata(meta)
@@ -63,15 +64,22 @@ def get_lin_test(meta, hours = 12):
 	tests.append(build_lin_test(meta, click_percent = 0.0, alpha = 0.001, h = hours, rec_part = 0.2))
 	return tests
 
+def build_target_test(meta, alpha, hours, target_percent, target_split, target_alpha):
+	test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.0)
+	test.target_percent = target_percent
+	test.target_algo = True
+	test.target_split = target_split
+	test.target_alpha = target_alpha
+	return test
 
 def get_lin_target_test(meta, hours = 12):
 	tests = list()
-	for alpha in [0.1, 0.01, 0.001]:
-		for target_percent in [0.6, 0.8, 1]:
-			test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.0)
-			test.target_percent = target_percent
-			test.target_algo = True
-			tests.append(test)
+	for target_split in [TargetSplitType.DAILY, TargetSplitType.NO_SPLIT]:
+		for target_alpha in [1, 2]: 
+			for alpha in [0.1, 0.01, 0.001]:
+				for target_percent in [0.8, 1]:
+					tests.append(build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = target_split, target_alpha = target_alpha))
+				
 	return tests
 
 # DONE

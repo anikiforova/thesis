@@ -39,20 +39,20 @@ testsMeta = TestBuilder.get_lin_target_test(meta, 6)
 output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
 output_log_path = "./Log/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
 
-output_column_names = False
-if not Path(output_path).is_file():
-	output = open(output_path, "w")	
-	output_column_names = True;
-else:
-	output = open(output_path, "a")
+#output_column_names = False
+#if not Path(output_path).is_file():
+output = open(output_path, "w")	
+output_column_names = True;
+#else:
+#	output = open(output_path, "a")
 
 log_output = open(output_log_path, "w")	
 
 for testMeta in testsMeta:
 	algo.setup(testMeta)
 	
-	log_output.write("Type,Timestamp,TotalImpressions,{},{}\n".format(campaign_ids_str, testMeta.get_algo_column_names()))
 	if output_column_names:
+		log_output.write("Type,Timestamp,TotalImpressions,{},{}\n".format(campaign_ids_str, testMeta.get_algo_column_names()))
 		output.write("Clicks,Impressions,TotalImpressions,Timestamp,BatchCTR,ModelCTR,MSE,MMSE,FullMSE,FullROC,FullTPR,FullFPR,FullFNR,FullPPR,ModelCalibration,ModelNE,ModelRIG,{}\n".format(testMeta.get_algo_column_names()))
 		output_column_names = False
 
