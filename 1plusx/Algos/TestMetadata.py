@@ -33,7 +33,8 @@ class TestMetadata:
 	target_percent					= 0.8
 	target_split					= TargetSplitType.NO_SPLIT
 	target_alpha					= 1
-
+	normalize_ctr					= True
+	
 	def __init__(self, meta):
 		self.meta 			= meta
 		self.length_scale	= self.meta.dimensions

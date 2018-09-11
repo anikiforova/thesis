@@ -46,7 +46,7 @@ prepData <- function(files, cur_path) {
   file=paste0(cur_path, paste0(files[1], ".csv"))
   data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
   columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart","BatchCTR","ModelCTR","MSE","MMSE","FullMSE","FullROC","FullTPR","FullFPR","FullFNR","FullPPR","ModelCalibration","ModelNE","ModelRIG"
-              , "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate", "MSE")
+              , "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate", "MSE", "TargetPercent", "TargetAlpha", "TargetSplit")
   data = selectNecessaryColumns(data, columns)
   if(length(files) > 1){
     for (name in files){
@@ -61,7 +61,6 @@ prepData <- function(files, cur_path) {
   data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
   data
 }
-
 g_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
   leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
@@ -109,10 +108,9 @@ getCTRPlot <- function(data, limits = c(0,1.5), scaleName="", pos="bottom") {
 getMSEPlot <- function(data, xLimit, scaleName, pos = "bottom") {
   g2 = ggplot(data, aes(x=TotalImpressions, y=MSE, colour=Factor)) + 
     stat_smooth(aes(y=MSE, colour=Factor), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=1) +
-    xlab("Impressions") + ylab("Log MSE") +
+    xlab("Impressions") + ylab("MSE") +
     expand_limits(y=xLimit) + 
     scale_x_continuous(labels=formatterM()) +
-    scale_y_log10() +
     theme_bw() +
     theme(plot.title = element_text(size = 10, face = "bold"), 
           legend.title=element_text(size=12), 
@@ -125,9 +123,18 @@ getMSEPlot <- function(data, xLimit, scaleName, pos = "bottom") {
   g2
 }
 
+getMSEPlotLog <- function(data, xLimit, scaleName, pos = "bottom") {
+  g2 = getMSEPlot(data, xLimit, scaleName, pos) +  scale_y_log10() + ylab("Log MSE")
+  g2
+}
+
+
+
 getCampaignMetrics <- function(files, campaignId, baseCTR, method = "LinUCB_Disjoint", alpha = 0) {
   path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaignId, "/", sep="")
   data = prepData(files, path)
+  
+  data = subset(data, Timestamp < 1534709673000)
   
   if (method != "Random")
   {
@@ -144,7 +151,9 @@ getCampaignMetrics <- function(files, campaignId, baseCTR, method = "LinUCB_Disj
   campaignData$Ratio = campaignData$CTR/campaignData$BaseCTR
   campaignData$RecommendationPart = campaignData$RecommendationPart * 100
   
-  campaignData = campaignData[campaignData$TotalImpressions == maxTotalImpressions, c("CampaignId", "Method", "RecommendationPart", "Clicks", "Impressions", "FullFNR","FullTPR", "BaseCTR", "Ratio", "CTR")]
+  campaignData = campaignData[campaignData$TotalImpressions == maxTotalImpressions, 
+                              c("CampaignId", "Method", "RecommendationPart", "Clicks", 
+                                "Impressions", "FullFNR","FullTPR", "BaseCTR", "Ratio", "CTR", "Timestamp")]
   
   campaignData
 }

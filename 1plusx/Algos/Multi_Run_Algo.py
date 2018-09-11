@@ -12,15 +12,9 @@ from pathlib import Path
 from Metadata import Metadata
 from TestMetadata import TestMetadata
 
-from Random import Random
 from Random_Multi import Random_Multi
-from Regression import Regression
-from LinUCB_Disjoint import LinUCB_Disjoint
 from LinUCB_Disjoint_Multi import LinUCB_Disjoint_Multi
-from EGreedy_Multi import EGreedy_Multi
-from TS_Lin import TS_Lin
-from GP_Clustered import GP_Clustered
-from NN import NN
+from TS_Lin_Multi import TS_Lin_Multi
 
 import MetricsCalculator
 import TestBuilder
@@ -29,24 +23,24 @@ import Util
 campaign_ids = set([866128, 856805, 847460, 858140, 865041])
 campaign_ids_str = ",".join([str(x) for x in campaign_ids])
 
-meta = Metadata("LinUCB_Disjoint_Multi_Target", campaign_id = 5, initialize_user_embeddings = False)
+meta = Metadata("TS_Lin_Multi_Target", campaign_id = 5, initialize_user_embeddings = False)
 days = pd.date_range(start='15/8/2018', end='17/08/2018') #end='20/08/2018')
 
-algo = LinUCB_Disjoint_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
+algo = TS_Lin_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
 
-testsMeta = TestBuilder.get_lin_target_test(meta, 6)
+testsMeta = TestBuilder.get_lin_multi_target_test_mini(meta, 6)
 
 output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
 output_log_path = "./Log/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
 
-#output_column_names = False
-#if not Path(output_path).is_file():
-output = open(output_path, "w")	
-output_column_names = True;
-#else:
-#	output = open(output_path, "a")
-
-log_output = open(output_log_path, "w")	
+output_column_names = False
+if not Path(output_path).is_file():
+	output = open(output_path, "w")	
+	log_output = open(output_log_path, "w")	
+	output_column_names = True;
+else:
+	output = open(output_path, "a")
+	log_output = open(output_log_path, "a")	
 
 for testMeta in testsMeta:
 	algo.setup(testMeta)

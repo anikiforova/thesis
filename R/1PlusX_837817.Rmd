@@ -11,7 +11,7 @@ library(ggplot2)
 library(scales)
 library(gridExtra)
 
-campaign_id = 837817
+campaign_id = 866128
 imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/"
 path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaign_id, "/", sep="")
 path_ctr = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/CTR/", campaign_id, "/", sep="")
@@ -194,7 +194,9 @@ g
 ```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
 
 #files = c("Regression_Test")
-files =  c("GP_Clustered_Metrics", "NN_Metrics", "LinUCB_Disjoint_Metrics", "Regression_Metrics", "Random_Metrics","TS_Lin_Metrics")
+#files =  c("GP_Clustered_Metrics", "NN_Metrics", "LinUCB_Disjoint_Metrics", "Regression_Metrics", "Random_Metrics","TS_Lin_Metrics")
+files =  c("LinUCB_Disjoint_Metrics", "Random_Metrics")
+
 data = prepData(files)
 
 #files = c("Regression_Test")
@@ -216,7 +218,7 @@ g2 = getMSEPlot(data, c(0,0.003), "Algorithms:")
 
 g = plotGroup(g1, g2, "CTR and MSE for Different Algorithms (Recommendation Size: 20%)") 
 g
-ggsave(paste(imageLocation, paste(campaign_id, "_AllAlgorithms.png", sep="")), plot=g, width = 20, height = 11, units = "cm")
+#ggsave(paste(imageLocation, paste(campaign_id, "_AllAlgorithms.png", sep="")), plot=g, width = 20, height = 11, units = "cm")
 ```
 \newpage
 \section*{\centering Random}

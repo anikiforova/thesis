@@ -24,16 +24,14 @@ import TestBuilder
 import Util
 
 # this runs a one campaign LinUCB on multiple campaigns at the same time to see how we can estimate click users
-meta = Metadata("LinUCB_Disjoint", campaign_id = 5, initialize_user_embeddings = False)
-algo = LinUCB_Disjoint(meta)
+meta = Metadata("Random", campaign_id = 5, initialize_user_embeddings = False)
+algo = Random(meta)
 
-testsMeta = TestBuilder.get_lin_test(meta, 12)
+testsMeta = TestBuilder.get_random_tests(meta, 6)
 
 output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
-if simulated:
-	output_path = "./Results/{0}/Simulated/{1}/{2}.csv".format(meta.campaign_id, simulation_id, meta.algo_name)
-
 output_column_names = False
+
 if not Path(output_path).is_file():
 	output = open(output_path, "w")	
 	output_column_names = True;
@@ -44,7 +42,7 @@ for testMeta in testsMeta:
 	algo.setup(testMeta)
 
 	if output_column_names:
-		output.write("Clicks,Impressions,TotalImpressions,Timestamp,BatchCTR,ModelCTR,MSE,MMSE,FullMSE,FullROC,FullTPR,FullFPR,FullFNR,FullPPR,ModelCalibration,ModelNE,ModelRIG{}\n".format(testMeta.get_algo_column_names()))
+		output.write("Clicks,Impressions,TotalImpressions,Timestamp,BatchCTR,ModelCTR,MSE,MMSE,FullMSE,FullROC,FullTPR,FullFPR,FullFNR,FullPPR,ModelCalibration,ModelNE,ModelRIG,{}\n".format(testMeta.get_algo_column_names()))
 		output_column_names = False
 
 	all_model_impressions = list()
@@ -58,7 +56,7 @@ for testMeta in testsMeta:
 
 	print("Starting evaluation of {}".format(testMeta.get_algo_info()))
 	
-	days = pd.date_range(start='15/8/2018', end='20/08/2018')
+	days = pd.date_range(start='15/8/2018', end='17/08/2018')
 
 	total_impressions = 0
 	warmup = True # it's important it stays outside of the day loop, so it does warmup only one time.
@@ -73,8 +71,6 @@ for testMeta in testsMeta:
 			recommended_users = algo.get_recommendations(testMeta.recommendation_part)
 
 		file_name = "{0}/sorted_time_impressions_{1}.csv".format(meta.path, date)
-		if simulated:
-			file_name = "{0}/Simulated/sorted_time_impressions_{1}.csv".format(meta.path, date)
 		
 		input = open(file_name, "r")
 		input.readline() # get rid of header
