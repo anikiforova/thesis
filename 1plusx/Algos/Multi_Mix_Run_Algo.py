@@ -24,15 +24,15 @@ campaign_ids = set([866128, 856805, 847460, 858140, 865041])
 campaign_ids_str = ",".join([str(x) for x in campaign_ids])
 
 meta = Metadata("LinUCB_Disjoint_Multi_Mix", campaign_id = 5, initialize_user_embeddings = False)
-days = pd.date_range(start='15/8/2018', end='17/08/2018') #end='20/08/2018')
+days = pd.date_range(start='15/8/2018', end='20/08/2018') #end='20/08/2018')
 
 algo = LinUCB_Disjoint_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
 
 testsMeta = TestBuilder.get_lin_multi_mix_test(meta, 6)
 
-output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
-output_log_path = "./Log/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
-output_campaign_log_path = "./Log/{0}/Campaign_Log.csv".format(meta.campaign_id, meta.algo_name)
+output_path = "./Results/{0}/{1}_7days.csv".format(meta.campaign_id, meta.algo_name)
+output_log_path = "./Log/{0}/{1}_7days.csv".format(meta.campaign_id, meta.algo_name)
+output_campaign_log_path = "./Log/{0}/Campaign_Log_7days.csv".format(meta.campaign_id, meta.algo_name)
 
 output_column_names = False
 if not Path(output_path).is_file():

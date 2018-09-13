@@ -23,17 +23,19 @@ import MetricsCalculator
 import TestBuilder
 import Util
 
+days = pd.date_range(start='15/8/2018', end='20/08/2018')
+
 campaign_ids = set([866128, 856805, 847460, 858140, 865041])
 campaign_ids_str = ",".join([str(x) for x in campaign_ids])
 
 # this runs a one campaign LinUCB on multiple campaigns at the same time to see how we can estimate click users
-meta = Metadata("LinUCB_Disjoint", campaign_id = 5, initialize_user_embeddings = False)
-algo = LinUCB_Disjoint(meta)
+meta = Metadata("Random", campaign_id = 5, initialize_user_embeddings = False)
+algo = Random(meta)
 
-testsMeta = TestBuilder.get_lin_test(meta, 6)
+testsMeta = TestBuilder.get_random_tests(meta, 6)
 
-output_path = "./Results/{0}/{1}_Metrics2.csv".format(meta.campaign_id, meta.algo_name)
-output_campaign_log_path = "./Log/{0}/Campaign_Log.csv".format(meta.campaign_id, meta.algo_name)
+output_path = "./Results/{0}/{1}_7days.csv".format(meta.campaign_id, meta.algo_name)
+output_campaign_log_path = "./Log/{0}/Campaign_Log_7days.csv".format(meta.campaign_id, meta.algo_name)
 
 output_column_names = False
 
@@ -66,8 +68,6 @@ for testMeta in testsMeta:
 	recommended_users = list()
 
 	print("Starting evaluation of {}".format(testMeta.get_algo_info()))
-	
-	days = pd.date_range(start='15/8/2018', end='17/08/2018')
 
 	total_impressions = 0
 	warmup = True # it's important it stays outside of the day loop, so it does warmup only one time.

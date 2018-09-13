@@ -67,7 +67,7 @@ def get_lin_alpha_tests(meta, hours = 12):
 
 def get_lin_test(meta, hours = 12):
 	tests = list()
-	tests.append(build_lin_test(meta, click_percent = 0.0, alpha = 0.1, h = hours, rec_part = 0.2))
+	tests.append(build_lin_test(meta, click_percent = 0.0, alpha = 0.001, h = hours, rec_part = 0.2))
 	return tests
 
 def build_target_test(meta, alpha, hours, target_percent, target_split, target_alpha, early_update):
@@ -100,7 +100,7 @@ def get_lin_multi_target_test(meta, hours = 12):
 
 def get_lin_multi_mix_test(meta, hours = 12):
 	tests = list()
-	for alpha in [0.1, 0.01, 0.001, 0.0001, 0.00001]: #[0.1, 0.01, 0.001]:
+	for alpha in [0.001]: #[0.1, 0.01, 0.001]:
 		test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.2)
 		test.normalize_ctr = False
 		tests.append(test)
@@ -122,11 +122,12 @@ def get_lin_multi_target_mix_test(meta, hours = 12):
 
 def get_lin_multi_target_test_mini(meta, hours = 12):
 	tests = list()
-	for target_split in [TargetSplitType.NO_SPLIT]:
-		for target_alpha in [1, 2]: 
-			for alpha in [0.1, 0.01, 0.001]:
-				for target_percent in [1]:
-					tests.append(build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = target_split, target_alpha = target_alpha))
+	alpha = 0.1
+	target_alpha = 1
+	target_percent = 1
+	early_update = True
+	for target_split in [TargetSplitType.DAILY, TargetSplitType.NO_SPLIT]:	
+		tests.append(build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = target_split, target_alpha = target_alpha, early_update = early_update))
 				
 	return tests
 
