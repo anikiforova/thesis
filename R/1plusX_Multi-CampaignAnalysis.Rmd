@@ -288,7 +288,7 @@ path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
 data = prepData(files, path)
 
 data$Factor = factor(paste(data$Method, " A:", data$Alpha, sep=""))
-data$Percent = data$BatchCTR * 100
+#data$Percent = data$BatchCTR * 100
 g1 = getCTRPlot(data, c(0,0.6)) + 
   geom_hline(yintercept = CTR * 100) +
   ggtitle("Learn Combined Campaign Data (Hindsight CTR - Learn Each Campaign Individually)")
@@ -299,7 +299,7 @@ g1
 ```{r include=True, echo=FALSE, warning=FALSE}
 
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
-files =  c("LinUCB_Disjoint_Multi_Metrics", "LinUCB_Disjoint_Metrics", "Random_Metrics")
+files =  c("LinUCB_Disjoint_Multi_Metrics", "LinUCB_Disjoint_Metrics", "Random_Metrics", "LinUCB_Disjoint_Multi_Mix_Metrics")
 data = prepData(files, path)
 
 data = subset(data, Alpha == 0  | 
@@ -309,10 +309,9 @@ data = subset(data, Alpha == 0  |
               & (data$TargetPercent == 1 | is.na(data$TargetPercent))
               ))
 
-data$Factor = factor(data$Method)
+data$Factor = factor(paste(data$Method, data$Alpha))
+#data$Percent = data$BatchCTR * 100
 g1 = getCTRPlot(data, c(0,0.6)) 
-data$Percent = data$BatchCTR * 100
-#g2 = getCTRPlot(data, c(0,0.6)) 
 #data = subset(data, Method != "Random")
 #g2 = getMSEPlot(data, c(0,0.003), "Algorithms:")
  g2 = ggplot(data, aes(x=TotalImpressions, y=FullTPR, colour=Factor)) + 
@@ -330,7 +329,8 @@ data$Percent = data$BatchCTR * 100
           axis.title.y = element_text(size=8))+
     scale_color_discrete(name="Algos:")
  
-plotGroup(g1, g2, "Multi-Campaign vs Single-Campaign(20%) handling") 
+# g1
+plotGroup(g1, g2, "Multi-Campaign vs Single-Campaign (20%) handling") 
 
 ```
 
@@ -395,5 +395,196 @@ g1 = getCTRPlot(data, c(0,0.6))
 data$Percent = data$BatchCTR * 100
 g2 = getCTRPlot(data, c(0,0.6)) 
 plotGroup(g1, g2, "Target Algorithm Comparison") 
+
+```
+
+```{r include=True, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log.csv"
+all <- read.csv(file=path)
+limit = 1
+data = subset(all, Method == "Random")
+data$Ratio = data$Impressions / sum(data$Impressions)
+p1 = getCampaignComparisonPlot(data, "Impression Ratio", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint")
+data$Ratio = data$Impressions / sum(data$Impressions)
+p2 = getCampaignComparisonPlot(data, "Impression Ratio", "LinUCB Single Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Mix" & Alpha == 0.0001)
+data$Ratio = data$Impressions / sum(data$Impressions)
+p3 = getCampaignComparisonPlot(data, "Impression Ratio", "LinUCB Multi-Campaign", limit) 
+
+mylegend<-g_legend(p1)
+plot_count = 3
+p5 = grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
+                               p2 + theme(legend.position="none"),
+                               p3 + theme(legend.position="none"),
+                               #p4 + theme(legend.position="none"),
+                               nrow=1, ncol=plot_count, widths=unit(rep(9, plot_count),"cm"), heights=unit(12, "cm")),
+                   mylegend, nrow=2, widths=unit(plot_count * 9, "cm"), heights=unit(c(12, 1), "cm"),
+                  top = textGrob("20% Recommendation Impression Ratio Performance", gp=gpar(fontsize=15,fontface=2)))
+
+ggsave(paste(imageLocation, "S_VS_Multi_ImpressionRatioPerCampaign.png", sep=""), plot=p5, width = 36, height = 14, units = "cm")
+```
+```{r include=True, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log.csv"
+all <- read.csv(file=path)
+limit = 1
+data = subset(all, Method == "Random")
+data$Ratio = data$Clicks / sum(data$Clicks)
+p1 = getCampaignComparisonPlot(data, "Click Ratio", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint")
+data$Ratio = data$Clicks / sum(data$Clicks)
+p2 = getCampaignComparisonPlot(data, "Click Ratio", "LinUCB Single Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Mix" & Alpha == 0.0001)
+data$Ratio = data$Clicks / sum(data$Clicks)
+p3 = getCampaignComparisonPlot(data, "Click Ratio", "LinUCB Multi-Campaign", limit) 
+
+mylegend<-g_legend(p1)
+plot_count = 3
+p5 = grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
+                               p2 + theme(legend.position="none"),
+                               p3 + theme(legend.position="none"),
+                               #p4 + theme(legend.position="none"),
+                               nrow=1, ncol=plot_count, widths=unit(rep(9, plot_count),"cm"), heights=unit(12, "cm")),
+                   mylegend, nrow=2, widths=unit(plot_count * 9, "cm"), heights=unit(c(12, 1), "cm"),
+                  top = textGrob("20% Recommendation Click Ratio Performance", gp=gpar(fontsize=15,fontface=2)))
+
+#p5
+ggsave(paste(imageLocation, "S_VS_Multi_ClicksRatioPerCampaign.png", sep=""), plot=p5, width = 36, height = 16, units = "cm")
+
+```
+
+```{r include=True, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log.csv"
+all <- read.csv(file=path)
+all$Impressions = as.integer(all$Impressions)
+limit = 1
+data = subset(all, Method == "Random_Multi")
+
+data$Ratio = data$Impressions / sum(data$Impressions)
+p1 = getCampaignComparisonPlot(data, "Impression Ratio", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1)
+data$Ratio = data$Impressions / sum(data$Impressions)
+p2 = getCampaignComparisonPlot(data, "Impression Ratio", "LinUCB Multi-Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.1 & RecommendationPart == "NO_SPLIT_1_False")
+data$Ratio = data$Impressions / sum(data$Impressions)
+p3 = getCampaignComparisonPlot(data, "Impression Ratio", "LinUCB Targeted Multi-Campaign", limit) 
+
+mylegend<-g_legend(p3)
+plot_count = 3
+p5 = grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
+                               p2 + theme(legend.position="none"),
+                               p3 + theme(legend.position="none"),
+                               #p4 + theme(legend.position="none"),
+                               nrow=1, ncol=plot_count, widths=unit(rep(9, plot_count),"cm"), heights=unit(12, "cm")),
+                   mylegend, nrow=2, widths=unit(plot_count * 9, "cm"), heights=unit(c(12, 1), "cm"),
+                  top = textGrob("Multi-Campaign Impression Ratio Performance", gp=gpar(fontsize=15,fontface=2)))
+
+ggsave(paste(imageLocation, "Multi_VS_Target_ImpressionRatioPerCampaign.png", sep=""), plot=p5, width = 36, height = 14, units = "cm")
+```
+
+```{r include=True, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log.csv"
+all <- read.csv(file=path)
+limit = 1
+data = subset(all, Method == "Random_Multi")
+data$Ratio = data$Clicks / sum(data$Clicks)
+p1 = getCampaignComparisonPlot(data, "Click Ratio", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1)
+data$Ratio = data$Clicks / sum(data$Clicks)
+p2 = getCampaignComparisonPlot(data, "Click Ratio", "LinUCB Multi-Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.1 & RecommendationPart == "NO_SPLIT_1_False")
+data$Ratio = data$Clicks / sum(data$Clicks)
+p3 = getCampaignComparisonPlot(data, "Click Ratio", "LinUCB Target Multi-Campaign", limit) 
+
+mylegend<-g_legend(p3)
+plot_count = 3
+p5 = grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
+                               p2 + theme(legend.position="none"),
+                               p3 + theme(legend.position="none"),
+                               #p4 + theme(legend.position="none"),
+                               nrow=1, ncol=plot_count, widths=unit(rep(9, plot_count),"cm"), heights=unit(12, "cm")),
+                   mylegend, nrow=2, widths=unit(plot_count * 9, "cm"), heights=unit(c(12, 1), "cm"),
+                  top = textGrob("Multi-Campaign Click Ratio Performance", gp=gpar(fontsize=15,fontface=2)))
+
+#p5
+ggsave(paste(imageLocation, "Multi_VS_Target_ClickRatioPerCampaign.png", sep=""), plot=p5, width = 36, height = 16, units = "cm")
+
+```
+```{r include=True, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log.csv"
+all <- read.csv(file=path)
+limit = 0.003
+data = subset(all, Method == "Random_Multi")
+data$Ratio = data$Clicks / data$Impressions
+p1 = getCampaignComparisonPlot(data, "CTR", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1)
+data$Ratio = data$Clicks / data$Impressions
+p2 = getCampaignComparisonPlot(data, "CTR", "LinUCB Multi-Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.1 & RecommendationPart == "NO_SPLIT_1_False")
+data$Ratio = data$Clicks / data$Impressions
+p3 = getCampaignComparisonPlot(data, "CTR", "LinUCB Target Multi-Campaign", limit) 
+
+mylegend<-g_legend(p3)
+plot_count = 3
+p5 = grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
+                               p2 + theme(legend.position="none"),
+                               p3 + theme(legend.position="none"),
+                               #p4 + theme(legend.position="none"),
+                               nrow=1, ncol=plot_count, widths=unit(rep(9, plot_count),"cm"), heights=unit(12, "cm")),
+                   mylegend, nrow=2, widths=unit(plot_count * 9, "cm"), heights=unit(c(12, 1), "cm"),
+                  top = textGrob("Multi-Campaign CTR Performance", gp=gpar(fontsize=15,fontface=2)))
+
+#p5
+ggsave(paste(imageLocation, "Multi_VS_Target_CTRPerCampaign.png", sep=""), plot=p5, width = 36, height = 16, units = "cm")
+
+```
+
+```{r include=True, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+#files =  c("LinUCB_Disjoint_Multi_Target", "Random_Metrics", "LinUCB_Disjoint_Multi_Metrics")
+files =  c("Random_Metrics", "LinUCB_Disjoint_Multi_Target")
+data = prepData(files, path)
+
+#data = subset(data, Method %in% c("Random", "LinUCB_Disjoint_Multi_Target") | 
+ #              (Alpha == 0.1 & Method == "LinUCB_Disjoint_Multi"))
+
+data$Factor = factor(paste(data$Method, data$Alpha, data$TargetSplit, data$EarlyUpdate))
+#data = subset(data, data$TargetSplit == "DAILY")
+data$Percent = data$BatchCTR * 100
+g1 = getCTRPlot(data, c(0,0.6)) 
+data = subset(data, Method == "LinUCB_Disjoint_Multi_Target")
+#g2 = getMSEPlot(data, c(0,0.003), "Algorithms:")
+g2 = ggplot(data, aes(x=TotalImpressions, y=BatchMSE, colour=Factor)) + 
+  geom_line() + 
+#  stat_smooth(aes(y=FullTPR, colour=Factor), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=1) +
+    xlab("Impressions") + ylab("Full MSE") +
+    #expand_limits(y=xLimit) + 
+    scale_x_continuous(labels=formatterM()) +
+    theme_bw() +
+    theme(plot.title = element_text(size = 10, face = "bold"), 
+          legend.title=element_text(size=12), 
+          legend.text=element_text(size=8), 
+          legend.key.size = unit(1,"line"),
+          legend.position="bottom",
+          axis.title.x = element_text(size=8),
+          axis.title.y = element_text(size=8))+
+    scale_color_discrete(name="Algos:")
+plotGroup(g1, g2, "Multi-Campaign vs Single-Campaign (20%) handling") 
 
 ```

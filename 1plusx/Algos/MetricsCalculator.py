@@ -1,6 +1,30 @@
 import math
 import numpy as np
 
+def get_basic_metrics(observed_impressions, predicted_values):
+	observed_impressions = np.array(observed_impressions)
+	predicted_values = np.array(predicted_values)
+
+	Clicks = np.sum(observed_impressions)
+	Impressions = np.size(observed_impressions)
+
+	CTR = np.mean(observed_impressions)
+	
+	clicks_filter = observed_impressions == 1
+	no_clicks_filter = observed_impressions == 0
+
+	MMSE_clicks = np.mean((observed_impressions[clicks_filter] - predicted_values[clicks_filter])**2 )
+	MMSE_no_clicks = np.mean((observed_impressions[no_clicks_filter] - predicted_values[no_clicks_filter])**2) 
+
+	MSE = MMSE_clicks + MMSE_no_clicks
+	MMSE = MMSE_clicks * 300 + MMSE_no_clicks
+
+	return {"CTR"			: CTR, 
+			"MSE"			: MSE, 
+			"MMSE"			: MMSE, 
+			"Clicks"		: Clicks, 
+			"Impressions"	: Impressions}
+
 def get_entropy_metrics(s_clicks, s_predicted_values, background_ctr, print=False):
 	impression_count 	= len(s_clicks)
 

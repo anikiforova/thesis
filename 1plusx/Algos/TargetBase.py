@@ -18,10 +18,14 @@ class TargetBase:
 		self.start_date = start_date
 		self.end_date = end_date
 
-		self.total_impressions = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
-		self.target_budgets = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
+		self.const_global_target_budgets = dict()
+		self.global_target_budgets = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
+		self.global_consumed_budgets = dict(zip(self.campaign_ids, np.zeros(len(self.campaign_ids))))
+
+		self.local_target_budgets = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
+
 		self.normalization_values = dict(zip(self.campaign_ids, np.ones(len(self.campaign_ids))))
-		self.consumed_budget = dict(zip(self.campaign_ids, np.zeros(len(self.campaign_ids))))
+		
 		self.initialize_daily_impressions()
 
 	def initialize_daily_impressions(self):
@@ -34,7 +38,7 @@ class TargetBase:
 		daily_impressions = daily_impressions.groupby(["CampaignId"]).agg({"Impressions":np.sum})
 		daily_impressions.reset_index(level=0, inplace=True)
 		
-		self.absolute_total_impressions = dict(zip(daily_impressions["CampaignId"].values, daily_impressions["Impressions"].values))
+		self.const_global_target_budgets = dict(zip(daily_impressions["CampaignId"].values, daily_impressions["Impressions"].values))
 
 	def setup(self, testMeta):
 		# dividing by the #campaigns since exploration scavanging will reduce the number
@@ -42,54 +46,62 @@ class TargetBase:
 		self.testMeta = testMeta
 		self.elapsed_days = 0
 
-		for campaign_id in self.total_impressions.keys():
-			self.consumed_budget[campaign_id] = 0
-			self.total_impressions[campaign_id] = int((self.testMeta.target_percent * self.absolute_total_impressions[campaign_id] )/(2*self.campaign_count))
-			self.target_budgets[campaign_id] = self.total_impressions[campaign_id]
+		for campaign_id in self.campaign_ids:
+			self.global_consumed_budgets[campaign_id] = 0
+			self.global_target_budgets[campaign_id] = int((self.testMeta.target_percent * self.const_global_target_budgets[campaign_id] )/(2*self.campaign_count))
+
+		self.reset_local_target_budgets()
 		
 	def calculate_normalization_value(self, target):
 		return round(((math.log(target + 1) + 1)) ** self.testMeta.target_alpha, 2)
 
-	def update_target_budgets(self, consumed_budget):
+	def consume_campaign_budget(self, campaign_id):
+		self.local_target_budgets[campaign_id] -= 1
+		self.global_consumed_budgets[campaign_id] += 1
+
+		if self.local_target_budgets[campaign_id] <= 0:
+			if self.local_target_budgets[campaign_id] == 0:
+				return True
+			self.local_target_budgets[campaign_id] = 0
+
+		return False
+	
+	def consume_target_budgets(self, consumption_log_by_campaign_ids):
 		for campaign_id in self.campaign_ids:
-			self.target_budgets[campaign_id] -= consumed_budget[campaign_id]
-			self.consumed_budget[campaign_id] += consumed_budget[campaign_id]
+			consumed_budget = np.sum([1 for id in consumption_log_by_campaign_ids if id == campaign_id])
 
-			if self.target_budgets[campaign_id] < 0:
-				self.target_budgets[campaign_id] = 0
+			self.local_target_budgets[campaign_id] -= consumed_budget
+			self.global_consumed_budgets[campaign_id] += consumed_budget
 
-			# maybe the remainder of impressions has to be considered as a parameter
-			self.normalization_values[campaign_id] = self.calculate_normalization_value(self.target_budgets[campaign_id])
+			if self.local_target_budgets[campaign_id] < 0:
+				self.local_target_budgets[campaign_id] = 0
 
 	def start_new_day(self):
 		self.elapsed_days += 1
 
-	def recalculate_budgets(self):
+	def reset_local_target_budgets(self):
 		print("Updating budgets...")
 		for campaign_id in self.campaign_ids:
-			campaign_remaining_budget = self.total_impressions[campaign_id] - self.consumed_budget[campaign_id]
+			campaign_remaining_budget = self.global_target_budgets[campaign_id] - self.global_consumed_budgets[campaign_id]
 
-			if self.testMeta.target_split == TargetSplitType.NO_SPLIT:
-				self.target_budgets[campaign_id] = campaign_remaining_budget
-
-			elif self.testMeta.target_split == TargetSplitType.DAILY:
-				self.target_budgets[campaign_id] = int(campaign_remaining_budget / (self.total_days - self.elapsed_days))
-			
+			if self.testMeta.target_split == TargetSplitType.DAILY:
+				self.local_target_budgets[campaign_id] = int(campaign_remaining_budget / (self.total_days - self.elapsed_days))
 			else:
-				print(colored("WARNING: No target budget split type defined.", "yellow")) 
-				self.target_budgets[campaign_id] = campaign_remaining_budget
+				self.local_target_budgets[campaign_id] = campaign_remaining_budget
+				print(colored("WARNING: Using NO_SPLIT target budget type.", "yellow")) 
+				
+			if self.local_target_budgets[campaign_id] < 0:
+				self.local_target_budgets[campaign_id] = 0
 
-			if self.target_budgets[campaign_id] < 0:
-				self.target_budgets[campaign_id] = 0
-			self.normalization_values[campaign_id] = self.calculate_normalization_value(self.target_budgets[campaign_id])
+			self.normalization_values[campaign_id] = self.calculate_normalization_value(self.local_target_budgets[campaign_id])
 		
 	def log_budgets(self, log_output, timestamp, total_impressions):
-		daily_target_budgets_str = ",".join([str(self.target_budgets[cid]) for cid in self.campaign_ids])
-		total_target_budgets_str = ",".join([str(int(self.total_impressions[cid] - self.consumed_budget[cid])) for cid in self.campaign_ids])
+		local_target_budgets_str = ",".join([str(self.local_target_budgets[cid]) for cid in self.campaign_ids])
+		global_target_budgets_str = ",".join([str(int(self.global_target_budgets[cid] - self.global_consumed_budgets[cid])) for cid in self.campaign_ids])
 		
 		algo_column_info = self.testMeta.get_algo_column_info()
-		log_output.write("Daily,{},{},{},{}\n".format(timestamp, total_impressions, daily_target_budgets_str, algo_column_info))
-		log_output.write("Total,{},{},{},{}\n".format(timestamp, total_impressions, total_target_budgets_str, algo_column_info))
+		log_output.write("Local,{},{},{},{}\n".format(timestamp, total_impressions, local_target_budgets_str, algo_column_info))
+		log_output.write("Global,{},{},{},{}\n".format(timestamp, total_impressions, global_target_budgets_str, algo_column_info))
 		log_output.flush()
 
 	def initialize_revenue(self):
@@ -102,7 +114,7 @@ class TargetBase:
 		self.CPM = dict(zip(campaigns, CPM))
 
 	def get_remaining_target_budgets(self):
-		return self.target_budgets
+		return self.local_target_budgets
 
 	def get_normalized_estimate(self, ctr, campaign_id):
 		# revenue_estimate = (ctr_estimate * self.meta.CPC[campaign_id] + self.meta.CPM[campaign_id] / 1000) 

@@ -23,13 +23,18 @@ import MetricsCalculator
 import TestBuilder
 import Util
 
+campaign_ids = set([866128, 856805, 847460, 858140, 865041])
+campaign_ids_str = ",".join([str(x) for x in campaign_ids])
+
 # this runs a one campaign LinUCB on multiple campaigns at the same time to see how we can estimate click users
-meta = Metadata("Random", campaign_id = 5, initialize_user_embeddings = False)
-algo = Random(meta)
+meta = Metadata("LinUCB_Disjoint", campaign_id = 5, initialize_user_embeddings = False)
+algo = LinUCB_Disjoint(meta)
 
-testsMeta = TestBuilder.get_random_tests(meta, 6)
+testsMeta = TestBuilder.get_lin_test(meta, 6)
 
-output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
+output_path = "./Results/{0}/{1}_Metrics2.csv".format(meta.campaign_id, meta.algo_name)
+output_campaign_log_path = "./Log/{0}/Campaign_Log.csv".format(meta.campaign_id, meta.algo_name)
+
 output_column_names = False
 
 if not Path(output_path).is_file():
@@ -38,10 +43,13 @@ if not Path(output_path).is_file():
 else:
 	output = open(output_path, "a")
 
+output_campaign_log = open(output_campaign_log_path, "a")	
+
 for testMeta in testsMeta:
 	algo.setup(testMeta)
 
 	if output_column_names:
+		#output_campaign_log.write("CampaignId,Clicks,Impressions,{}\n".format(testMeta.get_algo_column_names()))
 		output.write("Clicks,Impressions,TotalImpressions,Timestamp,BatchCTR,ModelCTR,MSE,MMSE,FullMSE,FullROC,FullTPR,FullFPR,FullFNR,FullPPR,ModelCalibration,ModelNE,ModelRIG,{}\n".format(testMeta.get_algo_column_names()))
 		output_column_names = False
 
@@ -51,6 +59,9 @@ for testMeta in testsMeta:
 	all_impressions = list()
 	batch_users = list()
 	batch_clicks = list()
+
+	impressions_per_campaign = dict(zip(campaign_ids, np.zeros(len(campaign_ids))))
+	clicks_per_campaign = dict(zip(campaign_ids, np.zeros(len(campaign_ids))))
 
 	recommended_users = list()
 
@@ -104,6 +115,9 @@ for testMeta in testsMeta:
 				batch_clicks.append(click)
 				all_model_impressions.append(click)
 				all_prediction_clicks.append(click)
+
+				impressions_per_campaign[displayed_campaign] += 1
+				clicks_per_campaign[displayed_campaign] += click
 			else:
 				all_prediction_clicks.append(0)
 
@@ -149,8 +163,12 @@ for testMeta in testsMeta:
 		algo.update(batch_users, batch_clicks)
 		batch_users = list()
 		batch_clicks = list()
-					
+				
+	for campaign_id in campaign_ids:
+		output_campaign_log.write("{},{},{},{}\n".format(campaign_id, impressions_per_campaign[campaign_id], clicks_per_campaign[campaign_id], testMeta.get_algo_column_info()))
+
 output.close()
+output_campaign_log.close()
 
 
 

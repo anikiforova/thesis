@@ -7,7 +7,8 @@ from TargetSplitType import TargetSplitType
 class TestMetadata:
 
 	click_percent					= 0.2
-	
+
+
 	# GP
 	gp_running_algo					= False
 	kernel_name						= ""
@@ -29,12 +30,13 @@ class TestMetadata:
 	train_part 						= 0.2
 	recommendation_part 			= 0.2
 
+	early_update					= False
 	target_algo						= False
 	target_percent					= 0.8
 	target_split					= TargetSplitType.NO_SPLIT
 	target_alpha					= 1
 	normalize_ctr					= True
-	
+
 	def __init__(self, meta):
 		self.meta 			= meta
 		self.length_scale	= self.meta.dimensions
@@ -46,9 +48,9 @@ class TestMetadata:
 		info = "{},H:{},Alpha:{},ClickPercent:{:.2}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
 
 		if self.target_algo:
-			info = "{},TargetPercent:{},TargetSplit:{},TargetAlpha:{}".format(info, self.target_percent, self.target_split.name, self.target_alpha)
-		else:
-			info = "{},Train:{},Rec:{}".format(info, self.train_part, self.recommendation_part)
+			info = "{},TargetPercent:{},TargetSplit:{},TargetAlpha:{},EarlyUpdate:{}".format(info, self.target_percent, self.target_split.name, self.target_alpha, self.early_update)
+		
+		info = "{},Train:{},Rec:{}".format(info, self.train_part, self.recommendation_part)
 
 		if self.gp_running_algo:
 			info =  "{},#Clusters:{},LengthScale:{},Nu:{:.2},Kernel:{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
@@ -62,9 +64,10 @@ class TestMetadata:
 		info = "{},{},{},{}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
 		
 		if self.target_algo:
-			info = "{},{},{},{}".format(info, self.target_percent, self.target_split.name, self.target_alpha)
-		else:
-			info = "{},{},{}".format(info, self.train_part, self.recommendation_part)
+			info = "{},{},{},{},{}".format(info, self.target_percent, self.target_split.name, self.target_alpha, self.early_update)
+		
+
+		info = "{},{},{}".format(info, self.train_part, self.recommendation_part)
 
 		if self.gp_running_algo:
 			info =  "{},{},{},{:.2},{}".format(info, self.cluster_count, self.length_scale, self.nu, self.kernel_name)
@@ -78,9 +81,9 @@ class TestMetadata:
 		info = "Method,Hours,Alpha,EqClicks"
 
 		if self.target_algo:
-			info = info + ",TargetPercent,TargetSplit,TargetAlpha"
-		else:
-			info = info + ",TrainPart,RecommendationPart"
+			info = info + ",TargetPercent,TargetSplit,TargetAlpha,EarlyUpdate"
+		
+		info = info + ",TrainPart,RecommendationPart"
 
 		if self.gp_running_algo:
 			info =  info + ",ClusterCount,LengthScale,Nu,Kernel"
