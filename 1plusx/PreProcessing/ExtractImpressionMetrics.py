@@ -5,21 +5,36 @@ import numpy as np
 from pandas import read_csv
 from pandas import DataFrame
 import pyarrow.parquet as pq
+import datetime as dt
 
-impressions =  read_csv("../../RawData/Campaigns/5/Processed/sorted_time_impressions.csv", ",")
+hours = 1
+breakdowns = int(24 / hours)
 
-impressions["Timestamp"] = (impressions["Timestamp"]/(3600 * 1000 * 24)).astype(int)
-impressions["Timestamp"] *= (3600 * 1000 * 24) 
-# print(impressions.dtypes)
+# print("Starting reading..")
+# impressions =  read_csv("../../RawData/Campaigns/5/Processed/sorted_time_impressions.csv", ",")
+# print("Starting conversion..")
 
-group = impressions.groupby(["CampaignId", "Timestamp"])
+# impressions["Timestamp"] = (impressions["Timestamp"]/(3600 * 1000 * hours)).astype(int)
+# impressions["Timestamp"] *= (3600 * hours * 1000) 
+# impressions["Hour"] = impressions["Timestamp"].apply(lambda a: dt.datetime.fromtimestamp(a/1000).hour)
+# # print(impressions.dtypes)
 
-result = group.agg({"Click": {"Impressions": np.size, "Clicks":np.sum, "CTR": np.mean}})
+# group = impressions.groupby(["CampaignId", "Timestamp", "Hour"])
 
-columnNames = dict({ "Click_Impressions": 	"Impressions", 
-					 "Click_Clicks": 		"Clicks", 
-					 "Click_CTR": 			"CTR"})
+# result = group.agg({"Click": {"Impressions": np.size, "Clicks":np.sum, "CTR": np.mean}})
 
-result.columns = [columnNames["_".join(x)] for x in result.columns.ravel()]
-# print(result.columns)
-result.to_csv("../../RawData/Campaigns/5/Processed/daily_impression_breakdown.csv")
+# columnNames = dict({ "Click_Impressions": 	"Impressions", 
+# 					 "Click_Clicks": 		"Clicks", 
+# 					 "Click_CTR": 			"CTR"})
+
+# result.columns = [columnNames["_".join(x)] for x in result.columns.ravel()]
+
+# result.to_csv("../../RawData/Campaigns/5/Processed/{}_impression_breakdown.csv".format(breakdowns))
+
+
+data = read_csv("../../RawData/Campaigns/5/Processed/{}_impression_breakdown.csv".format(breakdowns), ",")
+
+avg_group = data.groupby(["CampaignId", "Hour"])
+avg_result = avg_group.agg({"Impressions":np.mean, "Clicks": np.mean})
+
+avg_result.to_csv("../../RawData/Campaigns/5/Processed/{}_avg_impression_breakdown.csv".format(breakdowns))

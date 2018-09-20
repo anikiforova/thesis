@@ -13,17 +13,13 @@ class AlgoBase:
 		if self.meta.initialize_user_embeddings:
 			self.update_user_embeddings()
 
-	# to ensure inheritance of the method
-	def update_single_prediction(self, embedding, campaign_id):
-		pass
-
-	def update_multi_campaign_predictions(self):
+	def update_multi_campaign_predictions(self, campaign_ids):
 		print("Updating predictions..")
 		for index, embedding in enumerate(self.user_embeddings):
 			
 			best_normalized_estimate = 0
 
-			for campaign_id in self.campaign_ids:
+			for campaign_id in campaign_ids:
 				ctr_estimate, normalized_estimate = self.update_single_prediction(embedding, campaign_id)
 
 				if normalized_estimate > best_normalized_estimate:

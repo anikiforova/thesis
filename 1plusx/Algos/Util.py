@@ -21,7 +21,7 @@ def get_campaign_line_info(line):
 	return campaign_id, user_id, click, timestamp_raw, timestamp
 
 
-def get_multi_line_info(line, campaign_ids):
+def get_simulation_multi_line_info(line, campaign_ids):
 	parts 					= line.split(",")
 	user_id 				= int(parts[0])
 	timestamp_raw 			= int(parts[1])

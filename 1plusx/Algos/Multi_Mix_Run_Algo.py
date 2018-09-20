@@ -8,6 +8,7 @@ from pandas import read_csv
 from pandas import DataFrame
 from numpy import genfromtxt
 from pathlib import Path
+from termcolor import colored
 
 from Metadata import Metadata
 from TestMetadata import TestMetadata
@@ -23,7 +24,7 @@ import Util
 campaign_ids = set([866128, 856805, 847460, 858140, 865041])
 campaign_ids_str = ",".join([str(x) for x in campaign_ids])
 
-meta = Metadata("LinUCB_Disjoint_Multi_Mix", campaign_id = 5, initialize_user_embeddings = False)
+meta = Metadata("LinUCB_Disjoint_Multi_Mix_Test", campaign_id = 5, initialize_user_embeddings = False)
 days = pd.date_range(start='15/8/2018', end='20/08/2018') #end='20/08/2018')
 
 algo = LinUCB_Disjoint_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
@@ -46,7 +47,7 @@ else:
 
 output_campaign_log = open(output_campaign_log_path, "a")	
 
-for testMeta in testsMeta:
+for index, testMeta in enumerate(testsMeta):
 	algo.setup(testMeta)
 	
 	if output_column_names:
@@ -69,28 +70,30 @@ for testMeta in testsMeta:
 	impressions_per_campaign = dict(zip(campaign_ids, np.zeros(len(campaign_ids))))
 	clicks_per_campaign = dict(zip(campaign_ids, np.zeros(len(campaign_ids))))
 
-	print("Starting evaluation of {}".format(testMeta.get_algo_info()))
+	print(colored("{}/{} Starting evaluation of  {}".format(index, len(testsMeta), testMeta.get_algo_info()), "green"))
 
 	total_impressions = 0
 	warmup = True # it's important it stays outside of the day loop, so it does warmup only one time.
 	# print("Remaining target budgets:")
 	# print(algo.get_remaining_target_budgets())
 	for date in days:
-
-		print("Starting {}..".format(date))
+		print(colored("Starting {}..".format(date), "green"))
 		date = date.strftime("%Y-%m-%d")
 
-		algo.start_new_day()
-		algo.update_user_embeddings("_" + date)
-		algo.reset_local_target_budgets()
-		algo.reset_predictions()
-			
 		file_name = "{0}/sorted_time_impressions_{1}.csv".format(meta.path, date)
 		
 		input = open(file_name, "r")
 		input.readline() # get rid of header
-		_, _, _, _, hour_begin_timestamp = Util.get_campaign_line_info(input.readline())
+		_, _, _, hour_begin_timestamp_raw, hour_begin_timestamp = Util.get_campaign_line_info(input.readline())
 		
+		algo.reset_expected_impression_count(hour_begin_timestamp_raw)
+		algo.start_new_day()
+		algo.update_user_embeddings("_" + date)
+		algo.reset_local_target_budgets()
+		algo.reset_predictions()
+		algo.update_multi_campaign_predictions(campaign_ids)
+		recommended_users = algo.get_recommendations(testMeta.recommendation_part)
+			
 		#print("Time between updates:{0}".format(testMeta.get_time_between_updates_in_seconds()))
 		for cur_file_impressions, line in enumerate(input):
 			total_impressions += 1
@@ -107,7 +110,8 @@ for testMeta in testsMeta:
 				if warmup:
 					discard_target_impressions = True
 
-				algo.update(batch_campaign_ids, batch_users, batch_clicks)
+				algo.reset_expected_impression_count(timestamp_raw)
+				algo.update(batch_campaign_ids, batch_users, batch_clicks, timestamp_raw)
 				algo.log_budgets(log_output, total_impressions, timestamp_raw)
 				recommended_users = algo.get_recommendations(testMeta.recommendation_part)
 				batch_users, batch_clicks, batch_campaign_ids = list(), list(), list()
@@ -119,7 +123,7 @@ for testMeta in testsMeta:
 			all_impressions.append(click)
 			all_prediction_values.append(algo.getPrediction(user_id))
 			
-			if user_id in recommended_users:
+			if user_id in recommended_users and algo.getAssignment(user_id) == displayed_campaign:
 				algo.consume_campaign_budget(displayed_campaign)
 
 				batch_campaign_ids.append(displayed_campaign)
@@ -172,7 +176,7 @@ for testMeta in testsMeta:
 				output.flush()
 				
 		input.close()
-		algo.update(batch_campaign_ids, batch_users, batch_clicks)
+		algo.update(batch_campaign_ids, batch_users, batch_clicks, timestamp_raw)
 		algo.log_budgets(log_output, total_impressions, timestamp_raw)
 		recommended_users = algo.get_recommendations(testMeta.recommendation_part)
 

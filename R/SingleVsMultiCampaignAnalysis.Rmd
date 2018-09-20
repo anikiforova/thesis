@@ -1,0 +1,99 @@
+---
+title: "Single Vs Multi Campaign Analysis"
+output:
+  pdf_document: default
+---
+
+```{r include=TRUE, echo=FALSE,warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
+source("~/Documents/ETH/Thesis/1plusX/Data/thesis/R/ManageCampaignsLib.R")
+
+imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/Multi-Campaign/"
+
+#simulated_path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Multi-Campaign/Processed/all_simulated_impressions.csv"
+```
+
+```{r overview, include=TRUE, echo=FALSE, warning=FALSE}
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("LinUCB_Disjoint_Multi_Mix_Test_7days", "LinUCB_Disjoint_7days",  "Random_7days")
+#files =  c("LinUCB_Disjoint_7days")
+data = prepData(files, path)
+data = subset(data, RecommendationPart == 0.2 & 
+                (Alpha == 0|
+                (Method == "LinUCB_Disjoint_Multi_Mix_Test") |
+                ( Method == "LinUCB_Disjoint")))
+
+data$Factor = ""
+data[data$Method == "LinUCB_Disjoint", "Factor"] = "Single Campaign"
+data[data$Method == "LinUCB_Disjoint_Multi_Mix_Test", "Factor"] = "Multi-Campaign"
+data[data$Method == "Random", "Factor"] = "Random"
+data$Factor = factor(paste(data$Factor))
+#data$Percent = data$BatchCTR * 100
+getCTRPlot(data, c(0.0,0.2)) + 
+  ggtitle("LinUCB - Single vs Multi Campaign Results") +
+  theme(plot.title = element_text(size=15,hjust = 0.5))
+```
+
+```{r impressions, include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log_7days.csv"
+all <- read.csv(file=path)
+limit = 1
+data = subset(all, Method == "Random")
+data$Ratio = data$Impressions / sum(data$Impressions)
+p1 = getCampaignComparisonPlot(data, "Impression Ratio", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint")
+data$Ratio = data$Impressions / sum(data$Impressions)
+p2 = getCampaignComparisonPlot(data, "Impression Ratio", "Single Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Mix" & Alpha == 0.001)
+data$Ratio = data$Impressions / sum(data$Impressions)
+p3 = getCampaignComparisonPlot(data, "Impression Ratio", "Multi-Campaign", limit) 
+
+plotThreeComparison(p1, p2, p3, "20% Recommendation Impression Ratio Performance", TRUE, paste(imageLocation, "S_VS_Multi_ImpressionRatioPerCampaign.png", sep=""))
+
+```
+```{r clicks, include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log_7days.csv"
+all <- read.csv(file=path)
+limit = 1
+data = subset(all, Method == "Random")
+data$Ratio = data$Clicks / sum(data$Clicks)
+p1 = getCampaignComparisonPlot(data, "Click Ratio", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint")
+data$Ratio = data$Clicks / sum(data$Clicks)
+p2 = getCampaignComparisonPlot(data, "Click Ratio", "Single Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Mix" & Alpha == 0.001)
+data$Ratio = data$Clicks / sum(data$Clicks)
+p3 = getCampaignComparisonPlot(data, "Click Ratio", "Multi-Campaign", limit) 
+
+plotThreeComparison(p1, p2, p3, "20% Recommendation Click Ratio Performance", TRUE, paste(imageLocation, "S_VS_Multi_ClicksRatioPerCampaign.png", sep=""))
+
+```
+
+```{r ctr, include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Log/5/Campaign_Log_7days.csv"
+all <- read.csv(file=path)
+limit = 0.004
+data = subset(all, Method == "Random")
+data$Ratio = data$Clicks / data$Impressions
+p1 = getCampaignComparisonPlot(data, "CTR", "Random", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint")
+data$Ratio = data$Clicks / data$Impressions
+p2 = getCampaignComparisonPlot(data, "CTR", "Single Campaign", limit) 
+
+data = subset(all, Method == "LinUCB_Disjoint_Multi_Mix" & Alpha == 0.001)
+data$Ratio = data$Clicks / data$Impressions
+p3 = getCampaignComparisonPlot(data, "CTR", "Multi-Campaign", limit) 
+
+plotThreeComparison(p1, p2, p3, "20% Recommendation CTR Performance", TRUE, paste(imageLocation, "S_VS_Multi_CTRPerCampaign.png", sep=""))
+
+```

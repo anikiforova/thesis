@@ -29,10 +29,10 @@ campaign_ids = set([866128, 856805, 847460, 858140, 865041])
 campaign_ids_str = ",".join([str(x) for x in campaign_ids])
 
 # this runs a one campaign LinUCB on multiple campaigns at the same time to see how we can estimate click users
-meta = Metadata("Random", campaign_id = 5, initialize_user_embeddings = False)
-algo = Random(meta)
+meta = Metadata("LinUCB_Disjoint", campaign_id = 5, initialize_user_embeddings = False)
+algo = LinUCB_Disjoint(meta)
 
-testsMeta = TestBuilder.get_random_tests(meta, 6)
+testsMeta = TestBuilder.get_lin_tests_50(meta, 6)
 
 output_path = "./Results/{0}/{1}_7days.csv".format(meta.campaign_id, meta.algo_name)
 output_campaign_log_path = "./Log/{0}/Campaign_Log_7days.csv".format(meta.campaign_id, meta.algo_name)

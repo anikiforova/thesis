@@ -1,0 +1,95 @@
+---
+title: "Target Multi-Campaign Simulation Analysis"
+output: pdf_document
+---
+
+
+```{r include=TRUE, echo=FALSE,warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
+source("~/Documents/ETH/Thesis/1plusX/Data/thesis/R/ManageCampaignsLib.R")
+
+imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/Multi-Campaign/"
+```
+
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi", "Random_Multi")
+simulated_data = prepData(files, path)
+simulated_data = subset(simulated_data, (Alpha == 0 | 
+  (Alpha == 0.0001 & SimulationType == "Hindsight" & Method == "LinUCB_Disjoint_Multi") |
+  (Alpha == 0.1 & SimulationType == "Lower" & Method == "LinUCB_Disjoint_Multi") |
+  (Alpha == 0.1 & SimulationType == "Hindsight" & Method == "LinUCB_Disjoint_Multi_Target" & TargetPercent == 0.8) |
+  (Alpha == 0.0001 & SimulationType == "Lower" & Method == "LinUCB_Disjoint_Multi_Target"  & TargetPercent == 0.8)
+)) 
+
+simulated_data$Factor = ""
+simulated_data[simulated_data$Alpha == 0.0001 & simulated_data$SimulationType == "Hindsight" & simulated_data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "LinUCB Hindsight"
+
+simulated_data[simulated_data$Alpha == 0.1 & simulated_data$SimulationType == "Lower" & simulated_data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "LinUCB Lower"
+
+simulated_data[simulated_data$Alpha == 0.0001 & simulated_data$SimulationType == "Lower" & simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "Factor"] = "LinUCB Lower Target (80%)"
+
+simulated_data[simulated_data$SimulationType == "Hindsight" & simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "Factor"] = "LinUCB Hindsight Target (80%)"
+
+simulated_data[simulated_data$SimulationType == "Hindsight" & simulated_data$Method == "Random_Multi", "Factor"] = "Random Hindsight"
+simulated_data[simulated_data$SimulationType == "Lower" & simulated_data$Method == "Random_Multi", "Factor"] = "Random Lower"
+
+#simulated_data$Method = paste(simulated_data$Method, simulated_data$SimulationType, simulated_data$Alpha,
+ #                             simulated_data$TargetPercent)
+
+simulated_data$Factor = factor(simulated_data$Factor)
+
+#data$Percent = data$BatchCTR * 100
+getCTRPlot(simulated_data, c(0,0.3)) + 
+  ggtitle("Simulation - Lower and Hindsight Results")+ 
+  theme(plot.title = element_text(size=15,hjust = 0.5))
+
+```
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi", "Random_Multi")
+simulated_data = prepData(files, path)
+simulated_data = subset(simulated_data, SimulationType == "Hindsight" &
+                        (( Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.0001) |
+                          (Method == "LinUCB_Disjoint_Multi" & Alpha == 0.0001) |
+                          (Method == "Random_Multi")))
+
+simulated_data$Factor = ""
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "LinUCB"
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "Factor"] = paste("LinUCB Target (", simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "TargetPercent"] * 100, "%)", sep="")
+simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
+
+simulated_data$Factor = factor(simulated_data$Factor)
+#simulated_data$Percent = simulated_data$BatchCTR * 100
+getCTRPlot(simulated_data, c(0,0.12)) + 
+  ggtitle("Hindsight Simulation Results ")+ 
+  theme(plot.title = element_text(size=15,hjust = 0.5))
+```
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi", "Random_Multi")
+simulated_data = prepData(files, path)
+simulated_data = subset(simulated_data, SimulationType == "Lower" &
+                        (( Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.0001) |
+                           Method != "LinUCB_Disjoint_Multi_Target"))
+
+simulated_data$Factor = ""
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "LinUCB"
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "Factor"] = paste("LinUCB Target (", simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "TargetPercent"] * 100, "%)", sep="")
+
+simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
+
+simulated_data$Factor = factor(simulated_data$Factor)
+#simulated_data$Percent = simulated_data$BatchCTR * 100
+getCTRPlot(simulated_data, c(0.09,0.12)) + 
+  ggtitle("Lower Simulation Results ") + 
+  theme(plot.title = element_text(size=15,hjust = 0.5))
+```

@@ -3,11 +3,17 @@ from pandas import read_csv
 from pandas import DataFrame
 
 from TargetSplitType import TargetSplitType
+from SimulationType import SimulationType
+
+from SimulationType import get_friendly_name
 
 class TestMetadata:
 
 	click_percent					= 0.2
 
+	# Simulation meta
+	is_simulation					= False
+	simulation_type					= SimulationType.LOWER
 
 	# GP
 	gp_running_algo					= False
@@ -30,12 +36,16 @@ class TestMetadata:
 	train_part 						= 0.2
 	recommendation_part 			= 0.2
 
+	# Target Budget test meta
 	early_update					= False
 	target_algo						= False
 	target_percent					= 0.8
 	target_split					= TargetSplitType.NO_SPLIT
 	target_alpha					= 1
 	normalize_ctr					= True
+	normalize_target_value			= False
+	crop_minimal_target				= False
+	crop_percent					= 0.0
 
 	def __init__(self, meta):
 		self.meta 			= meta
@@ -48,7 +58,7 @@ class TestMetadata:
 		info = "{},H:{},Alpha:{},ClickPercent:{:.2}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
 
 		if self.target_algo:
-			info = "{},TargetPercent:{},TargetSplit:{},TargetAlpha:{},EarlyUpdate:{}".format(info, self.target_percent, self.target_split.name, self.target_alpha, self.early_update)
+			info = "{},TargetPercent:{},TargetSplit:{},TargetAlpha:{},EarlyUpdate:{},CropPercent:{},NormalizeTargetValue:{}".format(info, self.target_percent, self.target_split.name, self.target_alpha, self.early_update, self.crop_percent, self.normalize_target_value)
 		
 		info = "{},Train:{},Rec:{}".format(info, self.train_part, self.recommendation_part)
 
@@ -57,14 +67,17 @@ class TestMetadata:
 
 		if self.nn_running_algo:
 			info = "{},LearningRate:{},HiddenLayers:{}".format(info, self.learning_rate, self.hidden_layers)
-				
+			
+		if self.is_simulation:
+			info = "{},SimulationType:{}".format(info, get_friendly_name(self.simulation_type))
+
 		return info
 
 	def get_algo_column_info(self):
 		info = "{},{},{},{}".format(self.meta.algo_name, self.hours, self.alpha, self.click_percent)
 		
 		if self.target_algo:
-			info = "{},{},{},{},{}".format(info, self.target_percent, self.target_split.name, self.target_alpha, self.early_update)
+			info = "{},{},{},{},{},{},{}".format(info, self.target_percent, self.target_split.name, self.target_alpha, self.early_update, self.crop_percent, self.normalize_target_value)
 		
 
 		info = "{},{},{}".format(info, self.train_part, self.recommendation_part)
@@ -75,13 +88,16 @@ class TestMetadata:
 		if self.nn_running_algo:
 			info = "{},{},{}".format(info, self.learning_rate, self.hidden_layers)
 
+		if self.is_simulation:
+			info = "{},{}".format(info, get_friendly_name(self.simulation_type))
+			
 		return info
 
 	def get_algo_column_names(self):
 		info = "Method,Hours,Alpha,EqClicks"
 
 		if self.target_algo:
-			info = info + ",TargetPercent,TargetSplit,TargetAlpha,EarlyUpdate"
+			info = info + ",TargetPercent,TargetSplit,TargetAlpha,EarlyUpdate,CropPercent,NormalizeTargetValue"
 		
 		info = info + ",TrainPart,RecommendationPart"
 
@@ -91,6 +107,9 @@ class TestMetadata:
 		if self.nn_running_algo:
 			info = info + ",LearningRate,HiddenLayers"
 
+		if self.is_simulation:
+			info = info + ",SimulationType"
+			
 		return info
 
 	def normalize_array(self, array):
@@ -118,31 +137,6 @@ class TestMetadata:
 	def read_user_assignments(self):
 		user_assignments = read_csv("{0}//all_users_cluster_assignment_{1}.csv".format(self.meta.path, self.cluster_count), header=0)
 		return np.array(user_assignments["ClusterId"].values)
-
-	# def save_user_clusters(self, kernels):
-	# 	print("Saving kernels.. ", end='', flush=True)	
-	# 	output = open("{0}//all_users_kernels_{1}_2.csv".format(self.path, self.cluster_count), "w")
-	# 	output.write("Kernels\n")
-	# 	for k in kernels:
-	# 		user_str = np.array2string(k, separator=' ')[1:-1].replace('\n', '')
-	# 		output.write("{}\n".format(user_str))
-			
-	# 	output.close()
-	# 	print(" Done.")
-
-	# def read_user_clusters(self, user_count):
-	# 	print("Reading kernels.. ", end='', flush=True)	
-	# 	kernels = read_csv("{0}//all_users_kernels_{1}.csv".format(self.path, self.cluster_count), header=0)
-	# 	print(" Done.")
-
-	# 	print("Parsing kernels.. ", end='', flush=True)	
-	# 	kernels = np.array(kernels["Kernels"])
-	# 	kernels = np.array([np.fromstring(x, sep=" ") for x in kernels])
-	# 	kernels = [item for sublist in kernels for item in sublist]
-	# 	kernels = np.array(kernels).reshape([user_count, self.cluster_count])
-	# 	print(" Done.")
-
-	# 	return kernels
 
 
 

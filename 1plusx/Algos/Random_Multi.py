@@ -16,7 +16,7 @@ class Random_Multi(AlgoBase, TargetBase):
 		AlgoBase.setup(self, testMeta)
 		TargetBase.setup(self, testMeta)
 			
-	def update(self, campaign_ids, users, clicks):
+	def update(self, batch_campaign_ids, users, clicks, timestamp):
 		self.prediction = np.random.uniform(0, 1, self.user_count)
 		campaign_ids_list = list(self.campaign_ids)
 		self.campaign_assignment = [campaign_ids_list[a] for a in np.random.randint(len(self.campaign_ids), size=self.user_count)]
@@ -25,3 +25,7 @@ class Random_Multi(AlgoBase, TargetBase):
 		self.prediction = np.random.uniform(0, 1, self.user_count)
 		campaign_ids_list = list(self.campaign_ids)
 		self.campaign_assignment = [campaign_ids_list[a] for a in np.random.randint(len(self.campaign_ids), size=self.user_count)]
+
+	def update_single_prediction(self, embedding, campaign_id):
+		random_prediction = np.random.uniform(0, 1, 1)
+		return random_prediction, random_prediction	

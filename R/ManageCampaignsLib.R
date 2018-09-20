@@ -46,7 +46,8 @@ prepData <- function(files, cur_path) {
   file=paste0(cur_path, paste0(files[1], ".csv"))
   data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
   columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart","BatchCTR","ModelCTR","MSE","MMSE","FullMSE","FullROC","FullTPR","FullFPR","FullFNR","FullPPR","ModelCalibration","ModelNE","ModelRIG"
-              , "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate", "MSE", "TargetPercent", "TargetAlpha", "TargetSplit", "EarlyUpdate", "BatchMSE", "BatchMMSE", "FullMSE", "FullMMSE")
+              , "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate", "MSE", "TargetPercent", "TargetAlpha", "TargetSplit", "EarlyUpdate", "BatchMSE", "BatchMMSE", "FullMSE", "FullMMSE", "SimulationType",
+              "CropPercent","NormalizeTargetValue")
   data = selectNecessaryColumns(data, columns)
   if(length(files) > 1){
     for (name in files){
@@ -71,9 +72,9 @@ plotGroup <- function(g1, g2, title) {
   mylegend<-g_legend(g2)
   grid.arrange(arrangeGrob(g1 + theme(legend.position="none"),
                            g2 + theme(legend.position="none"),
-                           nrow=1, ncol=2, widths=unit(c(10, 10), "cm"), heights=unit(9, "cm")),
-               mylegend, nrow=2, widths=unit(20, "cm"), heights=unit(c(9, 1), "cm"),
-               top = title)
+                           nrow=1, ncol=2, widths=unit(c(8, 8), "cm"), heights=unit(8, "cm")),
+               mylegend, nrow=2, widths=unit(16, "cm"), heights=unit(c(8, 1), "cm"),
+               top = textGrob(title, gp=gpar(fontsize=15,fontface=2)))
 }
 
 library(grid)
@@ -85,6 +86,35 @@ plotGroupNoLegend <- function(g1, g2, title, width) {
   
 }
 
+getCampaignComparisonPlot <-function (data, ylable, title, limit) {
+  p1 = ggplot() + 
+    geom_bar(aes(y = Ratio, x = factor(CampaignId), fill = factor(CampaignId)), data = data, stat="identity") + 
+    xlab("Campaign Id") +
+    ylab(ylable) +
+    scale_fill_discrete(name="CampaignId") +
+    theme_bw() +
+    ggtitle(title) +
+    expand_limits(y=c(0, limit)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.title.x=element_blank()) +
+    theme(legend.justification=c(1,0),legend.position="bottom") 
+  p1
+}
+
+plotThreeComparison <-function (p1, p2, p3, title, saveImage, imagePath) {
+  plot_count = 3
+  plot_width = 5.5
+  p5 = grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
+                                p2 + theme(legend.position="none", axis.title.y=element_blank()),
+                                p3 + theme(legend.position="none", axis.title.y=element_blank()),
+                                nrow=1, ncol=plot_count, widths=unit(rep(plot_width, plot_count),"cm"), heights=unit(10, "cm")),
+                    nrow=1, widths=unit(plot_count * plot_width, "cm"), heights=unit(10, "cm"),
+                    top = textGrob(title, gp=gpar(fontsize=15,fontface=2)))
+  if(saveImage){
+      ggsave(imagePath, plot=p5, width = plot_width*plot_width, height = 12, units = "cm")  
+  }
+  
+}
 getCTRPlot <- function(data, limits = c(0,1.5), scaleName="", pos="bottom") {
   g1 = ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
     geom_line(size=1) +

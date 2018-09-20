@@ -4,6 +4,7 @@ import numpy as np
 from Metadata import Metadata
 from TestMetadata import TestMetadata
 from TargetSplitType import TargetSplitType
+from SimulationType import SimulationType
 
 def build_gp_test(meta, click_percent = 0.2, kernel = "Matern", nu = 1.5, length_scale = 100, cluster_count = 10, alpha = 1, h = 12, rec_part = 0.2):
 	t = TestMetadata(meta)
@@ -51,6 +52,16 @@ def get_lin_tests(meta, hours = 12):
 				tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = hours, rec_part = rec_part))
 	return tests
 
+def get_lin_tests_50(meta, hours = 12):
+	tests = list()
+	rec_part = 0.5
+	click_percent = 0.0
+
+	for alpha in [0.1, 0.01, 0.001]: # 0.1, 
+		tests.append(build_lin_test(meta, click_percent = click_percent, alpha = alpha, h = hours, rec_part = rec_part))
+	return tests
+
+
 def get_lin_tests_mini(meta, hours = 12):
 	tests = list()
 	click_percent 	= 0.0
@@ -88,6 +99,100 @@ def get_lin_multi_test(meta, hours = 12):
 			
 	return tests
 
+def get_simulation_lin_multi_test(meta, hours = 12):
+	tests = list()
+	for simulation_type in [SimulationType.LOWER, SimulationType.HINDSIGHT]:
+		for alpha in [0.1]: #[0.1, 0.01, 0.001]:
+			test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.0)
+			test.normalize_ctr = False
+			test.is_simulation = True
+			test.simulation_type = simulation_type
+			tests.append(test)
+
+	return tests
+
+def get_simulation_hindsight_lin_multi_test(meta, hours = 12):
+	tests = list()
+	for simulation_type in [SimulationType.HINDSIGHT]:
+		for alpha in [0.01, 0.001, 0.0001]:
+			test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.0)
+			test.normalize_ctr = False
+			test.is_simulation = True
+			test.simulation_type = simulation_type
+			tests.append(test)
+
+	return tests
+
+def get_simulation_hindsight_lin_multi_target_test(meta, hours = 12):
+	tests = list()
+	for simulation_type in [SimulationType.HINDSIGHT]:
+		for target_percent in [0.6, 0.8]:
+			for alpha in [0.1, 0.0001]:
+				test = build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = True)
+				test.normalize_ctr = True
+				test.is_simulation = True
+				test.simulation_type = simulation_type
+				tests.append(test)
+
+	return tests
+
+def get_simulation_lower_lin_multi_target_test(meta, hours = 12):
+	tests = list()
+	for simulation_type in [SimulationType.LOWER]:
+		for target_percent in [0.6, 0.8, 1]:
+			for alpha in [0.1, 0.0001]:
+				test = build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = True)
+				test.normalize_ctr = True
+				test.is_simulation = True
+				test.simulation_type = simulation_type
+				tests.append(test)
+
+	return tests
+
+def full_target_tests(meta, hours = 12):
+	tests = list()
+	for target_percent in [0.6, 0.8, 1]:
+		for early_update in [True, False]:
+			for target_split in [TargetSplitType.DAILY, TargetSplitType.NO_SPLIT]:
+				test = build_target_test(meta, 
+					alpha = 0.1, 
+					hours = hours, 
+					target_percent = target_percent, 
+					target_split = target_split, 
+					target_alpha = 1, 
+					early_update = early_update)
+				tests.append(test)
+
+	for crop_percent in [0.1 ,0.2, 0.4]:
+		for early_update in [True, False]:
+			test = build_target_test(meta, alpha = 0.1, hours = hours, target_percent = 1, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = early_update)
+			test.crop_minimal_target = True
+			test.crop_percent = crop_percent
+			tests.append(test)
+
+	for early_update in [True, False]:
+		test = build_target_test(meta, alpha = 0.1, hours = hours, target_percent = 1, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = early_update)
+		test.normalize_target_value = True	
+		tests.append(test)
+
+	return tests
+
+def get_multi_target_normalization_tests(meta, hours = 12):
+	tests = list()
+
+	# for crop_percent in [0.5, 0.1 ,0.2]:
+	# 	test = build_target_test(meta, alpha = 0.1, hours = hours, target_percent = 1, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = False)
+	# 	test.crop_minimal_target = True
+	# 	test.crop_percent = crop_percent
+
+	# 	tests.append(test)
+
+	test = build_target_test(meta, alpha = 0.1, hours = hours, target_percent = 1, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = True)
+	test.normalize_target_value = True	
+	tests.append(test)
+
+	return tests
+
 def get_lin_multi_target_test(meta, hours = 12):
 	tests = list()
 
@@ -100,7 +205,7 @@ def get_lin_multi_target_test(meta, hours = 12):
 
 def get_lin_multi_mix_test(meta, hours = 12):
 	tests = list()
-	for alpha in [0.001]: #[0.1, 0.01, 0.001]:
+	for alpha in [0.1, 0.01, 0.001]: 
 		test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.2)
 		test.normalize_ctr = False
 		tests.append(test)
@@ -131,6 +236,22 @@ def get_lin_multi_target_test_mini(meta, hours = 12):
 				
 	return tests
 
+def get_simulation_lin_multi_test(meta, hours = 12):
+	tests = list()
+	alpha = 0.1
+	target_alpha = 1
+	target_percent = 1
+	early_update = True
+
+	for simulation_type in [SimulationType.LOWER, SimulationType.HINDSIGHT]:
+		for target_split in [TargetSplitType.DAILY, TargetSplitType.NO_SPLIT]:	
+			test = build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = target_split, target_alpha = target_alpha, early_update = early_update)
+			test.is_simulation = True
+			test.simulation_type = simulation_type
+			tests.append(test)
+
+	return tests
+
 # DONE
 def get_random_multi_tests(meta, hours):
 	t = TestMetadata(meta)
@@ -146,6 +267,18 @@ def get_random_tests(meta, hours):
 	t.hours 				= hours
 	t.click_percent			= 0.0
 
+	return [t]
+
+def get_random_multi_simulation_tests(meta, hours):
+	t = TestMetadata(meta)
+	t.recommendation_part 	= 0.0
+	t.train_part 			= 0.0
+	t.hours 				= hours
+	t.click_percent			= 0.0
+	t.is_simulation 		= True
+	t.simulation_type		= SimulationType.HINDSIGHT
+	t.target_percent		= 0.8
+	
 	return [t]
 
 def get_nn_tests(meta):
