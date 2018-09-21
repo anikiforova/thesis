@@ -2,9 +2,9 @@ import numpy as np
 import math
 from numpy.linalg import inv
 
-from AlgoBase import AlgoBase
-from TargetBase import TargetBase
-from Metadata import Metadata
+from .AlgoBase import AlgoBase
+from .TargetBase import TargetBase
+from .Metadata import Metadata
 
 class LinUCB_Disjoint_Multi(AlgoBase, TargetBase):
 	

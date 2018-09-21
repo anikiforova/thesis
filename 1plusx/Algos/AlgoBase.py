@@ -44,6 +44,10 @@ class AlgoBase:
 		
 		self.user_embeddings = user_embeddings
 
+	def get_user_embedding(self, user_hash):
+		user_id = self.user_hash_to_id[user_hash]
+		return self.user_embeddings[user_id]
+		
 	def reset_predictions(self):
 		print("Resetting predictions..")
 		self.prediction = np.ones(self.user_count) * 0.002 + np.random.uniform(0, 0.001, self.user_count)		

@@ -1,10 +1,10 @@
 
 import numpy as np
 
-from Metadata import Metadata
-from TestMetadata import TestMetadata
-from TargetSplitType import TargetSplitType
-from SimulationType import SimulationType
+from .Metadata import Metadata
+from .TestMetadata import TestMetadata
+from .TargetSplitType import TargetSplitType
+from .SimulationType import SimulationType
 
 def build_gp_test(meta, click_percent = 0.2, kernel = "Matern", nu = 1.5, length_scale = 100, cluster_count = 10, alpha = 1, h = 12, rec_part = 0.2):
 	t = TestMetadata(meta)
@@ -113,26 +113,37 @@ def get_simulation_lin_multi_test(meta, hours = 12):
 
 def get_simulation_hindsight_lin_multi_test(meta, hours = 12):
 	tests = list()
-	for simulation_type in [SimulationType.HINDSIGHT]:
-		for alpha in [0.01, 0.001, 0.0001]:
+	chisquare_dfs = [0, 1, 5, 10, 20, 100]
+	simulation_indexes = [2, 5, 5, 5, 5, 5] 
+
+	for alpha in [0.1, 0.001]:
+		for chi_df, simulation_index in zip(chisquare_dfs, simulation_indexes):
 			test = build_lin_test(meta, click_percent = 0.0, alpha = alpha, h = hours, rec_part = 0.0)
-			test.normalize_ctr = False
+			test.normalize_ctr = True
 			test.is_simulation = True
-			test.simulation_type = simulation_type
+			test.simulation_type = SimulationType.HINDSIGHT
+			test.simulation_index = simulation_index
+			test.chi_df = chi_df
 			tests.append(test)
 
 	return tests
 
 def get_simulation_hindsight_lin_multi_target_test(meta, hours = 12):
 	tests = list()
-	for simulation_type in [SimulationType.HINDSIGHT]:
-		for target_percent in [0.6, 0.8]:
-			for alpha in [0.1, 0.0001]:
-				test = build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = True)
-				test.normalize_ctr = True
-				test.is_simulation = True
-				test.simulation_type = simulation_type
-				tests.append(test)
+	chisquare_dfs = [0, 1, 5, 10, 20, 100]
+	simulation_indexes = [2, 5, 5, 5, 5, 5] 
+	target_percent = 0.8
+	
+	for chi_df, simulation_index in zip(chisquare_dfs, simulation_indexes):
+		for alpha in [0.1]: #, 0.001]:
+			test = build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = True)
+			test.normalize_ctr = True
+			test.normalize_target_value = True
+			test.is_simulation = True
+			test.simulation_type = SimulationType.HINDSIGHT
+			test.simulation_index = simulation_index
+			test.chi_df = chi_df
+			tests.append(test)
 
 	return tests
 

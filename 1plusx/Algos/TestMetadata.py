@@ -2,10 +2,10 @@ import numpy as np
 from pandas import read_csv
 from pandas import DataFrame
 
-from TargetSplitType import TargetSplitType
-from SimulationType import SimulationType
+from .TargetSplitType import TargetSplitType
+from .SimulationType import SimulationType
 
-from SimulationType import get_friendly_name
+from .SimulationType import get_friendly_name
 
 class TestMetadata:
 
@@ -13,7 +13,9 @@ class TestMetadata:
 
 	# Simulation meta
 	is_simulation					= False
-	simulation_type					= SimulationType.LOWER
+	simulation_type					= SimulationType.HINDSIGHT
+	simulation_index				= 2
+	chi_df							= 0
 
 	# GP
 	gp_running_algo					= False
@@ -69,7 +71,7 @@ class TestMetadata:
 			info = "{},LearningRate:{},HiddenLayers:{}".format(info, self.learning_rate, self.hidden_layers)
 			
 		if self.is_simulation:
-			info = "{},SimulationType:{}".format(info, get_friendly_name(self.simulation_type))
+			info = "{},SimulationType:{},SimulationIndex:{},ChiDF:{}".format(info, get_friendly_name(self.simulation_type), self.simulation_index, self.chi_df)
 
 		return info
 
@@ -89,7 +91,7 @@ class TestMetadata:
 			info = "{},{},{}".format(info, self.learning_rate, self.hidden_layers)
 
 		if self.is_simulation:
-			info = "{},{}".format(info, get_friendly_name(self.simulation_type))
+			info = "{},{},{},{}".format(info, get_friendly_name(self.simulation_type), self.simulation_index, self.chi_df)
 			
 		return info
 
@@ -108,7 +110,7 @@ class TestMetadata:
 			info = info + ",LearningRate,HiddenLayers"
 
 		if self.is_simulation:
-			info = info + ",SimulationType"
+			info = info + ",SimulationType,SimulationIndex,ChiDF"
 			
 		return info
 

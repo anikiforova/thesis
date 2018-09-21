@@ -57,6 +57,15 @@ class Metadata:
 		filePath = "{0}/all_users{1}.csv".format(self.path, embeddings_file_name_postfix)
 		return Metadata.read_user_embeddings_by_path(filePath)
 
+	def read_impressions(self, embeddings_file_name_postfix = ""):
+		print("Reading users.. ", end='', flush=True)
+		filePath = "{0}/sorted_time_impressions{1}.csv".format(self.path, embeddings_file_name_postfix)
+		data = read_csv(filePath, ",")
+		campaign_users 		 = data["UserHash"].values
+		campaign_impressions = data["Click"].values
+
+		return campaign_users, campaign_impressions
+
 	def read_user_embeddings_by_path(filePath):
 		print("({})".format(filePath))
 		users = read_csv(filePath, header=0)
