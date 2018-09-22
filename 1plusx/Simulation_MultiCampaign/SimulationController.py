@@ -93,6 +93,12 @@ class SimulationController:
 				self.reset_chi_squares(chisquare_df)
 
 			simulated_value = np.random.normal(prediction, stdev, 1) + self.chi_squares[self.chi_squares_used] * ctr + np.random.uniform(-ctr/10, +ctr/10, 1)
+		elif simulation_index == 6:
+			self.chi_squares_used += 1
+			if self.chi_squares_used >= self.chi_squares_count:
+				self.reset_chi_squares(chisquare_df)
+
+			simulated_value = np.random.normal(prediction, stdev, 1) + 2 * self.chi_squares[self.chi_squares_used] * ctr + np.random.uniform(-ctr/10, +ctr/10, 1)
 
 		return simulated_value
 

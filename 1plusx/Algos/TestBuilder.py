@@ -130,8 +130,8 @@ def get_simulation_hindsight_lin_multi_test(meta, hours = 12):
 
 def get_simulation_hindsight_lin_multi_target_test(meta, hours = 12):
 	tests = list()
-	chisquare_dfs = [0, 1, 5, 10, 20, 100]
-	simulation_indexes = [2, 5, 5, 5, 5, 5] 
+	chisquare_dfs = [1, 5, 10, 20, 100]
+	simulation_indexes = [6, 6, 6, 6, 6] 
 	target_percent = 0.8
 	
 	for chi_df, simulation_index in zip(chisquare_dfs, simulation_indexes):
