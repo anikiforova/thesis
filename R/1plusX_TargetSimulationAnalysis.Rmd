@@ -13,6 +13,38 @@ source("~/Documents/ETH/Thesis/1plusX/Data/thesis/R/ManageCampaignsLib.R")
 imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/Multi-Campaign/"
 ```
 
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_Test")
+simulated_data = prepData(files, path)
+simulated_data = subset(simulated_data, (Alpha == 0.1 & SimulationType == "Hindsight" & Method == "LinUCB_Disjoint_Multi_Target" & TargetPercent == 0.8) |
+                                        (Alpha == 0.0001 & SimulationType == "Lower" & Method == "LinUCB_Disjoint_Multi_Target"  & TargetPercent == 0.8) )
+simulated_data$Name = paste(simulated_data$SimulationType, simulated_data$ChiDF, simulated_data$SimulationIndex) 
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("Random_Multi")
+random_data = prepData(files, path)
+random_data = subset(random_data, Method == "Random_Multi")
+random_data$Name = paste("Random", random_data$SimulationType) 
+
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("LinUCB_Disjoint_Multi_Target_Full")
+real_data = prepData(files, path)
+real_data = subset(real_data, (Method == "LinUCB_Disjoint_Multi_Target_Full" & EarlyUpdate == "True" & TargetPercent == 1 & NormalizeTargetValue == "True") ) 
+real_data$Name = "Real"
+
+data = rbind(simulated_data[c("Name", "Percent", "TotalImpressions", "BatchCTR")], 
+             real_data[c("Name", "Percent", "TotalImpressions", "BatchCTR")],
+             random_data[c("Name", "Percent", "TotalImpressions", "BatchCTR")])
+data$Factor = factor(data$Name)
+#data$Percent = data$BatchCTR * 100
+getCTRPlot(data, c(0,0.3)) + 
+  ggtitle("Simulated vs Real")+ 
+  theme(plot.title = element_text(size=15,hjust = 0.5))
+
+```
 
 ```{r include=TRUE, echo=FALSE, warning=FALSE}
 

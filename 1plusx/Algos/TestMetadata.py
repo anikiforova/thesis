@@ -16,6 +16,7 @@ class TestMetadata:
 	simulation_type					= SimulationType.HINDSIGHT
 	simulation_index				= 2
 	chi_df							= 0
+	chi_alpha						= 1
 
 	# GP
 	gp_running_algo					= False
@@ -71,7 +72,7 @@ class TestMetadata:
 			info = "{},LearningRate:{},HiddenLayers:{}".format(info, self.learning_rate, self.hidden_layers)
 			
 		if self.is_simulation:
-			info = "{},SimulationType:{},SimulationIndex:{},ChiDF:{}".format(info, get_friendly_name(self.simulation_type), self.simulation_index, self.chi_df)
+			info = "{},SimulationType:{},SimulationIndex:{},ChiDF:{},ChiAlpha:{}".format(info, get_friendly_name(self.simulation_type), self.simulation_index, self.chi_df, self.chi_alpha)
 
 		return info
 
@@ -91,7 +92,7 @@ class TestMetadata:
 			info = "{},{},{}".format(info, self.learning_rate, self.hidden_layers)
 
 		if self.is_simulation:
-			info = "{},{},{},{}".format(info, get_friendly_name(self.simulation_type), self.simulation_index, self.chi_df)
+			info = "{},{},{},{},{}".format(info, get_friendly_name(self.simulation_type), self.simulation_index, self.chi_df, self.chi_alpha)
 			
 		return info
 
@@ -110,7 +111,7 @@ class TestMetadata:
 			info = info + ",LearningRate,HiddenLayers"
 
 		if self.is_simulation:
-			info = info + ",SimulationType,SimulationIndex,ChiDF"
+			info = info + ",SimulationType,SimulationIndex,ChiDF,ChiAlpha"
 			
 		return info
 

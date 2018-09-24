@@ -21,6 +21,7 @@ class SimulationController:
 
 	chisquare_dfs = [0, 1, 5, 10, 20, 100]
 	simulation_indexes = [2, 5, 5, 5, 5, 5] 
+	chi_alphas = [2, 4]
 
 	def __init__(self, reinitialize_calibration = False):
 		input = open("{}/RegressionCoefficients.csv".format(self.hindsight_multi_campaign_path), "r")
@@ -56,9 +57,13 @@ class SimulationController:
 			self.initialize_calibration_parameters()
 
 
-	def setup(self, testMetadata):
-		self.reset_chi_squares(testMetadata.chi_df)
-		self.cur_test_metadata = testMetadata
+	def setup(self, testMeta):
+		self.reset_chi_squares(testMeta.chi_df)
+		self.cur_test_metadata = testMeta
+		
+		for campaign_id in self.campaign_ids:
+			if (campaign_id, testMeta.ChiAlpha, testMeta.DegreesOfFreedom, testMeta.SimulationIndex) not in self.calibration.keys():
+				self.reinitialize_campaign_calibration_parameters(testMeta, campaign_id)
 
 	def sigmoid(x):
 		return 1 / (1 + math.exp(-x))
@@ -75,7 +80,7 @@ class SimulationController:
 
 		return np.array([(v - min_val)/(max_val - min_val) for v in l])
 
-	def calculate_simulated_value(self, simulation_index, chisquare_df, prediction, stdev, ctr):
+	def calculate_simulated_value(self, simulation_index, chisquare_df, prediction, stdev, ctr, chi_alpha = 1):
 		simulated_value = 0.0
 		if simulation_index == 0:
 			simulated_value = prediction + np.random.uniform(-ctr/10, +ctr/10, 1)
@@ -92,14 +97,8 @@ class SimulationController:
 			if self.chi_squares_used >= self.chi_squares_count:
 				self.reset_chi_squares(chisquare_df)
 
-			simulated_value = np.random.normal(prediction, stdev, 1) + self.chi_squares[self.chi_squares_used] * ctr + np.random.uniform(-ctr/10, +ctr/10, 1)
-		elif simulation_index == 6:
-			self.chi_squares_used += 1
-			if self.chi_squares_used >= self.chi_squares_count:
-				self.reset_chi_squares(chisquare_df)
-
-			simulated_value = np.random.normal(prediction, stdev, 1) + 2 * self.chi_squares[self.chi_squares_used] * ctr + np.random.uniform(-ctr/10, +ctr/10, 1)
-
+			simulated_value = np.random.normal(prediction, stdev, 1) + chi_alpha * self.chi_squares[self.chi_squares_used] * ctr + np.random.uniform(-ctr/10, +ctr/10, 1)
+	
 		return simulated_value
 
 	def reset_chi_squares(self, df):
@@ -112,19 +111,56 @@ class SimulationController:
 		print("Initializing calibration parameters..")
 		dataframe = read_csv("{}/{}".format(self.hindsight_multi_campaign_path, self.calibration_parameters_filename), ",")
 
-		for campaign_id in self.campaign_ids:
-			for simulation_index, df in zip(self.simulation_indexes, self.chisquare_dfs):
-				row = dataframe.loc[(dataframe.CampaignId == campaign_id) & (dataframe.DegreesOfFreedom == df) & (dataframe.SimulationIndex == simulation_index)]
-				self.ctr[campaign_id] = row.CTR.values[0]
-				self.stdev[campaign_id] = row.STDEV.values[0]
-				self.calibration[(campaign_id, df)] = row.Calibration.values[0]
+		groups = dataframe.groupby(["CampaignId", "ChiAlpha", "DegreesOfFreedom", "SimulationIndex"])
+		for group in groups.groups.keys(): 
+			row = dataframe.loc[(dataframe.CampaignId == group[0]) & 
+								(dataframe.ChiAlpha == group[1]) &
+								(dataframe.DegreesOfFreedom == group[2]) & 
+								(dataframe.SimulationIndex == group[3])]
+
+			self.ctr[campaign_id] = row.CTR.values[0]
+			self.stdev[campaign_id] = row.STDEV.values[0]
+			self.calibration[group] = row.Calibration.values[0]
 				
 		#print(self.calibration)		
 		
+	def reinitialize_campaign_calibration_parameters(self, testMeta, campaign_id):
+		print("Reinitialize calibration parameters for {}..".format(campaign_id))
+		output = open("{}/{}".format(self.hindsight_multi_campaign_path, self.calibration_parameters_filename), "a")
+
+		meta = Metadata("Regression", campaign_id = campaign_id, initialize_user_embeddings = True)
+		_, campaign_impressions = meta.read_impressions()
+		_, user_embeddings = meta.read_user_embeddings()
+
+		predictions = self.coeff[campaign_id].dot(user_embeddings.T) + self.intercepts[campaign_id]
+
+		self.ctr[campaign_id] = np.mean(campaign_impressions)
+		self.stdev[campaign_id] = np.std(predictions)
+		print("Prediction mean:{}".format(np.mean(predictions)))
+
+		simulation_index = testMeta.SimulationIndex
+		df = testMeta.DegreesOfFreedom
+		chi_alpha = testMeta.ChiAlpha
+
+		self.reset_chi_squares(df)
+
+		simulated_predictions = np.array([self.calculate_simulated_value(simulation_index, df, p, self.stdev[campaign_id], self.ctr[campaign_id], chi_alpha) for p in predictions ])
+			
+		simulated_prediction_ctr = np.mean(simulated_predictions) 
+		self.calibration[(campaign_id, chi_alpha, df, simulation_index)] = self.ctr[campaign_id] / simulated_prediction_ctr	
+		
+		output.write("{},{},{},{},{},{},{}\n".format(campaign_id, chi_alpha, df, simulation_index, self.ctr[campaign_id], self.stdev[campaign_id], self.calibration[(campaign_id, df)]))
+		output.flush()
+
+		print(" Done with campaign:{}".format(campaign_id))
+		output.close()
+
+
 	def reinitialize_calibration_parameters(self):
 		print("Reinitialize calibration parameters..")
-		output = open("{}/{}".format(self.hindsight_multi_campaign_path, self.calibration_parameters_filename), "w")
-		output.write("CampaignId,DegreesOfFreedom,SimulationIndex,CTR,STDEV,Calibration\n")
+
+		output = open("{}/{}".format(self.hindsight_multi_campaign_path, self.calibration_parameters_filename), "a")
+#		output.write("CampaignId,ChiAlpha,DegreesOfFreedom,SimulationIndex,CTR,STDEV,Calibration\n")
 
 		for campaign_id in self.campaign_ids:
 			print("Starting {}.".format(campaign_id))
@@ -143,12 +179,13 @@ class SimulationController:
 
 				self.reset_chi_squares(df)
 
-				simulated_predictions = np.array([self.calculate_simulated_value(simulation_index, df, p, self.stdev[campaign_id], self.ctr[campaign_id]) for p in predictions ])
-			
-				simulated_prediction_ctr = np.mean(simulated_predictions) 
-				self.calibration[(campaign_id, df)] = self.ctr[campaign_id] / simulated_prediction_ctr	
-				output.write("{},{},{},{},{},{}\n".format(campaign_id, df, simulation_index, self.ctr[campaign_id], self.stdev[campaign_id], self.calibration[(campaign_id, df)]))
-				output.flush()
+				for chi_alpha in self.chi_alphas:
+					simulated_predictions = np.array([self.calculate_simulated_value(simulation_index, df, p, self.stdev[campaign_id], self.ctr[campaign_id], chi_alpha) for p in predictions ])
+				
+					simulated_prediction_ctr = np.mean(simulated_predictions) 
+					self.calibration[(campaign_id, df)] = self.ctr[campaign_id] / simulated_prediction_ctr	
+					output.write("{},{},{},{},{},{},{}\n".format(campaign_id, chi_alpha, df, simulation_index, self.ctr[campaign_id], self.stdev[campaign_id], self.calibration[(campaign_id, df)]))
+					output.flush()
 
 			print(" Done with campaign:{}".format(campaign_id))
 		output.close()
@@ -160,7 +197,7 @@ class SimulationController:
 	def get_simulated_impression(self, campaign_id, user_embedding):
 		predicted_value = self.predict_value(campaign_id, user_embedding)
 
-		simulated_value = self.calculate_simulated_value(self.cur_test_metadata.simulation_index, self.cur_test_metadata.chi_df, predicted_value, self.stdev[campaign_id], self.ctr[campaign_id]) 
+		simulated_value = self.calculate_simulated_value(self.cur_test_metadata.simulation_index, self.cur_test_metadata.chi_df, predicted_value, self.stdev[campaign_id], self.ctr[campaign_id], self.cur_test_metadata.chi_index) 
 		calibrated_simulated_value = simulated_value * self.calibration[(campaign_id, self.cur_test_metadata.chi_df)]
 
 		self.used_random_values += 1

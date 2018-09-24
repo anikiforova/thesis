@@ -147,6 +147,29 @@ def get_simulation_hindsight_lin_multi_target_test(meta, hours = 12):
 
 	return tests
 
+def get_simulation_lin_multi_target_test(meta, hours = 12):
+	tests = list()
+	chi_dfs = [1, 10, 100]
+	chi_alphas = [1, 2, 4]
+	
+	alpha = 0.1
+
+	simulation_index = 5
+	target_percent = 0.8
+	
+	for chi_alpha, df in zip(chi_alphas, chi_dfs):
+		test = build_target_test(meta, alpha = alpha, hours = hours, target_percent = target_percent, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = True)
+		test.normalize_ctr = True
+		test.normalize_target_value = True
+		test.is_simulation = True
+		test.simulation_type = SimulationType.HINDSIGHT
+		test.simulation_index = 5
+		test.chi_df = chi_df
+		test.chi_alpha = chi_alpha
+		tests.append(test)
+
+	return tests
+
 def get_simulation_lower_lin_multi_target_test(meta, hours = 12):
 	tests = list()
 	for simulation_type in [SimulationType.LOWER]:

@@ -47,7 +47,7 @@ prepData <- function(files, cur_path) {
   data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
   columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart","BatchCTR","ModelCTR","MSE","MMSE","FullMSE","FullROC","FullTPR","FullFPR","FullFNR","FullPPR","ModelCalibration","ModelNE","ModelRIG"
               , "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate", "MSE", "TargetPercent", "TargetAlpha", "TargetSplit", "EarlyUpdate", "BatchMSE", "BatchMMSE", "FullMSE", "FullMMSE", "SimulationType",
-              "CropPercent","NormalizeTargetValue")
+              "CropPercent","NormalizeTargetValue","SimulationIndex","ChiDF")
   data = selectNecessaryColumns(data, columns)
   if(length(files) > 1){
     for (name in files){
