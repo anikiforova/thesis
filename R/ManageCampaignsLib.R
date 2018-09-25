@@ -42,12 +42,50 @@ formatterLog <- function(){
 formatterDensity <- function(){
   function(x) x*10000
 }
+
+getClickersPlot <-function(){
+  data = data.frame(x=double(), type=integer())
+  chi_dfs = c(1, 1, 10, 100, 100)
+  chi_alphas = c( 1, 4, 4, 1, 4)
+  for (index in 1:length(chi_dfs))
+  {
+    df = chi_dfs[index]
+    alpha = chi_alphas[index]
+    
+    x =  rchisq(1000, df=df, ncp = 0) 
+    y = alpha*(x - min(x)) / (max(x) - min(x))
+    
+    data1 = data.frame(x = y, type=paste("DF:", df, " M:", alpha))
+    data = rbind(data, data1)  
+  }
+  
+  data1 = data.frame(x = rep(0, 1), type="Real Data")
+  data = rbind(data, data1)  
+  
+  p = ggplot(data, aes(x=x, color=factor(type), fill=factor(type))) +
+    geom_density(aes(y = ..density..), size=1, alpha = 0.3) + 
+    xlim(c(0, 1)) +
+    xlab("Value") +
+    ylab("Density") +
+    scale_color_discrete(name="Parameters:") +
+    scale_fill_discrete(guide=FALSE) +
+    theme_bw() +
+    ggtitle("Simulated Clickers Distribution (Chi)") +
+    theme(plot.title = element_text(size = 10, face = "bold"), 
+          legend.title=element_text(size=12), 
+          legend.text=element_text(size=8), 
+          legend.key.size = unit(1,"line"),
+          axis.title.x = element_text(size=8),
+          axis.title.y = element_text(size=8),
+          legend.position="bottom") 
+  p
+}
 prepData <- function(files, cur_path) {
   file=paste0(cur_path, paste0(files[1], ".csv"))
   data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
   columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart","BatchCTR","ModelCTR","MSE","MMSE","FullMSE","FullROC","FullTPR","FullFPR","FullFNR","FullPPR","ModelCalibration","ModelNE","ModelRIG"
               , "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate", "MSE", "TargetPercent", "TargetAlpha", "TargetSplit", "EarlyUpdate", "BatchMSE", "BatchMMSE", "FullMSE", "FullMMSE", "SimulationType",
-              "CropPercent","NormalizeTargetValue","SimulationIndex","ChiDF")
+              "CropPercent","NormalizeTargetValue","SimulationIndex","ChiDF", "ChiAlpha")
   data = selectNecessaryColumns(data, columns)
   if(length(files) > 1){
     for (name in files){
@@ -73,7 +111,7 @@ plotGroup <- function(g1, g2, title) {
   grid.arrange(arrangeGrob(g1 + theme(legend.position="none"),
                            g2 + theme(legend.position="none"),
                            nrow=1, ncol=2, widths=unit(c(8, 8), "cm"), heights=unit(8, "cm")),
-               mylegend, nrow=2, widths=unit(16, "cm"), heights=unit(c(8, 1), "cm"),
+               mylegend, nrow=2, widths=unit(16, "cm"), heights=unit(c(8, 1.5), "cm"),
                top = textGrob(title, gp=gpar(fontsize=15,fontface=2)))
 }
 

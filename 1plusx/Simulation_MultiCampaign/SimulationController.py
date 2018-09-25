@@ -59,10 +59,10 @@ class SimulationController:
 
 	def setup(self, testMeta):
 		self.reset_chi_squares(testMeta.chi_df)
-		self.cur_test_metadata = testMeta
+		self.cur_test_meta = testMeta
 		
 		for campaign_id in self.campaign_ids:
-			if (campaign_id, testMeta.ChiAlpha, testMeta.DegreesOfFreedom, testMeta.SimulationIndex) not in self.calibration.keys():
+			if (campaign_id, testMeta.chi_alpha, testMeta.chi_df, testMeta.simulation_index) not in self.calibration.keys():
 				self.reinitialize_campaign_calibration_parameters(testMeta, campaign_id)
 
 	def sigmoid(x):
@@ -113,7 +113,8 @@ class SimulationController:
 
 		groups = dataframe.groupby(["CampaignId", "ChiAlpha", "DegreesOfFreedom", "SimulationIndex"])
 		for group in groups.groups.keys(): 
-			row = dataframe.loc[(dataframe.CampaignId == group[0]) & 
+			campaign_id = group[0]
+			row = dataframe.loc[(dataframe.CampaignId == campaign_id) & 
 								(dataframe.ChiAlpha == group[1]) &
 								(dataframe.DegreesOfFreedom == group[2]) & 
 								(dataframe.SimulationIndex == group[3])]
@@ -138,9 +139,9 @@ class SimulationController:
 		self.stdev[campaign_id] = np.std(predictions)
 		print("Prediction mean:{}".format(np.mean(predictions)))
 
-		simulation_index = testMeta.SimulationIndex
-		df = testMeta.DegreesOfFreedom
-		chi_alpha = testMeta.ChiAlpha
+		simulation_index = testMeta.simulation_index
+		df = testMeta.chi_df
+		chi_alpha = testMeta.chi_alpha
 
 		self.reset_chi_squares(df)
 
@@ -197,8 +198,10 @@ class SimulationController:
 	def get_simulated_impression(self, campaign_id, user_embedding):
 		predicted_value = self.predict_value(campaign_id, user_embedding)
 
-		simulated_value = self.calculate_simulated_value(self.cur_test_metadata.simulation_index, self.cur_test_metadata.chi_df, predicted_value, self.stdev[campaign_id], self.ctr[campaign_id], self.cur_test_metadata.chi_index) 
-		calibrated_simulated_value = simulated_value * self.calibration[(campaign_id, self.cur_test_metadata.chi_df)]
+		simulated_value = self.calculate_simulated_value(self.cur_test_meta.simulation_index, self.cur_test_meta.chi_df, predicted_value, self.stdev[campaign_id], self.ctr[campaign_id], self.cur_test_meta.chi_alpha)
+
+		group = (campaign_id, self.cur_test_meta.chi_alpha, self.cur_test_meta.chi_df, self.cur_test_meta.simulation_index);
+		calibrated_simulated_value = simulated_value * self.calibration[group]
 
 		self.used_random_values += 1
 		if self.random_values_count <= self.used_random_values:

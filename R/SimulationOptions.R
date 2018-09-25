@@ -12,6 +12,7 @@ for (i in c(1, 5, 10, 20, 100, 100000)) {
 ggplot(data, aes(x=x, color=factor(type))) +
   geom_density(aes(y = ..density..))
   
+
 data = data.frame(x=double(), type=integer())
 for (df in c(1, 10, 100)) {
   x =  rchisq(100, df=df, ncp = 0) 
@@ -25,6 +26,24 @@ for (df in c(1, 10, 100)) {
 
 ggplot(data, aes(x=x, color=factor(type))) +
   geom_density(aes(y = ..density..)) + xlim(c(0, 1))
+
+data = data.frame(x=double(), type=integer())
+chi_dfs = c(1, 1, 10, 100, 100)
+chi_alphas = c( 1, 4, 4, 1, 4)
+for (index in 1:length(chi_dfs))
+{
+  df = chi_dfs[index]
+  alpha = chi_alphas[index]
+  
+  x =  rchisq(100, df=df, ncp = 0) 
+  y = alpha*(x - min(x)) / (max(x) - min(x))
+  
+  data1 = data.frame(x = y, type=paste(df, alpha))
+  data = rbind(data, data1)  
+}
+ggplot(data, aes(x=x, color=factor(type))) +
+  geom_density(aes(y = ..density..)) + xlim(c(0, 1))
+
 
 
 data = data.frame(x=double(), type=integer())
