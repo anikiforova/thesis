@@ -54,10 +54,15 @@ class TargetBase:
 
 
 	def setup(self, testMeta):
+
 		# dividing by the #campaigns since exploration scavanging will reduce the number
 		# Scale total campaign impressions 
 		self.testMeta = testMeta
 		self.elapsed_days = 0
+
+		if not self.testMeta.target_algo:
+			print("Setup of targets - Do nothing..")
+			return
 
 		for campaign_id in self.campaign_ids:
 			self.global_consumed_budgets[campaign_id] = 0
@@ -66,6 +71,9 @@ class TargetBase:
 		self.reset_local_target_budgets()
 		
 	def consume_campaign_budget(self, campaign_id):
+		if not self.testMeta.target_algo:
+			return
+
 		self.local_target_budgets[campaign_id] -= 1
 		self.global_consumed_budgets[campaign_id] += 1
 
@@ -77,6 +85,9 @@ class TargetBase:
 		return False
 	
 	def consume_target_budgets(self, consumption_log_by_campaign_ids):
+		if not self.testMeta.target_algo:
+			return
+
 		for campaign_id in self.campaign_ids:
 			consumed_budget = np.sum([1 for id in consumption_log_by_campaign_ids if id == campaign_id])
 
@@ -90,6 +101,9 @@ class TargetBase:
 		self.elapsed_days += 1
 
 	def reset_expected_impression_count(self, timestamp):
+		if not self.testMeta.target_algo:
+			return
+
 		print("Reseting expected impression count. Updating normalization values")
 		hour = dt.datetime.fromtimestamp(timestamp/1000).hour
 
@@ -102,6 +116,9 @@ class TargetBase:
 			self.calculate_normalization_value(campaign_id)
 
 	def get_normalized_target(self, target):
+		if not self.testMeta.target_algo:
+			return
+
 		result = 0
 		if self.testMeta.is_simulation: # if is simulation then full set of impressions should be used.
 			result = int(self.testMeta.target_percent * target)	
@@ -111,6 +128,9 @@ class TargetBase:
 		return result
 
 	def reset_local_target_budgets(self):
+		if not self.testMeta.target_algo:
+			return
+
 		print("Updating budgets...")
 		print_warning = False
 		for campaign_id in self.campaign_ids:
@@ -129,6 +149,9 @@ class TargetBase:
 			print(colored("WARNING: Using NO_SPLIT target budget type.", "yellow")) 
 	
 	def calculate_normalization_value(self, campaign_id):
+		if not self.testMeta.target_algo:
+			return
+
 		if self.testMeta.crop_minimal_target and self.local_target_budgets[campaign_id] < self.testMeta.crop_percent * self.expected_impression_count[campaign_id]:
 			print(colored("Crop target", "red"))
 			self.local_target_budgets[campaign_id] = 0				
@@ -141,6 +164,9 @@ class TargetBase:
 		self.normalization_values[campaign_id] = round(((math.log(self.local_target_budgets[campaign_id] + 1) + 1)) ** self.testMeta.target_alpha, 2)
 
 	def log_budgets(self, log_output, timestamp, total_impressions):
+		if not self.testMeta.target_algo:
+			return
+
 		local_target_budgets_str = ",".join([str(self.local_target_budgets[cid]) for cid in self.campaign_ids])
 		global_target_budgets_str = ",".join([str(int(self.global_target_budgets[cid] - self.global_consumed_budgets[cid])) for cid in self.campaign_ids])
 		
@@ -150,6 +176,9 @@ class TargetBase:
 		log_output.flush()
 
 	def initialize_revenue(self):
+		if not self.testMeta.target_algo:
+			return
+
 		campaign_revenue_meta = read_csv("{}/CampaignMetadata.csv".format(self.meta.base_path), sep=",")
 		campaigns = campaign_revenue_meta["CampaignId"].values
 		CPC = campaign_revenue_meta["CPC"].values

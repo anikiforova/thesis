@@ -24,10 +24,10 @@ import Util
 
 campaign_ids = [866128, 856805, 847460, 858140, 865041] 
 for campaign_id in campaign_ids:
-	meta = Metadata("Random", campaign_id)
-	algo = Random(meta)
+	meta = Metadata("LinUCB_Disjoint", campaign_id)
+	algo = LinUCB_Disjoint(meta)
 
-	testsMeta = TestBuilder.get_random_tests(meta, 12)
+	testsMeta = TestBuilder.get_lin_test(meta, 12)
 	output_path = "./Results/{0}/{1}_Metrics.csv".format(meta.campaign_id, meta.algo_name)
 
 	output_column_names = False

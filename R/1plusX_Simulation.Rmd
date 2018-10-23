@@ -12,6 +12,7 @@ library(scales)
 library(gridExtra)
 
 source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
+imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/Single-Campaign/"
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/Simulation/Results/"
 plot_results <- function(algorith_name="Random") {
   
@@ -210,3 +211,223 @@ grid.arrange(arrangeGrob(p1 + theme(legend.position="none"),
 #ggsave(paste(imageLocation,"Experiment4Write.png", sep=""), plot=p4, width = 20, height = 10, units = "cm")
 
 ```
+
+
+```{r Poly_Sigmoid_alphas, include=TRUE, echo=FALSE}
+algorith_name<-"LinUCB_Disjoint"
+
+data <- read.csv("~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/837817/Simulated/LinUCB_Disjoint.csv", header=TRUE, sep=",")
+
+data$Percent = data$Click / data$Impressions * 100
+data$Factor = paste(data$RecommendationPart * 100 , "%", sep = )
+data$Factor = factor(data$Factor, levels = unique(data$Factor[order(data$RecommendationPart)]))
+
+#reorder(x, sort(as.numeric(x)))
+
+groupedData <- summarySE(data, 
+            measurevar=c("Percent"),
+            groupvars=c("TotalImpressions", "Factor"))
+
+#data = subset(data, SimulationId == 4)
+#getCTRPlot(groupedData, c(0,0.3)) + 
+#  ggtitle("CTR Comparison")
+
+ggplot(groupedData, aes(TotalImpressions, y=mean, colour=Factor)) + 
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Factor), alpha=.3, show_guide=FALSE) +
+  expand_limits(y=c(0,30), x=c(0, 15000)) +
+  geom_line() + 
+  xlab("Impressions") + 
+  ylab("CTR") +
+  scale_x_continuous(labels=formatterM()) + 
+  scale_y_continuous(labels=formatterPercent()) +
+  labs(colour="Rec.Size:") + 
+  theme_bw() +
+  ggtitle("Recommendation Size Effects")  + 
+  theme(legend.position="bottom",legend.direction="horizontal")
+
+#ggsave(paste(imageLocation,"Experiment4Write.png", sep=""), plot=p4, width = 20, height = 10, units = "cm")
+
+```
+
+```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
+source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
+
+# 597165 - 0.001
+# 722100 - 0.01, 0.001
+# 809153 - to rerun entirely
+columnNames = c("CampaignId", "Method", "RecommendationPart", "CTR", "Clicks", "Impressions", "FullFNR", "FullTPR", "BaseCTR", "Ratio")
+all = data.frame(matrix(vector(), 0, length(columnNames), dimnames=list(c(), columnNames)), stringsAsFactors=F)
+campaignIds = c(837817)
+files =  c("Random")
+for (campaignId in campaignIds)
+{
+  random = getCampaignMetricsSimulated(files =  c("Random"),  campaignId = campaignId, baseCTR=0, method="Random")
+  data = getCampaignMetricsSimulated(files = c("LinUCB_Disjoint"), campaignId = campaignId, baseCTR=random[1, "CTR"], method="LinUCB_Disjoint", alpha = 0.001) 
+  #data = subset(data, RecommendationPart != 0.2)
+  data$RecommendationPartGainsRatio = data$FullTPR * 100 / data$RecommendationPart
+  all = rbind(all, data) 
+}
+
+ratioData <- summarySE2(all, measurevar=c("Ratio"), groupvars=c("RecommendationPart"))
+fprData <- summarySE2(all, measurevar=c("RecommendationPartGainsRatio"), groupvars=c("RecommendationPart"))
+
+ratioData$RecommendationPart = factor(ratioData$RecommendationPart)
+fprData$RecommendationPart = factor(fprData$RecommendationPart)
+g1 = getBarPlot(ratioData, yLabel = "CTR Ratio", title="")
+
+g2 = getBarPlot(fprData, yLabel = "TPR Ratio", title="")
+
+ratioData$RecommendationPart
+
+
+g = plotGroupNoTitleNoLegend(g1, g2, 9) 
+ggsave(paste(imageLocation, "/SimulatedRecommendationSize.png", sep=""), plot=g, width = 20, height = 9, units = "cm")
+g
+```
+
+```{r Poly_Sigmoid, include=TRUE, echo=FALSE , fig.width = 4}
+algorith_name<-"Poly_Sigmoid"
+data <- read.csv(file=paste0(path, paste0(algorith_name, ".csv")), header=TRUE, sep=",")
+head(data)
+data$RowNumber = as.numeric(rownames(data)) %% 133
+data$Percent = data$ClickCount / data$Impressions * 100
+data$Algorithm = paste(data$OverallCTR)
+data_non_random = data[data$AlgoName == "SEGreedy",]
+
+
+groupedData <- summarySE(data_non_random, 
+            measurevar=c("Percent"),
+            groupvars=c("Impressions", "AlgoName","OverallCTR", "Algorithm"))
+
+p = ggplot(groupedData, aes(Impressions, y=mean, colour=Algorithm)) + 
+  geom_ribbon(aes(ymin=mean-se, ymax=mean+se, linetype=NA, fill=Algorithm), alpha=.3) +
+  expand_limits(y=c(0,100)) +
+  geom_line() + xlab("Time") + ylab("% of Clicks") +
+ theme_bw() + ggtitle("CTR: 0.5%")+ theme(legend.position="bottom",legend.direction="horizontal")
+
+p
+
+
+#ggsave(paste(imageLocation,"SyntheticCTRComparison.png", sep=""), plot=p4, width = 20, height = 10, units = "cm")
+
+```
+
+
+
+```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
+
+files =  c("LinUCB_Disjoint", "Regression", "TS_Lin", "GP_Clustered", "NN", "Random")
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/837817/Simulated/"
+
+data = prepData(files, path)
+data = subset(data, Impressions > 1000 & RecommendationPart == 0.2 & TotalImpressions == max(data$TotalImpressions) )
+
+data = subset(data, (Method == "GP_Clustered" & EqClicks == 0 & ClusterCount == 10 & Hours == 12 & LengthScale == 100 & Nu == 2.5 ) |
+                (Method == "NN" & EqClicks == 0.2 & LearningRate == 0.01 ) |
+                (Method == "Regression" & EqClicks == 0 & Alpha == 0.001) |
+                (Method == "LinUCB_Disjoint" & EqClicks == 0 & Alpha == 0.001)|
+                (Method == "TS_Lin" & EqClicks == 0 & Alpha == 0.001)|
+                (Method == "Random" ) 
+                )
+data$Factor = factor(data$Method)
+
+levels(data$Factor) <- c("LinUCB (Disjoint)", "EGreedy (Lin)", "TS (Lin)","GP (Clustered)","NN", "Baseline")
+
+randomClicks = mean(data[data$Method == "Random", "Clicks"])
+data$RelativeCTR = data$Clicks/randomClicks
+
+g1 = ggplot(data[data$SimulationId == 2,], aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    ggtitle("Linear /w Error") +
+    scale_y_continuous() +
+    labs(fill = "Algorithms:")+
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=10), 
+        legend.key.size = unit(1,"line"),
+        legend.position="bottom",
+        axis.title.y = element_text(size=10)) 
+  
+g2 = ggplot(data[data$SimulationId == 4,], aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    ggtitle("Non-Linear /w Error") +
+    theme_bw() +
+    scale_y_continuous()+
+    labs(fill = "Algorithms:")+
+    theme( axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position="bottom",
+        legend.direction = "horizontal",
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=10), 
+        axis.title.y = element_text(size=10)) 
+p = plotGroupNoTitle(g1, g2, 9) 
+p
+
+ggsave(paste(imageLocation, "SimulationCTRRatioComparison_Legend.png", sep=""), plot=p, width = 20, height = 10, units = "cm")
+```
+
+
+```{r CTRMultiplier, include=TRUE, echo=FALSE , fig.width = 4}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/837817/Simulated/"
+files = c("Random_2", "LinUCB_Disjoint_2")
+#files = c("LinUCB_Disjoint_2")
+data = prepData(files, path)
+data = subset(data, SimulationId == 2 & CTRMultiplier > 0.1)
+data$Factor = factor(data$CTRMultiplier)
+#data = subset(data, CTRMultiplier < 4)
+#getCTRPlot(data, c(0,1), "")
+#g1 = getCTRPlot(data, c(0,1), "")
+#g2 = getMSEPlot(data, c(0,1), "")
+#plotGroup(g1, g2, "Random")
+
+data = subset(data, TotalImpressions == max(data$TotalImpressions))
+data$CTR = data$Clicks / data$Impressions
+baseline = subset(data, Method == "Random")
+data = subset(data, Method != "Random")
+data = summarySE2(data, measurevar=c("CTR"), groupvars=c("Factor"))
+
+data$RelativeCTR = data$mean/baseline$CTR 
+
+p = ggplot(data, aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+   # geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2, position=position_dodge(.9)) +
+   # geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    scale_y_continuous()+
+   xlab("Baseline CTR Multiplier")+
+   theme(legend.position="none",   
+        plot.title = element_text(size = 14, face = "bold"), 
+        axis.title.y = element_text(size=10)) 
+   
+ggsave(paste(imageLocation,"SimulationCTREffect.png", sep=""), plot=p, width = 7, height = 7, units = "cm")
+p
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

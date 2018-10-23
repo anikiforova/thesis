@@ -32,7 +32,7 @@ days = pd.date_range(start='15/8/2018', end='20/08/2018')
 
 algo = LinUCB_Disjoint_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
 
-testsMeta = TestBuilder.get_simulation_lower_lin_multi_target_test(meta, 6)
+testsMeta = TestBuilder.get_simulation_hindsight_lin_multi_target_test(meta, 6)
 
 output_path = "./Results/{0}/Simulation/{1}_Full.csv".format(meta.campaign_id, meta.algo_name)
 output_log_path = "./Log/{0}/Simulation/{1}_Full.csv".format(meta.campaign_id, meta.algo_name)

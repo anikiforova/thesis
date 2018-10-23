@@ -35,7 +35,11 @@ data$MSE = data$BatchMSE
 g1 = getCTRPlot(data, c(0,0.3))
 g2 = getMSEPlot(data, c(0,0.3), "Algorithm: ")
 
-plotGroup(g1, g2, "Best Multi vs Target ") 
+p = plotGroup(g1, g2, "Best Multi vs Target ") 
+
+ggsave(paste(imageLocation, "BestMultiVsTarget.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+p
+
 
 ```
 
@@ -55,10 +59,12 @@ data$Factor = paste(data$TargetSplit)
 data[data$Method == "Random_Multi", "Factor"] = "Random"
 data$Factor = factor(data$Factor)
 #data$Percent = data$BatchCTR * 100
-getCTRPlot(data, c(0,0.3), "Target Split:") + 
+p = getCTRPlot(data, c(0,0.3), "Target Split:") + 
   ggtitle("Target Split") + 
   theme(plot.title = element_text(size=15,hjust = 0.5))
 
+ggsave(paste(imageLocation, "TargetSplitEffect.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+p
 ```
 Target Split - Target is per day or per entire period
 
@@ -78,10 +84,12 @@ data$Factor = paste(data$EarlyUpdate)
 data[data$Method == "Random_Multi", "Factor"] = "Random"
 data$Factor = factor(data$Factor)
 #data$Percent = data$BatchCTR * 100
-getCTRPlot(data, c(0,0.3), "Early Update:") + 
+p = getCTRPlot(data, c(0,0.3), "Early Update:") + 
   ggtitle("Early Update")+ 
   theme(plot.title = element_text(size=15,hjust = 0.5))
 
+ggsave(paste(imageLocation, "EarlyUpdateEffect.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+p
 ```
 Early Update - Update when a budget is exhausted
 
@@ -101,9 +109,12 @@ data$Factor = paste(data$TargetPercent)
 data[data$Method == "Random_Multi", "Factor"] = "Random"
 data$Factor = factor(data$Factor)
 #data$Percent = data$BatchCTR * 100
-getCTRPlot(data, c(0,0.3), "Target % Reduction:") + 
+p = getCTRPlot(data, c(0,0.3), "Target % Reduction:") + 
   ggtitle("Target % Reduction")+ 
   theme(plot.title = element_text(size=15,hjust = 0.5))
+
+ggsave(paste(imageLocation, "TargetSizeEffect.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+p
 
 ```
 Target % Reduction - TargetBudget = TargetBudget * Reduction
@@ -121,10 +132,12 @@ data$Factor = paste(data$CropPercent)
 data[data$Method == "Random_Multi", "Factor"] = "Random"
 data$Factor = factor(data$Factor)
 #data$Percent = data$BatchCTR * 100
-getCTRPlot(data, c(0,0.3), "Crop %:") + 
+p = getCTRPlot(data, c(0,0.3), "Crop %:") + 
   ggtitle("Crop Percent")+ 
   theme(plot.title = element_text(size=15,hjust = 0.5))
 
+ggsave(paste(imageLocation, "CropPercentEffect.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+p
 ```
 Crop Percent - if TargetBudget < cp * E[#Impressions]) => TargetBudget = 0
 
@@ -142,9 +155,12 @@ data = subset(data, (Alpha == 0.1 & TargetPercent == 1 & TargetSplit == "DAILY" 
 data$Factor = factor(paste(data$NormalizeTargetValue))
 
 #data$Percent = data$BatchCTR * 100
-getCTRPlot(data, c(0,0.3), "Normalized:") + 
+p = getCTRPlot(data, c(0,0.3), "Normalized:") + 
   ggtitle("Normalization effect")+ 
   theme(plot.title = element_text(size=15,hjust = 0.5))
+
+ggsave(paste(imageLocation, "NormalizationEffect.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+p
 
 ```
 Normalization effect - TargetBudget/E[#Impression]
@@ -170,6 +186,7 @@ p3 = getCampaignComparisonPlot(data, "Impression Ratio", "Targeted Multi-Campaig
 
 
 plotThreeComparison(p1, p2, p3, "Multi-Campaign Impression Ratio Performance", TRUE, paste(imageLocation, "Multi_VS_Target_ImpressionRatioPerCampaign.png", sep=""))
+
 
 ```
 

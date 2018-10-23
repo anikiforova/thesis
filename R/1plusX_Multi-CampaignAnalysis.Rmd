@@ -10,7 +10,10 @@ library(gridExtra)
 source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
 source("~/Documents/ETH/Thesis/1plusX/Data/thesis/R/ManageCampaignsLib.R")
 
-imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/Multi-Campaign/"
+imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/CampaignData/"
+impressionScale = 2.23
+ctrScale = 1.57
+
 
 ```
 
@@ -20,23 +23,32 @@ path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/5/Processed/all_imp
 data <- read.csv(file=path, header=TRUE, sep=",")
 data$Timestamp = data$Timestamp / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
+#startDate <- as.Date("15-08-2018", "%d-%m-%Y")data$Timestamp
+startDate <- as.POSIXct(strptime("2018-08-15 00:00:00", "%Y-%m-%d %H:%M:%S"))
+endDate <- as.POSIXct(strptime("2018-08-21 00:00:00", "%Y-%m-%d %H:%M:%S"))
+data = subset(data, Timestamp >= startDate & Timestamp < endDate)
+data$Impressions = data$Impressions * impressionScale
+data = renameCampaignIds(data)
 
-g = ggplot(data, aes(fill=factor(CampaignId), y=Impressions, x=Timestamp)) +
+g1 = ggplot(data, aes(fill=factor(CampaignId), y=Impressions, x=Timestamp)) +
   geom_bar( stat="identity") +
   theme_bw() +
-  scale_fill_discrete(name="CampaignId") +
-  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+  ylab("Impression Count (Scaled)") +
+  scale_fill_discrete(name="Campaigns") +
+  scale_y_continuous(labels=formatterM()) + 
+  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%a")) +
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
         legend.justification=c(1,0), 
         legend.title=element_text(size=12), 
         legend.text=element_text(size=8), 
         legend.key.size = unit(1,"line"),
+        axis.title.x=element_blank(),
         plot.title = element_text(size = 14, face = "bold"), 
-        axis.title.y = element_text(size=10)) +
+        axis.title.y = element_text(size=10)) 
   ggtitle("Impressions per Campaign")
 
-ggsave(paste(imageLocation, "ImpressionsPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
-g
+ggsave(paste(imageLocation, "ImpressionsPerCampaign.png", sep=""), plot=g1, width = 20, height = 11, units = "cm")
+g1
 
 ```
 
@@ -47,24 +59,38 @@ path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/5/Processed/all_imp
 data <- read.csv(file=path, header=TRUE, sep=",")
 data$Timestamp = data$Timestamp / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
-g = ggplot(data, aes(color=factor(CampaignId), y=CTR, x=Timestamp)) +
+startDate <- as.POSIXct(strptime("2018-08-15 00:00:00", "%Y-%m-%d %H:%M:%S"))
+endDate <- as.POSIXct(strptime("2018-08-21 00:00:00", "%Y-%m-%d %H:%M:%S"))
+data = subset(data, Timestamp >= startDate & Timestamp < endDate)
+data$Impressions = data$Impressions * impressionScale
+data$CTR = data$CTR * ctrScale
+data = renameCampaignIds(data)
+
+g2 = ggplot(data, aes(color=factor(CampaignId), y=CTR, x=Timestamp)) +
   #geom_bar( stat="identity") +
   #stat_smooth(aes(color=factor(CampaignId), y=CTR, x=Timestamp), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=2) +
   geom_line()+
-  scale_color_discrete(name="CampaignId") +
+  ylab("CTR (Scaled)") +
+  scale_color_discrete(name="Campaign") +
+  scale_y_continuous(labels=percent)+
   theme_bw() +
-  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%a")) +
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
         legend.justification=c(1,0), 
         legend.title=element_text(size=12), 
         legend.text=element_text(size=8), 
         legend.key.size = unit(1,"line"),
+         axis.title.x=element_blank(),
         plot.title = element_text(size = 14, face = "bold"), 
-        axis.title.y = element_text(size=10)) +
-  ggtitle("CTR per Campaign")
+        axis.title.y = element_text(size=10)) 
+#+  ggtitle("CTR per Campaign")
 
-ggsave(paste(imageLocation, "CTRPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
-g
+ggsave(paste(imageLocation, "CTRPerCampaign.png", sep=""), plot=g2, width = 20, height = 11, units = "cm")
+g2
+
+p = plotGroupNoTitle(g1, g2, 9) 
+ggsave(paste(imageLocation, "ImpressionsAndCTRPerCampaign.png", sep=""), plot=p, width = 18, height = 10, units = "cm")
+
 ```
 
 
@@ -177,25 +203,36 @@ library(scales)
 path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/5/Processed/MultiCampaignUserStats.csv"
 data <- read.csv(file=path, header=TRUE, sep=",")
 data$Date = as.POSIXct(as.Date(data$Date))
+data$Date = as.POSIXct(data$Date, origin="1970-01-01")
+startDate <- as.POSIXct(strptime("2018-08-15 00:00:00", "%Y-%m-%d %H:%M:%S"))
+endDate <- as.POSIXct(strptime("2018-08-21 00:00:00", "%Y-%m-%d %H:%M:%S"))
+data = subset(data, Date >= startDate & Date < endDate)
 
-g = ggplot(data, aes(fill=factor(CampaignCount), y=UserCount, x=Date)) +
-  geom_bar( stat="identity") +
+groupedData <- summarySE(data, 
+            measurevar=c("UserCount"),
+            groupvars=c("CampaignCount"))
+
+
+g1 = ggplot(data, aes(fill=factor(CampaignCount), y=UserCount, x=Date)) +
+   geom_bar(position = "fill",stat = "identity") +
+  scale_y_continuous(labels=percent)+
   theme_bw() +
-  ylab("User Count") +
-  scale_y_continuous(labels=formatterK()) + 
-  scale_fill_discrete(name="# Observed Campaigns") +
-  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+  ylab("User Percent") +
+#  scale_y_continuous(labels=formatterK()) + 
+  scale_fill_discrete(name="# Observed\nCampaigns") +
+  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%a")) +
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
-        legend.justification=c(1,0), 
         legend.title=element_text(size=12), 
         legend.text=element_text(size=8), 
         legend.key.size = unit(1,"line"),
+        legend.position = "bottom",
+        axis.title.x=element_blank(),
         plot.title = element_text(size = 14, face = "bold"), 
-        axis.title.y = element_text(size=10)) +
-  ggtitle("% Users grouped by # Observed Campaigns")
+        axis.title.y = element_text(size=10)) 
+#+ ggtitle("% Users grouped by # Observed Campaigns")
 
-ggsave(paste(imageLocation, "UsersGroupsPerCampaign.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
-g
+ggsave(paste(imageLocation, "UsersGroupsPerCampaign.png", sep=""), plot=g1, width = 10, height = 10, units = "cm")
+g1
 
 ```
 
@@ -209,27 +246,38 @@ path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/5/Processed/MultiCa
 data <- read.csv(file=path, header=TRUE, sep=",")
 data$Date = as.POSIXct(as.Date(data$Date))
 
+dailyTotal <- aggregate(data$UserCount, by=list(Category=data$Date), FUN=sum)
+data$UserPercent = 0
+
+for (d in unique(data$Date)) 
+{
+  data[data$Date ==d, ]$UserPercent = data[data$Date ==d, ]$UserCount / dailyTotal[dailyTotal$Category == d, ]$x
+}
 #data = subset(data, CampaignCount != 1)
-summary <- summarySE2(data, measurevar=c("UserCount"), groupvars=c("CampaignCount", "ClickedCampaignsCount"))
+summary <- summarySE2(data, measurevar=c("UserPercent"), groupvars=c("CampaignCount", "ClickedCampaignsCount"))
+summary$ClickedCampaignsCount
 summary$Factor = factor(paste(summary$ClickedCampaignsCount, "/", summary$CampaignCount, sep=""))
 
-g = ggplot(summary, aes(x=Factor, y=mean, fill=Factor)) + 
+g2 = ggplot(summary, aes(x=Factor, y=mean, fill=Factor)) + 
     geom_bar(position=position_dodge(), stat="identity") +
     geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2, position=position_dodge(.9)) +
-    ylab("# Users") + xlab("(# Clicked Campaigns) / (# Seen Campaigns)") + ggtitle("Daily Click Users: (# Clicked Campaigns) / (# Seen Campaigns)") +
+    ylab("User Percent") + 
+    xlab("#Clicked/#Seen Campaigns") + 
+   #ggtitle("Daily Click Users: (# Clicked Campaigns) / (# Seen Campaigns)") +
     theme_bw() +
-    scale_fill_hue() + 
-    theme(legend.justification=c(1,0), 
-          legend.position="none",
-          legend.title=element_text(size=12), 
-          legend.text=element_text(size=8), 
-          legend.key.size = unit(1,"line"),
-          plot.title = element_text(size = 14, face = "bold"), 
-          axis.title.x = element_text(size=10),
-          axis.title.y = element_text(size=10)) 
- 
-ggsave(paste(imageLocation, "ClickersPerCampaignSeen.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
-g
+    scale_fill_hue("#Clicked / #Seen\nCampaigns")+ 
+   scale_y_continuous(labels = percent)+
+    theme(#axis.text.x=element_text(angle = 45, hjust = 1, size=7),
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=8), 
+        legend.key.size = unit(1,"line"),
+        legend.position = "none",
+         #axis.title.x=element_blank(),
+        plot.title = element_text(size = 14, face = "bold"), 
+        axis.title.y = element_text(size=10))  
+  
+ggsave(paste(imageLocation, "ClickersPerCampaignSeen.png", sep=""), plot=g2, width = 10, height = 10, units = "cm")
+g2
 
 ```
 
@@ -239,22 +287,31 @@ library(scales)
 path = "~/Documents/ETH/Thesis/1plusX/Data/RawData/Campaigns/5/Processed/MultiCampaignUserClickStats.csv"
 data <- read.csv(file=path, header=TRUE, sep=",")
 data$Date = as.POSIXct(as.Date(data$Date))
+data <- read.csv(file=path, header=TRUE, sep=",")
+data$Date = as.POSIXct(as.Date(data$Date))
+data$Date = as.POSIXct(data$Date, origin="1970-01-01")
+startDate <- as.POSIXct(strptime("2018-08-15 00:00:00", "%Y-%m-%d %H:%M:%S"))
+endDate <- as.POSIXct(strptime("2018-08-21 00:00:00", "%Y-%m-%d %H:%M:%S"))
+data = subset(data, Date >= startDate & Date < endDate)
 
+mean(subset(data, CampaignCount == 1)$PercentFromTotalClickUserCount)
 g = ggplot(data, aes(fill=factor(CampaignCount), y=ClickUserCount, x=Date)) +
-  geom_bar( stat="identity") +
+  geom_bar(position = "fill",stat = "identity") +
   theme_bw() +
-  ylab("User Count") +
-  scale_y_continuous(labels=formatterK()) + 
-  scale_fill_discrete(name="# Clicked Campaigns") +
-  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%b %e")) +
+  ylab("User Percent") +
+  scale_y_continuous(labels=percent)+
+  scale_fill_discrete(name="# Clicked\nCampaigns") +
+  scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%a")) +
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size=7),
         legend.justification=c(1,0), 
         legend.title=element_text(size=12), 
         legend.text=element_text(size=8), 
         legend.key.size = unit(1,"line"),
+        axis.title.x=element_blank(),
         plot.title = element_text(size = 14, face = "bold"), 
-        axis.title.y = element_text(size=10)) +
-  ggtitle("# Click Users grouped by # Campaigns they have clicked on")
+        axis.title.y = element_text(size=10)) 
+#+ ggtitle("# Click Users grouped by # Campaigns they have clicked on")
+
 
 ggsave(paste(imageLocation, "ClickersPerCampaignCount.png", sep=""), plot=g, width = 20, height = 11, units = "cm")
 g

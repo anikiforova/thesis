@@ -49,3 +49,13 @@ CampaignId,Clicks,Impressions,Method,Hours,Alpha,EqClicks,TargetPercent,TargetSp
 847460,1983908.0,2387.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Lower
 858140,2276831.0,1763.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Lower
 865041,2175746.0,1907.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Lower
+866128,2611774.0,3657.0,LinUCB_Disjoint_Multi_Target,6,0.1,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+856805,6141997.0,13436.0,LinUCB_Disjoint_Multi_Target,6,0.1,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+847460,1983897.0,4964.0,LinUCB_Disjoint_Multi_Target,6,0.1,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+858140,2512626.0,4184.0,LinUCB_Disjoint_Multi_Target,6,0.1,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+865041,2176231.0,1571.0,LinUCB_Disjoint_Multi_Target,6,0.1,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+866128,2354753.0,4355.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+856805,6322499.0,12960.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+847460,2233923.0,5524.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+858140,2528844.0,4031.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight
+865041,1986506.0,2115.0,LinUCB_Disjoint_Multi_Target,6,0.0001,0.0,1,DAILY,1,True,0.0,False,0.0,0.0,Hindsight

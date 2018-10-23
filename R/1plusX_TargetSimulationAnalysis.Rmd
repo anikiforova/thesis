@@ -9,7 +9,7 @@ library(ggplot2)
 library(gridExtra)
 source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
 source("~/Documents/ETH/Thesis/1plusX/Data/thesis/R/ManageCampaignsLib.R")
-
+ctrScale = 1.57
 imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images/Multi-Campaign/"
 ```
 
@@ -27,6 +27,7 @@ simulated_data = subset(simulated_data, (ChiDF == 1 & ChiAlpha == 1) |
                                         (ChiDF == 10 & ChiAlpha == 4) |
                                         (ChiDF == 100 & ChiAlpha == 1) |
                                         (ChiDF == 100 & ChiAlpha == 4))
+simulated_data$Name
 simulated_data$Name = paste("DF:", simulated_data$ChiDF, " M:", simulated_data$ChiAlpha, sep="") 
 
 real_data = prepData(c("LinUCB_Disjoint_Multi_Target_Full"), path)
@@ -35,15 +36,20 @@ real_data$Name = "Real Data"
 
 data = rbind(simulated_data[c("Name", "Percent", "TotalImpressions", "BatchCTR")], 
              real_data[c("Name", "Percent", "TotalImpressions", "BatchCTR")])
-             
+
+#data = simulated_data[,c("Name", "Percent", "TotalImpressions", "BatchCTR")]
 data$Factor = factor(data$Name)
+data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
+data$Percent = data$Percent * ctrScale
 
 g1 = getCTRPlot(data, c(0,0.3)) + 
   ggtitle("CTR Comparison")
 
-g2 = getClickersPlot() 
+g2 = getClickersPlot(includeRealData = TRUE) 
 
-plotGroup(g1, g2, "Targeted - Hindsight Simulation VS Real Data") 
+p = plotGroupNoTitle(g1, g2, 9) 
+ggsave(paste(imageLocation, "ChiHindsight.png", sep=""), plot=p, width = 18, height = 10, units = "cm")
+p
 
 ```
 
@@ -130,3 +136,245 @@ getCTRPlot(simulated_data, c(0.09,0.12)) +
   ggtitle("Lower Simulation Results ") + 
   theme(plot.title = element_text(size=15,hjust = 0.5))
 ```
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi", "Random_Multi")
+simulated_data = prepData(files, path)
+
+simulated_data = subset(simulated_data, SimulationType == "Hindsight" &
+                        (( Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.0001) |
+                          (Method == "LinUCB_Disjoint_Multi" & Alpha == 0.0001) |
+                          (Method == "Random_Multi")))
+
+simulated_data$Factor = ""
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "No Target"
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "Factor"] = 
+  paste("Target ", simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "TargetPercent"] * 100, "%", sep="")
+simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
+
+
+randomClicks = mean(simulated_data[simulated_data$Factor == "Random", "Clicks"])
+no_random = subset(simulated_data, TotalImpressions == max(simulated_data$TotalImpressions) & Factor != "Random")
+no_random$RelativeCTR = no_random$Clicks/randomClicks
+no_random$Factor = factor(no_random$Factor)
+no_random$Factor = factor(no_random$Factor,levels(no_random$Factor)[c(1, 3, 4, 2)])
+
+g1 = ggplot(no_random, aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    ggtitle("Hindsight") +
+    scale_y_continuous() +
+    labs(fill = "Algorithms:")+
+    theme(axis.title.x=element_blank(),
+        legend.position="none",
+        axis.title.y = element_text(size=10)) 
+
+files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi", "Random_Multi")
+simulated_data = prepData(files, path)
+simulated_data = subset(simulated_data, SimulationType == "Lower" &
+                        (( Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.0001) |
+                           Method != "LinUCB_Disjoint_Multi_Target"))
+
+simulated_data$Factor = ""
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "LinUCB"
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "Factor"] = paste("LinUCB Target (", simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "TargetPercent"] * 100, "%)", sep="")
+
+simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
+randomClicks = mean(simulated_data[simulated_data$Factor == "Random", "Clicks"])
+no_random = subset(simulated_data, TotalImpressions == max(simulated_data$TotalImpressions) & Factor != "Random")
+no_random$RelativeCTR = no_random$Clicks/randomClicks
+no_random$Factor = factor(no_random$Factor)
+no_random$Factor = factor(no_random$Factor,levels(no_random$Factor)[c(1, 3, 4, 2)])
+g2 = ggplot(no_random, aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    ggtitle("Hindsight") +
+    scale_y_continuous() +
+    labs(fill = "Algorithms:")+
+    theme(axis.title.x=element_blank(),
+        legend.position="none",
+        axis.title.y = element_text(size=10))
+
+#simulated_data$Factor = factor(simulated_data$Factor)
+p = plotGroupNoTitle(g1, g2, 9) 
+p
+
+```
+
+
+
+
+
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi", "Random_Multi")
+simulated_data = prepData(files, path)
+
+simulated_data = subset(simulated_data, 
+                        (( Method == "LinUCB_Disjoint_Multi_Target" & Alpha == 0.0001) |
+                           Method != "LinUCB_Disjoint_Multi_Target"))
+
+simulated_data$Factor = ""
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "No Budgets"
+simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "Factor"] = 
+  paste(simulated_data[simulated_data$Method == "LinUCB_Disjoint_Multi_Target", "TargetPercent"] * 100, "% Budget", sep="")
+simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
+
+hindsight = subset(simulated_data, SimulationType == "Hindsight")
+randomClicks = mean(hindsight[hindsight$Factor == "Random", "Clicks"])
+no_random = subset(hindsight, TotalImpressions == max(hindsight$TotalImpressions) & Factor != "Random")
+no_random$RelativeCTR = no_random$Clicks/randomClicks
+no_random$Factor = factor(no_random$Factor)
+no_random$Factor = factor(no_random$Factor,levels(no_random$Factor)[c(4, 2, 3, 1)])
+
+g1 = ggplot(no_random, aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    ggtitle("Upper Bound") +
+    scale_y_continuous() +
+    labs(fill = "Algorithms:")+
+    theme(axis.title.x=element_blank(),
+        legend.position="none",
+        axis.title.y = element_text(size=10),
+        axis.text.x = element_text(size=8)) 
+
+lower = subset(simulated_data, SimulationType == "Lower")
+randomClicks = mean(lower[lower$Factor == "Random", "Clicks"])
+l = subset(lower, TotalImpressions == max(lower$TotalImpressions) & Factor != "Random")
+l$RelativeCTR = l$Clicks/randomClicks
+l$Factor = factor(l$Factor)
+l$Factor = factor(l$Factor,levels(l$Factor)[c(4, 2, 3, 1)])
+
+g2 = ggplot(l, aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    ggtitle("Lower Bound") +
+    scale_y_continuous() +
+    labs(fill = "Algorithms:")+
+    theme(axis.title.x=element_blank(),
+        legend.position="none",
+        axis.title.y = element_text(size=10),
+        axis.text.x = element_text(size=8))
+
+p = plotGroupNoTitleNoLegend(g1, g2, 9) 
+
+ggsave(paste(imageLocation, "SimulationTargetEffect.png", sep=""), plot=p, width = 18, height = 10, units = "cm")
+p
+
+```
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_All")
+
+simulated_data = prepData(files, path)
+simulated_data = subset(simulated_data, SimulationType == "Hindsight" 
+                        & SimulationIndex %in% c(1,2,3,5)
+                        & (ChiAlpha == 4 | ChiAlpha == 0))
+
+files =  c("LinUCB_Disjoint_Multi_Target_Chi")
+
+#simulated_data2 = prepData(files, path)
+#simulated_data2 = subset(simulated_data2, SimulationType == "Hindsight" & SimulationIndex == 5 & ChiAlpha == 4&
+    #                       ChiDF == 1)
+#simulated_data2$Factor = "Linear /w Chi /w Error Targeted"
+
+simulated_data$Factor = ""
+simulated_data[simulated_data$SimulationIndex == 1, "Factor"] = "Linear"
+simulated_data[simulated_data$SimulationIndex == 2, "Factor"] = "Linear /w Error"
+simulated_data[simulated_data$SimulationIndex == 3, "Factor"] = "Non-Linear /w Error"
+simulated_data[simulated_data$SimulationIndex == 5 & simulated_data$ChiAlpha == 4, "Factor"] = "Linear /w Chi /w Error"
+
+simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+real_data = prepData(c("LinUCB_Disjoint_Multi_7days"), path)
+real_data = subset(real_data, (Method == "LinUCB_Disjoint_Multi" ) ) 
+real_data$Factor = "Real Data"
+
+
+all = rbind(simulated_data[c("Factor", "Percent", "TotalImpressions", "BatchCTR", "SimulationIndex")], 
+             real_data[c("Factor", "Percent", "TotalImpressions", "BatchCTR", "SimulationIndex")])
+            #,simulated_data2[c("Factor", "Percent", "TotalImpressions", "BatchCTR", "SimulationIndex")])
+
+all$Factor = factor(all$Factor)
+all$Factor = factor(all$Factor,levels(all$Factor)[c(1, 3, 4, 2, 5)])
+all$TotalImpressions = all$TotalImpressions / max(all$TotalImpressions)
+all$Percent = all$Percent * ctrScale
+library(gridExtra)
+p = getCTRPlot(all, c(0,0.12), "Simulation Type:", "bottom")+
+    theme(legend.justification = c(1, 0), 
+          legend.position = c(1, 0),  
+          legend.box.background = element_rect(colour = "black"))
+p
+
+ggsave(paste(imageLocation, "SimulationComparison.png", sep=""), plot=p, width = 15, height = 10, units = "cm")
+```
+
+
+
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/Simulation/"
+files =  c("LinUCB_Disjoint_Multi_Target_All")
+
+simulated_data = prepData(files, path)
+simulated_data = subset(simulated_data, SimulationIndex == 5 & ChiAlpha %in% c(4) & ChiDF == 1)
+simulated_data$Factor = "LinUCB"
+
+files =  c("LinUCB_Disjoint_Multi_Target_Chi")
+
+simulated_data2 = prepData(files, path)
+simulated_data2 = subset(simulated_data2, SimulationIndex == 5 & ChiAlpha %in% c(4) & ChiDF == 1)
+simulated_data2$Factor = "LinUCB /w Budgets"
+
+simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
+
+all = rbind(simulated_data[c("Factor", "Percent", "TotalImpressions", "BatchCTR", "SimulationIndex")], 
+             simulated_data2[c("Factor", "Percent", "TotalImpressions", "BatchCTR", "SimulationIndex")])
+
+all$Factor = factor(all$Factor)
+all$Factor = factor(all$Factor, levels(all$Factor)[c(3, 1, 4, 2)])
+all$TotalImpressions = all$TotalImpressions / max(all$TotalImpressions)
+all$Percent = all$Percent * ctrScale
+
+
+p2 = getCTRPlot(all, c(0,0.12), "Simulation Type:", "right") + 
+  scale_color_brewer(palette="Paired", name="Algorithm:")+
+  theme(legend.justification = c(1, 0), 
+          legend.position = c(1, 0),  
+          legend.box.background = element_rect(colour = "black"))
+p2
+
+ggsave(paste(imageLocation, "SimulationAlgoComparison.png", sep=""), plot=p2, width = 15, height = 10, units = "cm")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

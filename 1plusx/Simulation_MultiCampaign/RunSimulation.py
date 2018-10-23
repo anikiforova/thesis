@@ -26,6 +26,7 @@ from Algos.SimulationType import get_friendly_name
 
 from Algos.MetricsCalculator import get_basic_metrics    
 from Algos.TestBuilder import get_simulation_lin_multi_target_test
+from Algos.TestBuilder import get_simulations_multi_test
 from Algos.Util import get_campaign_line_info
 
 from SimulationController import SimulationController
@@ -40,11 +41,11 @@ algo = LinUCB_Disjoint_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
 
 simulation_controller = SimulationController(reinitialize_calibration = False)
 
-testsMeta = get_simulation_lin_multi_target_test(meta, 6)
+testsMeta = get_simulations_multi_test(meta, 6)
 
-output_path = "./Results/{0}/Simulation/{1}_Chi.csv".format(meta.campaign_id, meta.algo_name)
-output_log_path = "./Log/{0}/Simulation/{1}_Chi.csv".format(meta.campaign_id, meta.algo_name)
-output_campaign_log_path = "./Log/{0}/Simulation/Campaign_Log_Chi.csv".format(meta.campaign_id)
+output_path = "./Results/{0}/Simulation/{1}_All.csv".format(meta.campaign_id, meta.algo_name)
+output_log_path = "./Log/{0}/Simulation/{1}_All.csv".format(meta.campaign_id, meta.algo_name)
+output_campaign_log_path = "./Log/{0}/Simulation/Campaign_Log_All.csv".format(meta.campaign_id)
 
 output_column_names = False
 if not Path(output_path).is_file():

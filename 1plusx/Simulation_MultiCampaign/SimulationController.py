@@ -62,6 +62,7 @@ class SimulationController:
 		self.cur_test_meta = testMeta
 		
 		for campaign_id in self.campaign_ids:
+			# print("{},{},{},{}".format(campaign_id, testMeta.chi_alpha, testMeta.chi_df, testMeta.simulation_index))
 			if (campaign_id, testMeta.chi_alpha, testMeta.chi_df, testMeta.simulation_index) not in self.calibration.keys():
 				self.reinitialize_campaign_calibration_parameters(testMeta, campaign_id)
 
@@ -91,7 +92,7 @@ class SimulationController:
 		elif simulation_index == 3:
 			simulated_value = SimulationController.sigmoid(prediction) + np.random.uniform(-ctr/10, +ctr/10, 1)
 		elif simulation_index == 4:
-			simulated_value = SimulationController.sigmoid(square_func(prediction)) + np.random.uniform(-ctr/10, +ctr/10, 1)
+			simulated_value = SimulationController.sigmoid(SimulationController.square_func(prediction)) + np.random.uniform(-ctr/10, +ctr/10, 1)
 		elif simulation_index == 5:
 			self.chi_squares_used += 1
 			if self.chi_squares_used >= self.chi_squares_count:
@@ -123,7 +124,7 @@ class SimulationController:
 			self.stdev[campaign_id] = row.STDEV.values[0]
 			self.calibration[group] = row.Calibration.values[0]
 				
-		#print(self.calibration)		
+		# print(self.calibration)		
 		
 	def reinitialize_campaign_calibration_parameters(self, testMeta, campaign_id):
 		print("Reinitialize calibration parameters for {}..".format(campaign_id))
@@ -150,7 +151,7 @@ class SimulationController:
 		simulated_prediction_ctr = np.mean(simulated_predictions) 
 		self.calibration[(campaign_id, chi_alpha, df, simulation_index)] = self.ctr[campaign_id] / simulated_prediction_ctr	
 		
-		output.write("{},{},{},{},{},{},{}\n".format(campaign_id, chi_alpha, df, simulation_index, self.ctr[campaign_id], self.stdev[campaign_id], self.calibration[(campaign_id, df)]))
+		output.write("{},{},{},{},{},{},{}\n".format(campaign_id, chi_alpha, df, simulation_index, self.ctr[campaign_id], self.stdev[campaign_id], self.calibration[(campaign_id, chi_alpha, df, simulation_index)]))
 		output.flush()
 
 		print(" Done with campaign:{}".format(campaign_id))

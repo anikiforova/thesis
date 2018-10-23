@@ -25,7 +25,13 @@ def get_basic_metrics(observed_impressions, predicted_values):
 			"Clicks"		: Clicks, 
 			"Impressions"	: Impressions}
 
-def get_entropy_metrics(s_clicks, s_predicted_values, background_ctr, print=False):
+def get_entropy_metrics(s_clicks, s_predicted_values, background_ctr, print=False, detailed=True):
+	if not detailed:
+		return {"CTR"			: np.nan,
+				"Calibration"	: np.nan,
+				"NE"			: np.nan,
+				"RIG"			: np.nan}
+
 	impression_count 	= len(s_clicks)
 
 	cur_ctr = np.mean(s_clicks)
@@ -75,7 +81,19 @@ def get_iterative_model_metrics(background_impressions, model_background_predict
 			"Clicks"		: clicks,
 			"Impressions"	: impressions}
 
-def get_full_model_metrics(background_impressions, model_impressions):
+def get_full_model_metrics(background_impressions, model_impressions, detailed = True):
+	if not detailed:
+		return {"MSE": np.nan,
+			"MMSE":np.nan, 
+			"ROC": np.nan, 
+			"TPR": np.nan, 
+			"FNR": np.nan, 
+			"FPR": np.nan, 
+			"PPR": np.nan, 
+			"TP" : np.nan,
+			"FN" : np.nan,
+			"FP" : np.nan,
+			"TN" : np.nan}
 	bi = np.array(background_impressions)
 	mi = np.array(model_impressions)
 

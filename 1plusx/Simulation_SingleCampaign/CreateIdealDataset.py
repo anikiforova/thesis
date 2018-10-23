@@ -50,7 +50,7 @@ def get_simulated_value(simulation_index, prediction, var, ctr):
 
 path = "../../RawData/Campaigns/"
 impressions_file_path_extension = "/Processed/sorted_time_impressions.csv"
-simulated_impressions_file_path_extension = "/Processed/simulated_time_impressions_s"
+simulated_impressions_file_path_extension = "/Processed/simulated_time_impressions"
 campaign_id = 837817 #  597165 #
 print ("Starting model for {}..".format(campaign_id))
 impressions_file_path = "{0}/{1}/{2}".format(path, campaign_id, impressions_file_path_extension)
@@ -60,7 +60,7 @@ data = read_csv(impressions_file_path, ",")
 users 		= data["UserHash"].values
 impressions = data["Click"].values
 
-meta = Metadata(campaign_id)
+meta = Metadata("Regression", campaign_id)
 algo = Regression(meta)
 testMeta = TestMetadata(meta)
 testMeta.click_percent = 0.0
@@ -77,63 +77,63 @@ print("Starting model evaluation..")
 input = open("{0}/{1}/{2}".format(path, campaign_id, impressions_file_path_extension), "r")
 header = input.readline() # get rid of header
 
-outputs = list()
-simulation_values = np.array([])
+simulation_values = dict()
 simulation_count = 5
 
 min_val = np.min(prediction)
 max_val = np.max(prediction)
 
-for i in np.arange(0, simulation_count):
-	cur_values = np.array([get_simulated_value(i, pred, var, ctr) for pred in prediction])
-	simulation_values = np.append(simulation_values, cur_values)
-
-	# output = open("{0}/{1}/{2}{3}.csv".format(path, campaign_id, simulated_impressions_file_path_extension, i), "w")
-	# output.write(header)
-	# outputs.append(output)
-
-simulation_values = simulation_values.reshape([simulation_count, total_count])
-
-# print("Starting output...")
-# for index, line in enumerate(input):
-# 	user_hash, click, timestamp_raw, timestamp = Util.get_line_info(line) 
-# 	for output_index in np.arange(0, simulation_count):
-# 		outputs[output_index].write("{},{},{}\n".format(user_hash, int(simulation_clicks[output_index][index]), timestamp_raw))
-# input.close()
-# print("Done with output..")
-
-ctr_multipliers = [1, 2, 5, 10, 20, 50, 100, 200, int(1/ctr)]
+ctr_multipliers = [2]#, 20, 50, 100, 200, int(1/ctr)]
+simulation_ids = [4] #np.arange(0, simulation_count)
 
 output_stats = open("./Results/{0}/Simulated/SimulationDetails.csv".format(campaign_id), "w")
 output_stats.write("CampaignId,SimulationId,Cutoff,CTR,MSE,Calibration,NE,RIG,TPR,FPR,FNR,PPR,ROC\n")
 
-for index in np.arange(0, simulation_count):
+print("Starting simulation..")
+for i in simulation_ids:
+	cur_values = np.array([get_simulated_value(i, pred, var, ctr) for pred in prediction])
+	simulation_values[i] = cur_values
+
+print("Starting printing..")
+for index in simulation_ids:
 	for multiplier in ctr_multipliers:
 		cutoff_value = np.percentile(simulation_values[index], 100 - multiplier * ctr * 100)
 		print("Simulation:{} Multiplier:{} CTR:{:.04} Cutoff:{:.04}".format(index, multiplier, multiplier * ctr, cutoff_value))
 
 		simulation_impressions = np.array(simulation_values[index] > cutoff_value, dtype=int)
-		metrics = Metrics.get_full_model_metrics(impressions, simulation_impressions)
 		
-		entropy_metrics = Metrics.get_entropy_metrics(simulation_impressions, simulation_values[index], ctr)
+		output = open("{0}/{1}/{2}_s_{3}_m_{4}.csv".format(path, campaign_id, simulated_impressions_file_path_extension, index, multiplier), "w")
+		output.write(header)
+		print("Starting output...")
+		for i, line in enumerate(input):
+			user_hash, _, timestamp_raw, _ = Util.get_line_info(line) 
+			output.write("{},{},{}\n".format(user_hash, int(simulation_impressions[i]), timestamp_raw))
+				
+		output.close()
 
-		output_stats.write("{},{},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04}\n".format(campaign_id, 
-			index, 
-			cutoff_value, 
-			entropy_metrics["CTR"], 
-			metrics["MSE"], 
-			entropy_metrics["Calibration"], 
-			entropy_metrics["NE"],
-			entropy_metrics["RIG"], 
-			metrics["TPR"], 
-			metrics["FPR"], 
-			metrics["FNR"], 
-			metrics["PPR"], 
-			metrics["ROC"]))
+		# metrics = Metrics.get_full_model_metrics(impressions, simulation_impressions)
+		
+		# entropy_metrics = Metrics.get_entropy_metrics(simulation_impressions, simulation_values[index], ctr)
+
+		# output_stats.write("{},{},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04},{:.04}\n".format(campaign_id, 
+		# 	index, 
+		# 	cutoff_value, 
+		# 	entropy_metrics["CTR"], 
+		# 	metrics["MSE"], 
+		# 	entropy_metrics["Calibration"], 
+		# 	entropy_metrics["NE"],
+		# 	entropy_metrics["RIG"], 
+		# 	metrics["TPR"], 
+		# 	metrics["FPR"], 
+		# 	metrics["FNR"], 
+		# 	metrics["PPR"], 
+		# 	metrics["ROC"]))
 	
 output_stats.close()
 #outputs[index].close()
 
+input.close()
+print("Done with output..")
 
 
 

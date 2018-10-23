@@ -80,10 +80,6 @@ for campaign_id in campaign_ids:
 	algo.update(campaign_users, campaign_impressions)
 	prediction = np.array([algo.getPrediction(user_hash) for user_hash in campaign_users])
 
-	print(algo.model.coef_)
-	print(algo.model.coef_.T)
-	break
-
 	ctr[campaign_id] = np.mean(campaign_impressions)
 	var[campaign_id] = np.var(prediction)
 
@@ -93,49 +89,49 @@ for campaign_id in campaign_ids:
 	algos[campaign_id] = algo
 	print("Campaign:{} Original CTR:{:.04} New CTR:{:.04} Calibration:{:.04}".format(campaign_id, ctr[campaign_id], simulated_prediction_ctr, calibration[campaign_id]))
 
-a = pd.date_range(start='15/8/2018', end='28/08/2018')
+a = pd.date_range(start='15/8/2018', end='20/08/2018') 
 
-# printHeader = True
-# for date in a:
-# 	date = date.strftime("%Y-%m-%d")
-# 	print("\nDate {}...".format(date))
+printHeader = True
+for date in a:
+	date = date.strftime("%Y-%m-%d")
+	print("\nDate {}...".format(date))
 
-# 	input = open("{0}/sorted_time_impressions_{1}.csv".format(real_multi_campaign_path, date), "r")
-# 	input.readline()
+	input = open("{0}/sorted_time_impressions_{1}.csv".format(real_multi_campaign_path, date), "r")
+	input.readline()
 
-# 	output = open("{0}/sorted_time_impressions_{1}.csv".format(hindsight_multi_campaign_path, date), "w")
-# 	output.write("UserHash,Timestamp,{}\n".format(",".join(str(c) for c in campaign_ids)))
+	output = open("{0}/sorted_time_impressions_{1}_{2}.csv".format(hindsight_multi_campaign_path, date, simulation_index), "w")
+	output.write("UserHash,Timestamp,{}\n".format(",".join(str(c) for c in campaign_ids)))
 	
-# 	user_ids, user_embeddings = Metadata.read_user_embeddings_by_path("{0}/all_users_{1}.csv".format(real_multi_campaign_path, date))
-# 	dictionary = dict(zip(user_ids, user_embeddings))
-# 	random_values = np.random.uniform(0, 1, 10000 * len(campaign_ids)).reshape([10000, len(campaign_ids)])
-# 	for line_index, line in enumerate(input):
-# 		line_parts = line.split(",")
-# 		oritinal_campaign_id = int(line_parts[0])
-# 		user_hash = int(line_parts[1])
-# 		click = line_parts[2]
-# 		timestamp = line_parts[3][0:-1]
+	user_ids, user_embeddings = Metadata.read_user_embeddings_by_path("{0}/all_users_{1}.csv".format(real_multi_campaign_path, date))
+	dictionary = dict(zip(user_ids, user_embeddings))
+	random_values = np.random.uniform(0, 1, 10000 * len(campaign_ids)).reshape([10000, len(campaign_ids)])
+	for line_index, line in enumerate(input):
+		line_parts = line.split(",")
+		oritinal_campaign_id = int(line_parts[0])
+		user_hash = int(line_parts[1])
+		click = line_parts[2]
+		timestamp = line_parts[3][0:-1]
 
-# 		results = list()
-# 		for campaign_index, campaign_id in enumerate(campaign_ids):
-# 			algo = algos[campaign_id]
-# 			if campaign_id != oritinal_campaign_id:
-# 				user_embedding = dictionary[user_hash]
-# 				predicted_value = algo.predict_now(user_embedding)
+		results = list()
+		for campaign_index, campaign_id in enumerate(campaign_ids):
+			algo = algos[campaign_id]
+			if campaign_id != oritinal_campaign_id:
+				user_embedding = dictionary[user_hash]
+				predicted_value = algo.predict_now(user_embedding)
 
-# 				simulated_value = get_simulated_value(simulation_index, predicted_value, var[campaign_id], ctr[campaign_id]) 
-# 				calibrated_simulated_value = simulated_value * calibration[campaign_id]
-# 				click = "0" if calibrated_simulated_value < random_values[line_index%10000][campaign_index] else "1"
-# 			results.append(click)
+				simulated_value = get_simulated_value(simulation_index, predicted_value, var[campaign_id], ctr[campaign_id]) 
+				calibrated_simulated_value = simulated_value * calibration[campaign_id]
+				click = "0" if calibrated_simulated_value < random_values[line_index%10000][campaign_index] else "1"
+			results.append(click)
 
-# 		output.write("{0},{1},{2}\n".format(user_hash, timestamp, ",".join(results)))
-# 		if line_index % 10000 == 0:
-# 			random_values = np.random.uniform(0, 1, 10000 * len(campaign_ids)).reshape([10000, len(campaign_ids)])
-# 			print(".", end='', flush=True)	
-# 			output.flush()
+		output.write("{0},{1},{2}\n".format(user_hash, timestamp, ",".join(results)))
+		if line_index % 10000 == 0:
+			random_values = np.random.uniform(0, 1, 10000 * len(campaign_ids)).reshape([10000, len(campaign_ids)])
+			print(".", end='', flush=True)	
+			output.flush()
 		
-# 	output.close()
-# #outputs[index].close()
+	output.close()
+#outputs[index].close()
 
 
 

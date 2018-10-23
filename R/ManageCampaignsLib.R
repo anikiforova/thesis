@@ -16,6 +16,20 @@ selectNecessaryColumns <- function(df, columns) {
   }
   df[,columns]
 }
+
+renameCampaignIds <-function (data) {
+  campaignIds = c(847460, 856805, 858140, 865041, 866128)
+  campaignPseudonims = c("A", "B", "C", "D", "E")
+  
+  index = 1
+  for (campaignId in campaignIds)
+  {
+    data[data$CampaignId == campaignId, "CampaignId"] =  campaignPseudonims[index]
+    index = index + 1
+  }
+  data
+}
+
 formatterPretty <- function(){
   function(x) ifelse(x==10, paste(x, "% (Random)"), paste(x, "%"))
 }
@@ -43,7 +57,7 @@ formatterDensity <- function(){
   function(x) x*10000
 }
 
-getClickersPlot <-function(){
+getClickersPlot <-function(includeRealData = TRUE){
   data = data.frame(x=double(), type=integer())
   chi_dfs = c(1, 1, 10, 100, 100)
   chi_alphas = c( 1, 4, 4, 1, 4)
@@ -55,19 +69,21 @@ getClickersPlot <-function(){
     x =  rchisq(1000, df=df, ncp = 0) 
     y = alpha*(x - min(x)) / (max(x) - min(x))
     
-    data1 = data.frame(x = y, type=paste("DF:", df, " M:", alpha))
+    data1 = data.frame(x = y, type=paste("DF:",df, " M:", alpha, sep = ""))
     data = rbind(data, data1)  
   }
-  
-  data1 = data.frame(x = rep(0, 1), type="Real Data")
-  data = rbind(data, data1)  
+  if(includeRealData)
+  {
+    data1 = data.frame(x = rep(0, 1), type="Real Data")
+    data = rbind(data, data1)  
+  }
   
   p = ggplot(data, aes(x=x, color=factor(type), fill=factor(type))) +
     geom_density(aes(y = ..density..), size=1, alpha = 0.3) + 
     xlim(c(0, 1)) +
     xlab("Value") +
     ylab("Density") +
-    scale_color_discrete(name="Parameters:") +
+    scale_color_discrete(name="Chi Parameters") +
     scale_fill_discrete(guide=FALSE) +
     theme_bw() +
     ggtitle("Simulated Clickers Distribution (Chi)") +
@@ -85,13 +101,18 @@ prepData <- function(files, cur_path) {
   data <- read.csv(file=paste0(cur_path, paste0(files[1], ".csv")), header=TRUE, sep=",")
   columns = c("Clicks", "Impressions", "RecommendationPart","TotalImpressions","Method", "Alpha","Timestamp","TrainPart","BatchCTR","ModelCTR","MSE","MMSE","FullMSE","FullROC","FullTPR","FullFPR","FullFNR","FullPPR","ModelCalibration","ModelNE","ModelRIG"
               , "Nu", "Hours", "LengthScale", "ClusterCount","EqClicks","LearningRate", "MSE", "TargetPercent", "TargetAlpha", "TargetSplit", "EarlyUpdate", "BatchMSE", "BatchMMSE", "FullMSE", "FullMMSE", "SimulationType",
-              "CropPercent","NormalizeTargetValue","SimulationIndex","ChiDF", "ChiAlpha")
+              "CropPercent","NormalizeTargetValue","SimulationIndex","ChiDF", "ChiAlpha","SimulationId","CTRMultiplier")
   data = selectNecessaryColumns(data, columns)
   if(length(files) > 1){
+    i = 1
     for (name in files){
-      data1 <- read.csv(file=paste0(cur_path, paste0(name, ".csv")), header=TRUE, sep=",")
-      data1 = selectNecessaryColumns(data1, columns)
-      data <- rbind(data, data1)  
+      if(i != 1)
+      {
+        data1 <- read.csv(file=paste0(cur_path, paste0(name, ".csv")), header=TRUE, sep=",")
+        data1 = selectNecessaryColumns(data1, columns)
+        data <- rbind(data, data1)  
+      }
+      i= i + 1
     }
   }
   data$Percent = data$Clicks / data$Impressions * 100
@@ -106,12 +127,12 @@ g_legend<-function(a.gplot){
   legend <- tmp$grobs[[leg]]
   return(legend)}
 
-plotGroup <- function(g1, g2, title) {
+plotGroup <- function(g1, g2, title, width = 8) {
   mylegend<-g_legend(g2)
   grid.arrange(arrangeGrob(g1 + theme(legend.position="none"),
                            g2 + theme(legend.position="none"),
-                           nrow=1, ncol=2, widths=unit(c(8, 8), "cm"), heights=unit(8, "cm")),
-               mylegend, nrow=2, widths=unit(16, "cm"), heights=unit(c(8, 1.5), "cm"),
+                           nrow=1, ncol=2, widths=unit(c(width, width), "cm"), heights=unit(8, "cm")),
+               mylegend, nrow=2, widths=unit(width*2, "cm"), heights=unit(c(8, 1.5), "cm"),
                top = textGrob(title, gp=gpar(fontsize=15,fontface=2)))
 }
 
@@ -122,6 +143,22 @@ plotGroupNoLegend <- function(g1, g2, title, width) {
                nrow=1, ncol=2, widths=unit(c(width, width), "cm"), heights=unit(9, "cm"),
                top = textGrob(title, gp=gpar(fontsize=15,fontface=2)))
   
+}
+
+plotGroupNoTitle <- function(g1, g2, width) {
+  g2  = g2 + theme(legend.position="bottom")
+  mylegend<-g_legend(g2)
+  grid.arrange(arrangeGrob(g1 + theme(legend.position="none"),
+                           g2 + theme(legend.position="none"),
+                           nrow=1, ncol=2, widths=unit(c(width, width), "cm"), heights=unit(8.5, "cm")),
+               mylegend, nrow=2, widths=unit(width*2, "cm"), heights=unit(c(8.5, 1.5), "cm"))
+  
+}
+
+plotGroupNoTitleNoLegend <- function(g1, g2, width) {
+  grid.arrange(g1 + theme(legend.position="none"),
+               g2 + theme(legend.position="none"),
+               nrow=1, ncol=2, widths=unit(c(width, width), "cm"), heights=unit(9, "cm"))
 }
 
 getCampaignComparisonPlot <-function (data, ylable, title, limit) {
@@ -156,9 +193,9 @@ plotThreeComparison <-function (p1, p2, p3, title, saveImage, imagePath) {
 getCTRPlot <- function(data, limits = c(0,1.5), scaleName="", pos="bottom") {
   g1 = ggplot(data, aes(x=TotalImpressions, y=Percent, colour=Factor)) + 
     geom_line(size=1) +
-    xlab("Impressions") + ylab("CTR") +
+    xlab("Time Progression") + ylab("Cumulative CTR (Scaled)") +
     expand_limits(y=limits) + 
-    scale_x_continuous(labels=formatterM()) + 
+    #scale_x_continuous(labels=formatterM()) + 
     scale_y_continuous(labels=formatterPercent()) +
     scale_color_discrete(name=scaleName) +
     theme_bw() +
@@ -176,9 +213,10 @@ getCTRPlot <- function(data, limits = c(0,1.5), scaleName="", pos="bottom") {
 getMSEPlot <- function(data, xLimit, scaleName, pos = "bottom") {
   g2 = ggplot(data, aes(x=TotalImpressions, y=MSE, colour=Factor)) + 
     stat_smooth(aes(y=MSE, colour=Factor), method = "lm", formula = y ~ poly(x, 20), se = FALSE, size=1) +
-    xlab("Impressions") + ylab("MSE") +
+    xlab("Time Progression") + ylab("Log MSE") +
     expand_limits(y=xLimit) + 
-    scale_x_continuous(labels=formatterM()) +
+    scale_y_log10()+
+   # scale_x_continuous(labels=formatterM()) +
     theme_bw() +
     theme(plot.title = element_text(size = 10, face = "bold"), 
           legend.title=element_text(size=12), 
@@ -198,8 +236,18 @@ getMSEPlotLog <- function(data, xLimit, scaleName, pos = "bottom") {
 
 
 
+getCampaignMetricsSimulated <- function(files, campaignId, baseCTR, method = "LinUCB_Disjoint", alpha = 0) {
+  path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaignId, "/Simulated/", sep="")
+  
+  getCampaignMetricsBase(path, files, campaignId, baseCTR, method, alpha)
+}
+
 getCampaignMetrics <- function(files, campaignId, baseCTR, method = "LinUCB_Disjoint", alpha = 0) {
   path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaignId, "/", sep="")
+  getCampaignMetricsBase(path, files, campaignId, baseCTR, method, alpha)
+}
+
+getCampaignMetricsBase <- function(path, files, campaignId, baseCTR, method = "LinUCB_Disjoint", alpha = 0) {
   data = prepData(files, path)
   
   data = subset(data, Timestamp < 1534709673000)
@@ -235,7 +283,7 @@ getBarPlot <- function(data, yLabel, title){
     expand_limits(y=0) +
     theme_bw() +
     scale_x_discrete(labels=formatterPercent()) +
-    scale_fill_hue() + 
+    #scale_fill_hue() + 
     theme(legend.justification=c(1,0), 
           legend.position="bottom",
           legend.title=element_text(size=12), 
@@ -252,6 +300,26 @@ getBarPlotCampaigns <- function(data, yLabel, title){
     geom_hline(yintercept = 1) + 
     geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2, position=position_dodge(.9)) +
     xlab("CampaignId") + ylab(yLabel) + ggtitle(title) +
+    expand_limits(y=0) +
+    theme_bw() +
+    scale_x_discrete() +
+    scale_fill_hue() + 
+    theme(legend.justification=c(1,0), 
+          legend.position="bottom",
+          legend.title=element_text(size=12), 
+          legend.text=element_text(size=8), 
+          legend.key.size = unit(1,"line"),
+          plot.title = element_text(size = 14, face = "bold"), 
+          axis.title.x = element_text(size=10),
+          axis.title.y = element_text(size=10)) 
+}
+
+getBarPlotSimulation <- function(data, yLabel, title){
+  ggplot(data, aes(x=SimulationId, y=mean, fill=SimulationId)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) + 
+    geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2, position=position_dodge(.9)) +
+    xlab("SimulationId") + ylab(yLabel) + ggtitle(title) +
     expand_limits(y=0) +
     theme_bw() +
     scale_x_discrete() +

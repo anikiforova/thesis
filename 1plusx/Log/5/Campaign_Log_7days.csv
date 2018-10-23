@@ -109,3 +109,8 @@ CampaignId,Impressions,Clicks,Method,Hours,Alpha,EqClicks,TrainPart,Recommendati
 866128,101929.0,618.0,LinUCB_Disjoint_Multi_Mix_Test,6,0.1,0.0,0.2,0.2
 865041,27998.0,66.0,LinUCB_Disjoint_Multi_Mix_Test,6,0.1,0.0,0.2,0.2
 858140,58048.0,196.0,LinUCB_Disjoint_Multi_Mix_Test,6,0.1,0.0,0.2,0.2
+847460,76292.0,592.0,LinUCB_Disjoint,6,0.1,0.0,0.033,0.033
+856805,128845.0,782.0,LinUCB_Disjoint,6,0.1,0.0,0.033,0.033
+866128,130128.0,683.0,LinUCB_Disjoint,6,0.1,0.0,0.033,0.033
+865041,82766.0,418.0,LinUCB_Disjoint,6,0.1,0.0,0.033,0.033
+858140,39600.0,180.0,LinUCB_Disjoint,6,0.1,0.0,0.033,0.033
