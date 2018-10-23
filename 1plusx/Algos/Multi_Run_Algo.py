@@ -29,11 +29,11 @@ days = pd.date_range(start='15/8/2018', end='20/08/2018')
 
 algo = LinUCB_Disjoint_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
 
-testsMeta = TestBuilder.get_lin_multi_test(meta, 6)
+testsMeta = TestBuilder.baseline_test(meta, 6)
 
-output_path = "./Results/{0}/{1}_7days.csv".format(meta.campaign_id, meta.algo_name)
-output_log_path = "./Log/{0}/{1}_7days.csv".format(meta.campaign_id, meta.algo_name)
-output_campaign_log_path = "./Log/{0}/Campaign_Log_Full.csv".format(meta.campaign_id)
+output_path = "./Results/{0}/{1}_Feature.csv".format(meta.campaign_id, meta.algo_name)
+output_log_path = "./Log/{0}/{1}_Feature.csv".format(meta.campaign_id, meta.algo_name)
+output_campaign_log_path = "./Log/{0}/Campaign_Log_Feature.csv".format(meta.campaign_id)
 
 output_column_names = False
 if not Path(output_path).is_file():

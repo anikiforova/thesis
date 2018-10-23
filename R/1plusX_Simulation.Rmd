@@ -281,7 +281,7 @@ ratioData$RecommendationPart
 
 
 g = plotGroupNoTitleNoLegend(g1, g2, 9) 
-ggsave(paste(imageLocation, "/SimulatedRecommendationSize.png", sep=""), plot=g, width = 20, height = 9, units = "cm")
+ggsave(paste(imageLocation, "/SimulatedRecommendationSize.png", sep=""), plot=g, width = 18, height = 9, units = "cm")
 g
 ```
 
@@ -373,7 +373,7 @@ g2 = ggplot(data[data$SimulationId == 4,], aes(x=Factor, y=RelativeCTR, fill=Fac
 p = plotGroupNoTitle(g1, g2, 9) 
 p
 
-ggsave(paste(imageLocation, "SimulationCTRRatioComparison_Legend.png", sep=""), plot=p, width = 20, height = 10, units = "cm")
+ggsave(paste(imageLocation, "SimulationCTRRatioComparison_Legend.png", sep=""), plot=p, width = 18, height = 10, units = "cm")
 ```
 
 

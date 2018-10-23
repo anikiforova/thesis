@@ -217,7 +217,7 @@ g1 = ggplot(data, aes(fill=factor(CampaignCount), y=UserCount, x=Date)) +
    geom_bar(position = "fill",stat = "identity") +
   scale_y_continuous(labels=percent)+
   theme_bw() +
-  ylab("User Percent") +
+  ylab("User % of Click Users") +
 #  scale_y_continuous(labels=formatterK()) + 
   scale_fill_discrete(name="# Observed\nCampaigns") +
   scale_x_datetime(breaks = date_breaks("1 day"), labels = date_format("%a")) +

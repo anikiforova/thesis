@@ -3,8 +3,8 @@ import math
 from numpy.linalg import inv
 from random import randint
 
-from .TargetBase import TargetBase
-from .AlgoBase import AlgoBase
+from TargetBase import TargetBase
+from AlgoBase import AlgoBase
 
 class Random_Multi(AlgoBase, TargetBase):
 	

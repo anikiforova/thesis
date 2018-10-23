@@ -2,10 +2,10 @@ import numpy as np
 from pandas import read_csv
 from pandas import DataFrame
 
-from .TargetSplitType import TargetSplitType
-from .SimulationType import SimulationType
+from TargetSplitType import TargetSplitType
+from SimulationType import SimulationType
 
-from .SimulationType import get_friendly_name
+from SimulationType import get_friendly_name
 
 class TestMetadata:
 

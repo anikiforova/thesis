@@ -43,25 +43,25 @@ source("~/Documents/ETH/ASL/ASL_Middleware/analysis/R/External.R")
 # 809153 - to rerun entirely
 columnNames = c("CampaignId", "Method", "RecommendationPart", "CTR", "Clicks", "Impressions", "FullFNR", "FullTPR", "BaseCTR", "Ratio")
 all = data.frame(matrix(vector(), 0, length(columnNames), dimnames=list(c(), columnNames)), stringsAsFactors=F)
-campaignIds = c(837817, 722100, 809153)
+campaignIds = c(597165, 837817, 722100, 809153)
 files =  c("Random")
 for (campaignId in campaignIds)
 {
   random = getCampaignMetrics(files =  c("Random"),  campaignId = campaignId, baseCTR=0, method="Random")
-  data = getCampaignMetrics(files = c("LinUCB_Disjoint_Metrics"), campaignId = campaignId, baseCTR=random[1, "CTR"], method="LinUCB_Disjoint") 
+  data = getCampaignMetrics(files = c("LinUCB_Disjoint_Metrics"), campaignId = campaignId, baseCTR=random[1, "CTR"], method="LinUCB_Disjoint", alpha = 0.01) 
   data$RecommendationPartGainsRatio = data$FullTPR * 100 / data$RecommendationPart
   all = rbind(all, data) 
 }
-
-
+data$RecommendationPart = factor(data$RecommendationPart)
 ratioData <- summarySE2(all, measurevar=c("Ratio"), groupvars=c("RecommendationPart"))
 fprData <- summarySE2(all, measurevar=c("RecommendationPartGainsRatio"), groupvars=c("RecommendationPart"))
-
+ratioData$RecommendationPart = factor(ratioData$RecommendationPart)
+fprData$RecommendationPart = factor(fprData$RecommendationPart)
 g1 = getBarPlot(ratioData, yLabel = "CTR Ratio", title="")
 g2 = getBarPlot(fprData, yLabel = "TPR Ratio", title="")
 
 g = plotGroupNoTitleNoLegend(g1, g2, 9) 
-ggsave(paste(imageLocation, "RecommendationSize.png"), plot=g, width = 20, height = 9, units = "cm")
+ggsave(paste(imageLocation, "RecommendationSize.png"), plot=g, width = 18, height = 9, units = "cm")
 g
 ```
 
@@ -97,7 +97,7 @@ g2 = getMSEPlot(data, c(0,0.003), "Algorithms:")
 
 g = plotGroupNoTitle(g1, g2, 9) 
 g
-ggsave(paste(imageLocation, paste(campaign_id, "AllAlgorithms.png", sep="")), plot=g, width = 19, height = 10, units = "cm")
+ggsave(paste(imageLocation, "AllAlgorithms.png", sep=""), plot=g, width = 18, height = 10, units = "cm")
 ```
 \newpage
 \section*{\centering Random}

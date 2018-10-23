@@ -5,7 +5,7 @@ from pandas import read_csv
 from pandas import DataFrame
 from termcolor import colored
 
-from .TargetSplitType import TargetSplitType
+from TargetSplitType import TargetSplitType
 
 class TargetBase:
 	

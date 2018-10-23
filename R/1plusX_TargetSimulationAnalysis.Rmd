@@ -239,6 +239,7 @@ g1 = ggplot(no_random, aes(x=Factor, y=RelativeCTR, fill=Factor)) +
     geom_hline(yintercept = 1) +
     ylab("CTR Ratio") + 
     theme_bw() +
+    expand_limits(y=c(0,4)) + 
     ggtitle("Upper Bound") +
     scale_y_continuous() +
     labs(fill = "Algorithms:")+
@@ -259,6 +260,7 @@ g2 = ggplot(l, aes(x=Factor, y=RelativeCTR, fill=Factor)) +
     geom_hline(yintercept = 1) +
     ylab("CTR Ratio") + 
     theme_bw() +
+  expand_limits(y=c(0,4)) +
     ggtitle("Lower Bound") +
     scale_y_continuous() +
     labs(fill = "Algorithms:")+
@@ -314,13 +316,16 @@ all$Factor = factor(all$Factor,levels(all$Factor)[c(1, 3, 4, 2, 5)])
 all$TotalImpressions = all$TotalImpressions / max(all$TotalImpressions)
 all$Percent = all$Percent * ctrScale
 library(gridExtra)
-p = getCTRPlot(all, c(0,0.12), "Simulation Type:", "bottom")+
+p = getCTRPlot(all, c(0,0.5), "Simulation Type:", "bottom")+
     theme(legend.justification = c(1, 0), 
           legend.position = c(1, 0),  
+          legend.title = element_text(size=10),
+          legend.text = element_text(size=8),
+          legend.key.height=unit(0.8,"line"),
           legend.box.background = element_rect(colour = "black"))
 p
 
-ggsave(paste(imageLocation, "SimulationComparison.png", sep=""), plot=p, width = 15, height = 10, units = "cm")
+ggsave(paste(imageLocation, "SimulationComparison.png", sep=""), plot=p, width = 9, height = 10, units = "cm")
 ```
 
 
@@ -351,15 +356,23 @@ all$Factor = factor(all$Factor, levels(all$Factor)[c(3, 1, 4, 2)])
 all$TotalImpressions = all$TotalImpressions / max(all$TotalImpressions)
 all$Percent = all$Percent * ctrScale
 
-
-p2 = getCTRPlot(all, c(0,0.12), "Simulation Type:", "right") + 
+all = subset(all, TotalImpressions == max(all$TotalImpressions))
+0.3989058/0.4073882	
+(0.4073882 - 0.3989058)/0.4073882	
+  
+p2 = getCTRPlot(all, c(0,0.5), "Simulation Type:", "right") + 
   scale_color_brewer(palette="Paired", name="Algorithm:")+
   theme(legend.justification = c(1, 0), 
           legend.position = c(1, 0),  
-          legend.box.background = element_rect(colour = "black"))
+        legend.title = element_text(size=10),
+        legend.text = element_text(size=8),
+          legend.key.height=unit(0.8,"line"),
+          legend.box.background = element_rect(color = "black"))
 p2
 
-ggsave(paste(imageLocation, "SimulationAlgoComparison.png", sep=""), plot=p2, width = 15, height = 10, units = "cm")
+ggsave(paste(imageLocation, "SimulationAlgoComparison.png", sep=""), plot=p2, width = 9, height = 10, units = "cm")
+
+
 
 ```
 

@@ -1,10 +1,10 @@
 
 import numpy as np
 
-from .Metadata import Metadata
-from .TestMetadata import TestMetadata
-from .TargetSplitType import TargetSplitType
-from .SimulationType import SimulationType
+from Metadata import Metadata
+from TestMetadata import TestMetadata
+from TargetSplitType import TargetSplitType
+from SimulationType import SimulationType
 
 def build_gp_test(meta, click_percent = 0.2, kernel = "Matern", nu = 1.5, length_scale = 100, cluster_count = 10, alpha = 1, h = 12, rec_part = 0.2):
 	t = TestMetadata(meta)
@@ -229,18 +229,96 @@ def full_target_tests(meta, hours = 12):
 					target_split = target_split, 
 					target_alpha = 1, 
 					early_update = early_update)
+				test.normalize_target_value = True	
 				tests.append(test)
 
 	for crop_percent in [0.1 ,0.2, 0.4]:
-		for early_update in [True, False]:
-			test = build_target_test(meta, alpha = 0.1, hours = hours, target_percent = 1, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = early_update)
-			test.crop_minimal_target = True
-			test.crop_percent = crop_percent
-			tests.append(test)
+		test = build_target_test(meta, alpha = 0.1, hours = hours, target_percent = 1, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = False)
+		test.crop_minimal_target = True
+		test.crop_percent = crop_percent
+		test.normalize_target_value = True	
+		tests.append(test)
 
 	for early_update in [True, False]:
 		test = build_target_test(meta, alpha = 0.1, hours = hours, target_percent = 1, target_split = TargetSplitType.DAILY, target_alpha = 1, early_update = early_update)
 		test.normalize_target_value = True	
+		tests.append(test)
+
+	return tests
+
+def baseline_test(meta, hours = 12):
+	tests = list()
+
+	test = build_target_test(meta, 
+		alpha = 0.1, 
+		hours = hours, 
+		target_percent = 1, 
+		target_split = TargetSplitType.NO_SPLIT, 
+		target_alpha = 1, 
+		early_update = false)
+	test.normalize_target_value = False	
+
+	tests.append(test)
+
+	return rests;
+
+def full_feature_target_tests(meta, hours = 12):
+	tests = list()
+	for target_percent in [0.6, 0.8, 1]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = target_percent, 
+			target_split = TargetSplitType.DAILY, 
+			target_alpha = 1, 
+			early_update = True)
+		test.normalize_target_value = True	
+		tests.append(test)
+
+	for crop_percent in [0.1 ,0.2, 0.4]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = TargetSplitType.DAILY, 
+			target_alpha = 1, 
+			early_update = False)
+		test.crop_minimal_target = True
+		test.crop_percent = crop_percent
+		test.normalize_target_value = True	
+		tests.append(test)
+
+	for early_update in [True, False]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = TargetSplitType.DAILY, 
+			target_alpha = 1, 
+			early_update = early_update)
+		test.normalize_target_value = True	
+		tests.append(test)
+
+	for target_split in [TargetSplitType.DAILY, TargetSplitType.NO_SPLIT]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = target_split, 
+			target_alpha = 1, 
+			early_update = True)
+		test.normalize_target_value = True	
+		tests.append(test)
+
+	for normalize in [True, False]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = TargetSplitType.DAILY, 
+			target_alpha = 1, 
+			early_update = True)
+		test.normalize_target_value = normalize	
 		tests.append(test)
 
 	return tests

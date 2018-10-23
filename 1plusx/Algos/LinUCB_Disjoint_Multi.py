@@ -2,9 +2,9 @@ import numpy as np
 import math
 from numpy.linalg import inv
 
-from .AlgoBase import AlgoBase
-from .TargetBase import TargetBase
-from .Metadata import Metadata
+from AlgoBase import AlgoBase
+from TargetBase import TargetBase
+from Metadata import Metadata
 
 class LinUCB_Disjoint_Multi(AlgoBase, TargetBase):
 	
@@ -69,7 +69,6 @@ class LinUCB_Disjoint_Multi(AlgoBase, TargetBase):
 
 			selected_user_count = int(assigned_user_count * percent)
 			recommendation_ids = np.append(recommendation_ids, prediction_argsorted[prediction_assignment][-selected_user_count:][::-1])
-
 		
 		expected_user_count = int(self.user_count * percent)
 		print("Expected user count: {}, actual: {}".format(expected_user_count, len(recommendation_ids)))
