@@ -18,26 +18,53 @@ imageLocation = "~/Documents/ETH/Thesis/1plusX/Data/thesis/1plusx/Results/Images
 ```{r include=TRUE, echo=FALSE, warning=FALSE}
 
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
-files =  c("Random_Multi_7days", "LinUCB_Disjoint_Multi_7days", "LinUCB_Disjoint_Multi_Target_Full")
+files =  c("Random_Multi_7days", "LinUCB_Disjoint_Multi_7days", #"LinUCB_Disjoint_Multi_Target_Full",
+           "LinUCB_Disjoint_Multi_Target_Feature")
 data = prepData(files, path)
 
-data = subset(data, (Method == "LinUCB_Disjoint_Multi_Target_Full" & EarlyUpdate == "True" & TargetPercent == 1 & NormalizeTargetValue == "True") | (Method != "LinUCB_Disjoint_Multi_Target_Full") )
-
+data = subset(data,
+    (!is.na(TargetPercent) & TargetPercent == 1 & TargetSplit == "NO_SPLIT" & NormalizeTargetValue == "False" & CropPercent == 0 & EarlyUpdate =="False")
+    | (!is.na(TargetPercent) & TargetPercent == 1 & TargetSplit == "DAILY" & NormalizeTargetValue == "True" & CropPercent == 0 & EarlyUpdate =="True")
+    | (is.na(data$TargetPercent) & data$Method == "LinUCB_Disjoint_Multi" )
+    | (is.na(data$TargetPercent) & data$Method == "Random_Multi"))
+              
 data$Factor = ""
-data[data$Method == "LinUCB_Disjoint_Multi_Target_Full", "Factor"] = "LinUCB Multi-Target"
-data[data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "LinUCB Multi"
-data[data$Method == "Random_Multi", "Factor"] = "Random"
+data[!is.na(data$TargetPercent) &
+    data$TargetPercent == 1 & 
+    data$TargetSplit == "NO_SPLIT" & 
+    data$NormalizeTargetValue == "False" & 
+    data$CropPercent == 0 & 
+    data$EarlyUpdate =="False" , "Factor"] = "T_LinUCB (basic)"
+
+data[!is.na(data$TargetPercent) &
+    data$TargetPercent == 1 & 
+    data$TargetSplit == "DAILY" & 
+    data$NormalizeTargetValue == "True" & 
+    data$CropPercent == 0 & 
+    data$EarlyUpdate =="True" , "Factor"] = "T_LinUCB (optimized)"
+
+data[is.na(data$TargetPercent) & data$Method == "LinUCB_Disjoint_Multi" , "Factor"] = "LinUCB"
+data[is.na(data$TargetPercent) & data$Method == "Random_Multi" , "Factor"] = "Random"
+
 
 data$Factor = factor(data$Factor)
+data$Factor = factor(data$Factor,levels(data$Factor)[c(4, 3, 1, 2)])
+data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
+data$Percent = data$Percent * ctrScale
+
 #data$Percent = data$BatchCTR * 100
 data$MSE = data$BatchMSE
 
-g1 = getCTRPlot(data, c(0,0.3))
-g2 = getMSEPlot(data, c(0,0.3), "Algorithm: ")
+#g1 = 
+p =  getCTRPlot(data, c(0,0.45), "Algorithm:") + 
+  theme(legend.justification = c(1, 0), 
+          legend.position = c(1, 0),  
+          legend.title = element_text(size=10),
+          legend.text = element_text(size=8),
+          legend.key.height=unit(0.8,"line"),
+          legend.box.background = element_rect(colour = "black"))
 
-p = plotGroup(g1, g2, "Best Multi vs Target ") 
-
-ggsave(paste(imageLocation, "BestMultiVsTarget.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+ggsave(paste(imageLocation, "BestMultiVsTarget.png", sep=""), plot=p, width = width, height = 9, units = "cm")
 p
 
 
@@ -45,22 +72,23 @@ p
 
 ```{r include=TRUE, echo=FALSE, warning=FALSE}
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
-files =  c("LinUCB_Disjoint_Multi_Target_Full")
+files =  c("LinUCB_Disjoint_Multi_Target_Feature")
 data = prepData(files, path)
 
 data$Timestamp = as.numeric(data$Timestamp) / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
 
-data = subset(data, (Alpha == 0.1 & EarlyUpdate == "True" & TargetPercent == 1 & TargetAlpha == 1 & CropPercent == 0.0  & NormalizeTargetValue == "False") | Alpha == 0)
+data = subset(data, 
+              (TargetPercent == 1& CropPercent == 0.0  & NormalizeTargetValue == "False" & EarlyUpdate== "False") )
 
 data$Factor = ""
-data[data$TargetSplit == "DAILY", ]$Factor = "Daily"
-data[data$TargetSplit == "NO_SPLIT", ]$Factor = "No Split"
+data[data$TargetSplit == "DAILY", ]$Factor = "T_LinUCB /w Daily Target Split"
+data[data$TargetSplit == "NO_SPLIT", ]$Factor = "T_LinUCB"
 data$Factor = factor(data$Factor)
 
 data$Percent = data$Percent * ctrScale
 data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
-p = getCTRPlot(data, c(0,0.45), "Target Split:") + 
+p = getCTRPlot(data, c(0,0.45), "Algorithm:") + 
   theme(legend.justification = c(1, 0), 
           legend.position = c(1, 0),  
           legend.title = element_text(size=10),
@@ -81,16 +109,19 @@ data = prepData(files, path)
 data$Timestamp = as.numeric(data$Timestamp) / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
 
-data = subset(data, (Alpha == 0.1 & TargetSplit == "DAILY" & TargetPercent == 1 & TargetAlpha == 1 & CropPercent == 0.0  & NormalizeTargetValue == "False") | Alpha == 0)
+data = subset(data, 
+              (TargetPercent == 1 & CropPercent == 0.0  & NormalizeTargetValue == "False" & TargetSplit == "DAILY"))
+              #| 
+               # (TargetPercent == 1& CropPercent == 0.0  & NormalizeTargetValue == "False" & TargetSplit == "NO_SPLIT"))
 
 data$Factor = ""
-data[data$EarlyUpdate == "True",]$Factor = "Early Update"
-data[data$EarlyUpdate == "False",]$Factor = "No Add-ons"
+data[data$EarlyUpdate == "True",]$Factor = "T_LinUCB /w DTS /w On-Demand Update"
+data[data$EarlyUpdate == "False",]$Factor = "T_LinUCB /w DTS"
 data$Factor = factor(data$Factor)
 
 data$Percent = data$Percent * ctrScale
 data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
-p = getCTRPlot(data, c(0,0.45), "Features:") + 
+p = getCTRPlot(data, c(0,0.45), "Algorithm:") + 
   theme(legend.justification = c(1, 0), 
           legend.position = c(1, 0),  
           legend.title = element_text(size=10),
@@ -105,32 +136,41 @@ Early Update - Update when a budget is exhausted
 
 ```{r include=TRUE, echo=FALSE, warning=FALSE}
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
-files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi_7days")
+files =  c("LinUCB_Disjoint_Multi_Target_Feature", "LinUCB_Disjoint_Multi_7days", "Random_Multi_7days")
 
 data = prepData(files, path)
 
 data$Timestamp = as.numeric(data$Timestamp) / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
-data = subset(data, 
-                (Method == "LinUCB_Disjoint_Multi_Target_Full" & Alpha == 0.1 & TargetSplit == "DAILY" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="True" & NormalizeTargetValue == "False") 
-                | (Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1) 
-                | Alpha == 0)
+data = subset(data, TotalImpressions == max (data$TotalImpressions) &(
+                (Alpha == 0.1 & TargetSplit == "NO_SPLIT" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="False" & NormalizeTargetValue == "False" & TargetPercent > 0.4) 
+                | (Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1 & is.na(NormalizeTargetValue) )
+              | (Method == "Random_Multi")))
 
+random = subset(data, Method == "Random_Multi")
 data$Factor = paste(data$TargetPercent)
 
+
+data = subset(data, Method != "Random_Multi")
+data$RelativeCTR = data$Percent / random$Percent  
+
+data[data$Method == "LinUCB_Disjoint_Multi" & is.na(data$NormalizeTargetValue) , "Factor"] = "No Target"
+data[!is.na(data$NormalizeTargetValue) , "Factor"] = paste("Target ", data[!is.na(data$NormalizeTargetValue), "TargetPercent"] * 100, "%", sep="")
 data$Factor = factor(data$Factor)
+data$Factor = factor(data$Factor,levels(data$Factor)[c(1, 3, 4, 2)])
 
-data$Percent = data$Percent * ctrScale
-data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
-p = getCTRPlot(data, c(0,0.45), "Target % Reduction:") + 
-  theme(legend.justification = c(1, 0), 
-          legend.position = c(1, 0),  
-          legend.title = element_text(size=10),
-          legend.text = element_text(size=8),
-          legend.key.height=unit(0.8,"line"),
-          legend.box.background = element_rect(colour = "black"))
+p = ggplot(data, aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    scale_y_continuous() +
+    labs(fill = "Algorithms:")+
+    theme(axis.title.x=element_blank(),
+        legend.position="none",
+        axis.title.y = element_text(size=10))
 
-ggsave(paste(imageLocation, "R_TargetSizeEffect.png", sep=""), plot=p, width = width * 2, height = 11, units = "cm")
+ggsave(paste(imageLocation, "R_TargetSizeEffect.png", sep=""), plot=p, width = width, height = 9, units = "cm")
 p
 
 ```
@@ -138,28 +178,24 @@ Target % Reduction - TargetBudget = TargetBudget * Reduction
 
 ```{r include=TRUE, echo=FALSE, warning=FALSE}
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
-files =  c("LinUCB_Disjoint_Multi_Target_Full")
+files =  c("LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi_Target_Feature")
 data = prepData(files, path)
 
 data$Timestamp = as.numeric(data$Timestamp) / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
-head(data)
+#head(data)
 data = subset(data, 
-(Alpha == 0.1 & TargetPercent == 1 & TargetSplit == "DAILY" & TargetAlpha == 1 & NormalizeTargetValue == "False") &
-              ((CropPercent > 0.0 & EarlyUpdate =="False" )
-              | (CropPercent == 0.0 & EarlyUpdate =="False")
-              | (CropPercent == 0.0 & EarlyUpdate =="True"))
-              | Alpha == 0)
+(Alpha == 0.1 & TargetPercent == 1 & TargetSplit == "DAILY" & TargetAlpha == 1 & NormalizeTargetValue == "False" &CropPercent %in% c(0, 0.4) & EarlyUpdate =="False" ))
 
 data$Factor = ""
-data[data$CropPercent > 0.0 & data$EarlyUpdate =="False",]$Factor = paste(data[data$CropPercent > 0.0 & data$EarlyUpdate =="False",]$CropPercent, "% Crop", sep = "")
-data[data$CropPercent == 0.0 & data$EarlyUpdate =="True",]$Factor = "Early Update"
-data[data$CropPercent == 0.0 & data$EarlyUpdate =="False",]$Factor = "No Add-ons"
+data[data$CropPercent > 0.0 & data$EarlyUpdate =="False",]$Factor = paste("T_LinUCB /w DTS /w ", data[data$CropPercent > 0.0 & data$EarlyUpdate =="False",]$CropPercent, "% Crop", sep = "")
+#data[data$CropPercent == 0.0 & data$EarlyUpdate =="True",]$Factor = "Early Update"
+data[data$CropPercent == 0.0 & data$EarlyUpdate =="False",]$Factor = "T_LinUCB"
 
 data$Percent = data$Percent * ctrScale
 data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
 
-p = getCTRPlot(data, c(0,0.45), "Features:") + 
+p = getCTRPlot(data, c(0,0.45), "Algorithm:") + 
   theme(legend.justification = c(1, 0), 
           legend.position = c(1, 0),  
           legend.title = element_text(size=10),
@@ -175,24 +211,23 @@ Crop Percent - if TargetBudget < cp * E[#Impressions]) => TargetBudget = 0
 ```{r include=TRUE, echo=FALSE, warning=FALSE}
 # Normalization effect
 path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
-files =  c("LinUCB_Disjoint_Multi_Target_Full")
+files =  c("LinUCB_Disjoint_Multi_Target_Feature")
 data = prepData(files, path)
 
 data$Timestamp = as.numeric(data$Timestamp) / 1000
 data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
 
-data = subset(data, (Alpha == 0.1 & TargetPercent == 1 & TargetSplit == "DAILY" & TargetAlpha == 1 & EarlyUpdate == "True"
-            & CropPercent == 0) | Alpha == 0)
+data = subset(data, (TargetPercent == 1 & CropPercent == 0.0  & TargetSplit == "NO_SPLIT" & EarlyUpdate== "False"))
 data$Factor = ""
-data[data$NormalizeTargetValue == "True", ]$Factor = "Normalization"
-data[data$NormalizeTargetValue == "False", ]$Factor = "No Add-ons"
+data[data$NormalizeTargetValue == "True", ]$Factor = "T_LinUCB /w Audience Norm."
+data[data$NormalizeTargetValue == "False", ]$Factor = "T_LinUCB"
 data$Factor = factor(data$Factor)
-data$Factor = factor(data$Factor,levels(data$Factor)[c(2, 1)])
+#data$Factor = factor(data$Factor,levels(data$Factor)[c(2, 1)])
 
 data$Percent = data$Percent * ctrScale
 data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
 
-p = getCTRPlot(data, c(0,0.45), "Features:") + 
+p = getCTRPlot(data, c(0,0.45), "Algorithm:") + 
   theme(legend.justification = c(1, 0), 
           legend.position = c(1, 0),  
           legend.title = element_text(size=10),
@@ -221,12 +256,12 @@ p1 = getCampaignComparisonPlot(data, "Impression Count Distribution", "Random", 
 data = subset(all, Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1)
 data = renameCampaignIds(data)
 data$Ratio = data$Impressions / sum(data$Impressions)
-p2 = getCampaignComparisonPlot(data, "Impression Count Distribution", "Multi-Campaign", limit) 
+p2 = getCampaignComparisonPlot(data, "Impression Count Distribution", "LinUCB", limit) 
 
 data = subset(all, Method == "LinUCB_Disjoint_Multi_Target_Full" & EarlyUpdate == "True" & TargetPercent == 1 & NormalizeTargetValue == "True")
 data = renameCampaignIds(data)
 data$Ratio = data$Impressions / sum(data$Impressions)
-p3 = getCampaignComparisonPlot(data, "Impression Count Distribution", "Targeted Multi-Campaign", limit) 
+p3 = getCampaignComparisonPlot(data, "Impression Count Distribution", "T_LinUCB", limit) 
 
 
 plotThreeComparisonNoTitle(p1, p2, p3, TRUE, paste(imageLocation, "Multi_VS_Target_ImpressionRatioPerCampaign.png", sep=""))
@@ -247,12 +282,12 @@ p1 = getCampaignComparisonPlot(data, "Click Count Distribution", "Random", limit
 data = subset(all, Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1)
 data = renameCampaignIds(data)
 data$Ratio = data$Clicks / sum(data$Clicks)
-p2 = getCampaignComparisonPlot(data, "Click Count Distribution", "Multi-Campaign", limit) 
+p2 = getCampaignComparisonPlot(data, "Click Count Distribution", "LinUCB", limit) 
 
 data = subset(all, Method == "LinUCB_Disjoint_Multi_Target_Full" & EarlyUpdate == "True" & TargetPercent == 1 & NormalizeTargetValue == "True")
 data = renameCampaignIds(data)
 data$Ratio = data$Clicks / sum(data$Clicks)
-p3 = getCampaignComparisonPlot(data, "Click Count Distribution", "Target Multi-Campaign", limit) 
+p3 = getCampaignComparisonPlot(data, "Click Count Distribution", "T_LinUCB", limit) 
 
 plotThreeComparisonNoTitle(p1, p2, p3, TRUE, paste(imageLocation, "Multi_VS_Target_ClickRatioPerCampaign.png", sep=""))
 
@@ -266,22 +301,230 @@ data = subset(all, Method == "Random_Multi")
 data = renameCampaignIds(data)
 data$Ratio = data$Clicks / data$Impressions
 data$Ratio = data$Ratio * ctrScale
-p1 = getCampaignComparisonPlot(data, "CTR", "Random", limit) 
+p1 = getCampaignComparisonPlot(data, "CTR", "Random", limit)  + scale_y_continuous(labels=percent)
 
 data = subset(all, Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1)
 data = renameCampaignIds(data)
 data$Ratio = data$Clicks / data$Impressions
 data$Ratio = data$Ratio * ctrScale
-p2 = getCampaignComparisonPlot(data, "CTR", "Multi-Campaign", limit) 
+p2 = getCampaignComparisonPlot(data, "CTR", "LinUCB", limit) + scale_y_continuous(labels=percent)
 
 data = subset(all, Method == "LinUCB_Disjoint_Multi_Target_Full" & EarlyUpdate == "True" & TargetPercent == 1 & NormalizeTargetValue == "True")
 data = renameCampaignIds(data)
 data$Ratio = data$Clicks / data$Impressions
 data$Ratio = data$Ratio * ctrScale
-p3 = getCampaignComparisonPlot(data, "CTR", "Target Multi-Campaign", limit) 
+p3 = getCampaignComparisonPlot(data, "CTR", "T_LinUCB", limit) +scale_y_continuous(labels=percent)
 
 plotThreeComparisonNoTitle(p1, p2, p3, TRUE, paste(imageLocation, "Multi_VS_Target_CTRPerCampaign.png", sep=""))
 
 ```
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("LinUCB_Disjoint_Multi_Target_Feature")
+data = prepData(files, path)
+
+data$Timestamp = as.numeric(data$Timestamp) / 1000
+data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
+
+data = subset(data, 
+              (EarlyUpdate == "False" & TargetPercent == 1& CropPercent == 0.0  & NormalizeTargetValue == "False") 
+            |  (EarlyUpdate == "True" & TargetPercent == 1 & CropPercent == 0.0  & NormalizeTargetValue == "True" & TargetSplit == "DAILY") )
+
+data$Factor = ""
+data[data$EarlyUpdate == "False", ]$Factor = "Basic"
+data[data$EarlyUpdate == "True", ]$Factor = "Optimized"
+data$Factor = factor(data$Factor)
+
+data$Percent = data$Percent * ctrScale
+data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
+p = getCTRPlot(data, c(0,0.45), "Target Algorithm\nType:") + 
+  theme(legend.justification = c(1, 0), 
+          legend.position = c(1, 0),  
+          legend.title = element_text(size=10),
+          legend.text = element_text(size=8),
+          legend.key.height=unit(0.8,"line"),
+          legend.box.background = element_rect(colour = "black"))
+
+ggsave(paste(imageLocation, "F_TargetAlgorithmType.png", sep=""), plot=p, width = 9, height = 9, units = "cm")
+p
+```
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("LinUCB_Disjoint_Multi_Target_Feature", "LinUCB_Disjoint_Multi_7days")
+data = prepData(files, path)
+
+data$Timestamp = as.numeric(data$Timestamp) / 1000
+data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
+
+data = subset(data, 
+              (EarlyUpdate == "False" & TargetPercent == 1& CropPercent == 0.0  & NormalizeTargetValue == "False" & TargetSplit == "NO_SPLIT" ) 
+            |  (is.na(data$EarlyUpdate)))
+
+data$Name = ""
+data[is.na(data$EarlyUpdate) , ]$Name = "LinUCB "
+data[data$EarlyUpdate == "False" & !is.na(data$EarlyUpdate), ]$Name = "T_LinUCB (Basic)"
+data$Factor = factor(data$Name)
+
+data$Percent = data$Percent * ctrScale
+data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
+p1 = getCTRPlot(data, c(0,0.45), "Algorithm:") + 
+  theme(legend.justification = c(1, 0), 
+          legend.position = c(1, 0),  
+          legend.title = element_text(size=10),
+          legend.text = element_text(size=8),
+          legend.key.height=unit(0.8,"line"),
+          legend.box.background = element_rect(colour = "black"))
+
+ggsave(paste(imageLocation, "F_TargetBaseline.png", sep=""), plot=p1, width = 9, height = 9, units = "cm")
+p1
+```
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("LinUCB_Disjoint_Multi_Target_Feature", "LinUCB_Disjoint_Multi_7days", "Random_Multi_7days")
+
+data = prepData(files, path)
+
+data$Timestamp = as.numeric(data$Timestamp) / 1000
+data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
+data = subset(data, TotalImpressions == max (data$TotalImpressions) &(
+                (Alpha == 0.1 & TargetSplit == "NO_SPLIT" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="False" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+                | (Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1 & is.na(NormalizeTargetValue) )
+              | (Method == "Random_Multi")))
+
+random = subset(data, Method == "Random_Multi")
+data$Factor = paste(data$TargetPercent)
+
+data = subset(data, Method != "Random_Multi")
+data$RelativeCTR = data$Percent / random$Percent  
+
+data[data$Method == "LinUCB_Disjoint_Multi" & is.na(data$NormalizeTargetValue) , "Factor"] = "LinUCB"
+data[!is.na(data$NormalizeTargetValue) , "Factor"] = "T_LinUCB"
+data$Factor = factor(data$Factor)
+data$RelativeCTR
+p2 = ggplot(data, aes(x=Factor, y=RelativeCTR, fill=Factor)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_hline(yintercept = 1) +
+    ylab("CTR Ratio") + 
+    theme_bw() +
+    scale_y_continuous() +
+    labs(fill = "Algorithms:")+
+    theme(axis.title.x=element_blank(),
+        legend.position="none",
+        axis.title.y = element_text(size=10))
+
+ggsave(paste(imageLocation, "F_TargetBaselineCTRRatio.png", sep=""), plot=p2, width = width, height = 9, units = "cm")
+p2
+
+width = 9
+p = plotGroupNoTitle(p1, p2, 9) 
+
+ggsave(paste(imageLocation, "F_TargetBaselineBoth.png", sep=""), plot=p, width = width * 2, height = 10, units = "cm")
+p
+
+
+```
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("LinUCB_Disjoint_Multi_Target_Feature","LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi_7days", "Random_Multi_7days")
+
+data = prepData(files, path)
+
+data$Timestamp = as.numeric(data$Timestamp) / 1000
+data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
+data = subset(data, TotalImpressions == max (data$TotalImpressions) &(
+    (TargetSplit == "NO_SPLIT" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="False" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+  | (TargetSplit == "NO_SPLIT" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="False" & NormalizeTargetValue == "True" & TargetPercent == 1) 
+  | (TargetSplit == "NO_SPLIT" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="True" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+  | (TargetSplit == "DAILY" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="False" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+  | (TargetSplit == "NO_SPLIT" & TargetAlpha == 1 & CropPercent == 0.4 & EarlyUpdate =="False" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+  | (Method == "LinUCB_Disjoint_Multi" & Alpha == 0.1 & is.na(NormalizeTargetValue) )
+  | (Method == "Random_Multi")))
+
+random = subset(data, Method == "Random_Multi")
+data= subset(data, !is.na(NormalizeTargetValue))
+data$Factor = ""
+data[data$TargetSplit == "NO_SPLIT" & data$CropPercent == 0.0 & data$EarlyUpdate =="False" & data$NormalizeTargetValue == "False" & data$TargetPercent == 1, ]$Factor = "Baseline"
+data[data$TargetSplit == "NO_SPLIT" & data$CropPercent == 0.0 & data$EarlyUpdate =="False" & data$NormalizeTargetValue == "True" & data$TargetPercent == 1, ]$Factor = "Normalized"
+data[data$TargetSplit == "NO_SPLIT" & data$CropPercent == 0.0 & data$EarlyUpdate =="True" & data$NormalizeTargetValue == "False" & data$TargetPercent == 1, ]$Factor = "EarlyUpdate"
+data[data$TargetSplit == "DAILY" & data$CropPercent == 0.0 & data$EarlyUpdate =="False" & data$NormalizeTargetValue == "False" & data$TargetPercent == 1, ]$Factor = "TargetSplit"
+data[data$TargetSplit == "NO_SPLIT" & data$CropPercent == 0.4 & data$EarlyUpdate =="False" & data$NormalizeTargetValue == "False" & data$TargetPercent == 1, ]$Factor = "Crop %"
+
+data$RelativeCTR = data$Percent / random$Percent  
+
+#data$RelativeCTR= data$RelativeCTR-0.01 
+data$Gain = (data$RelativeCTR-0.01) / data[data$Factor == "Baseline", "RelativeCTR"] - 1
+data[order(data$Factor), c("Factor","RelativeCTR", "Gain")]
+
+```
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("LinUCB_Disjoint_Multi_Target_Feature","LinUCB_Disjoint_Multi_Target_Full", "LinUCB_Disjoint_Multi_7days", "Random_Multi_7days")
+
+data = prepData(files, path)
+
+data$Timestamp = as.numeric(data$Timestamp) / 1000
+data$Timestamp = as.POSIXct(data$Timestamp, origin="1970-01-01")
+data = subset(data, TotalImpressions == max (data$TotalImpressions) &(
+    (TargetSplit == "DAILY" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="False" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+  | (TargetSplit == "DAILY" & TargetAlpha == 1 & CropPercent == 0.0 & EarlyUpdate =="True" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+  | (TargetSplit == "DAILY" & TargetAlpha == 1 & CropPercent == 0.4 & EarlyUpdate =="False" & NormalizeTargetValue == "False" & TargetPercent == 1) 
+  | (Method == "Random_Multi")))
+
+random = subset(data, Method == "Random_Multi")
+data= subset(data, !is.na(NormalizeTargetValue))
+data$Factor = ""
+data[data$TargetSplit == "DAILY" & data$CropPercent == 0.0 & data$EarlyUpdate =="False" & data$TargetPercent == 1, ]$Factor = "Baseline"
+data[data$TargetSplit == "DAILY" & data$CropPercent == 0.4 & data$EarlyUpdate =="False" & data$TargetPercent == 1, ]$Factor = "Crop % 0.4"
+data[data$TargetSplit == "DAILY" & data$CropPercent == 0.0 & data$EarlyUpdate =="True" & data$TargetPercent == 1, ]$Factor = "Early Update"
+ 
+data$RelativeCTR = data$Percent / random$Percent  
+
+data$Gain = data$RelativeCTR / data[data$Factor == "Baseline", "RelativeCTR"] - 1
+data[order(data$Factor), c("Factor","RelativeCTR", "Gain")]
+
+```
+
+```{r include=TRUE, echo=FALSE, warning=FALSE}
+
+path = "~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/5/"
+files =  c("Random_Multi_7days", "LinUCB_Disjoint_Multi_7days", "LinUCB_Disjoint_Multi_Target_Full")
+data = prepData(files, path)
+
+data = subset(data, (Method == "LinUCB_Disjoint_Multi_Target_Full" & EarlyUpdate == "True" & TargetPercent == 1 & NormalizeTargetValue == "True") | (Method != "LinUCB_Disjoint_Multi_Target_Full") )
+
+data$Factor = ""
+data[data$Method == "LinUCB_Disjoint_Multi_Target_Full", "Factor"] = "T_LinUCB /w Add-ons"
+data[data$Method == "LinUCB_Disjoint_Multi", "Factor"] = "LinUCB"
+data[data$Method == "Random_Multi", "Factor"] = "Random"
+data$Factor = factor(data$Factor)
+data$Percent = data$Percent * ctrScale
+
+data = subset(data, TotalImpressions == max (data$TotalImpressions) )
+random = subset(data, Method == "Random_Multi")
+data= subset(data, Method != "Random_Multi" )
+
+data$RelativeCTR = data$Percent / random$Percent  
+
+data$Gain = data$RelativeCTR / data[data$Factor == "LinUCB", "RelativeCTR"] - 1
+data[order(data$Factor), c("Factor","RelativeCTR", "Gain")]
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -24,12 +24,12 @@ import Util
 campaign_ids = set([866128, 856805, 847460, 858140, 865041])
 campaign_ids_str = ",".join([str(x) for x in campaign_ids])
 
-meta = Metadata("LinUCB_Disjoint_Multi", campaign_id = 5, initialize_user_embeddings = False)
+meta = Metadata("LinUCB_Disjoint_Multi_Target", campaign_id = 5, initialize_user_embeddings = False)
 days = pd.date_range(start='15/8/2018', end='20/08/2018') 
 
 algo = LinUCB_Disjoint_Multi(meta, campaign_ids, days[0], days[-1]+ 1)
 
-testsMeta = TestBuilder.baseline_test(meta, 6)
+testsMeta = TestBuilder.basic_feature_target_tests2(meta, 6)
 
 output_path = "./Results/{0}/{1}_Feature.csv".format(meta.campaign_id, meta.algo_name)
 output_log_path = "./Log/{0}/{1}_Feature.csv".format(meta.campaign_id, meta.algo_name)

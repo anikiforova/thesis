@@ -255,12 +255,88 @@ def baseline_test(meta, hours = 12):
 		target_percent = 1, 
 		target_split = TargetSplitType.NO_SPLIT, 
 		target_alpha = 1, 
-		early_update = false)
+		early_update = False)
 	test.normalize_target_value = False	
 
 	tests.append(test)
 
-	return rests;
+	return tests;
+
+def basic_feature_target_tests1(meta, hours = 12):
+	tests = list()
+	
+	for early_update in [True]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = TargetSplitType.NO_SPLIT, 
+			target_alpha = 1, 
+			early_update = early_update)
+		test.normalize_target_value = False	
+		tests.append(test)
+
+	for target_split in [TargetSplitType.DAILY]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = target_split, 
+			target_alpha = 1, 
+			early_update = False)
+		test.normalize_target_value = False	
+		tests.append(test)
+
+	for normalize in [True]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = TargetSplitType.NO_SPLIT, 
+			target_alpha = 1, 
+			early_update = False)
+		test.normalize_target_value = normalize	
+		tests.append(test)
+
+	for target_percent in [0.6, 0.8]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = target_percent, 
+			target_split = TargetSplitType.NO_SPLIT, 
+			target_alpha = 1, 
+			early_update = False)
+		test.normalize_target_value = False	
+		tests.append(test)
+	return tests
+
+def basic_feature_target_tests2(meta, hours = 12):
+	tests = list()
+	
+	for target_percent in [0.4]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = target_percent, 
+			target_split = TargetSplitType.NO_SPLIT, 
+			target_alpha = 1, 
+			early_update = False)
+		test.normalize_target_value = False	
+		tests.append(test)
+
+	for crop_percent in [0.1 ,0.2, 0.4]:
+		test = build_target_test(meta, 
+			alpha = 0.1, 
+			hours = hours, 
+			target_percent = 1, 
+			target_split = TargetSplitType.NO_SPLIT, 
+			target_alpha = 1, 
+			early_update = False)
+		test.crop_minimal_target = True
+		test.crop_percent = crop_percent
+		test.normalize_target_value = False	
+		tests.append(test)
+	return tests
 
 def full_feature_target_tests(meta, hours = 12):
 	tests = list()

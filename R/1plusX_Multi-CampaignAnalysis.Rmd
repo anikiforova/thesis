@@ -261,7 +261,7 @@ summary$Factor = factor(paste(summary$ClickedCampaignsCount, "/", summary$Campai
 g2 = ggplot(summary, aes(x=Factor, y=mean, fill=Factor)) + 
     geom_bar(position=position_dodge(), stat="identity") +
     geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2, position=position_dodge(.9)) +
-    ylab("User Percent") + 
+    ylab("User % of Click Users") + 
     xlab("#Clicked/#Seen Campaigns") + 
    #ggtitle("Daily Click Users: (# Clicked Campaigns) / (# Seen Campaigns)") +
     theme_bw() +

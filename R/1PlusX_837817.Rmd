@@ -345,3 +345,38 @@ ggplot(data, aes(x=Timestamp, y=Impressions, colour=Factor)) +
     ggtitle("Cumulative # Impressions during Exploration Scavanging")
   
 ``` 
+
+```{r Best, include=TRUE, echo=FALSE, warning=FALSE}
+
+#files = c("Regression_Test")
+files =  c("GP_Clustered_Metrics", "NN_Metrics", "LinUCB_Disjoint_Metrics", "Regression_Metrics", "Random_Metrics","TS_Lin_Metrics")
+#files =  c("LinUCB_Disjoint_Metrics", "Random_Metrics")
+campaign_id = 837817
+ctrScale = 1.57
+path = paste("~/Documents/ETH/Thesis/1plusX/Data/Thesis/1plusx/Results/", campaign_id, "/", sep="")
+
+data = prepData(files, path)
+
+#files = c("Regression_Test")
+
+data = subset(data, Impressions > 1000 & RecommendationPart == 0.2 )
+data$TotalImpressions = data$TotalImpressions / max(data$TotalImpressions)
+
+data = subset(data, (Method == "GP_Clustered" & EqClicks == 0 & ClusterCount == 10 & Hours == 12 & LengthScale == 100 & Nu == 2.5 ) |
+                (Method == "NN" & EqClicks == 0.2 & LearningRate == 0.001 ) |
+                (Method == "Regression" & EqClicks == 0 & Alpha == 0.01) |
+                (Method == "LinUCB_Disjoint" & EqClicks == 0 & Alpha == 0.01)|
+                (Method == "TS_Lin" & EqClicks == 0 & Alpha == 0.001)|
+                (Method == "Baseline" ) 
+                )
+data$Factor = factor(data$Method)
+levels(data$Factor) <- c("GP (Clustered)","NN","LinUCB (Disjoint)", "EGreedy (Lin)", "Baseline", "TS (Lin)")
+
+data$Percent = data$Percent * ctrScale 
+
+
+data = data[data$TotalImpressions == max(data$TotalImpressions), ]
+
+data$Relative = data$Percent / data[data$Method == "Baseline", "Percent"]
+data[order(data$Percent), c("Method", "Percent","Relative")]
+```

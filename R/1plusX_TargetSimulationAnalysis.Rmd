@@ -344,7 +344,7 @@ files =  c("LinUCB_Disjoint_Multi_Target_Chi")
 
 simulated_data2 = prepData(files, path)
 simulated_data2 = subset(simulated_data2, SimulationIndex == 5 & ChiAlpha %in% c(4) & ChiDF == 1)
-simulated_data2$Factor = "LinUCB /w Budgets"
+simulated_data2$Factor = "T_LinUCB"
 
 simulated_data[simulated_data$Method == "Random_Multi", "Factor"] = "Random"
 
@@ -356,10 +356,8 @@ all$Factor = factor(all$Factor, levels(all$Factor)[c(3, 1, 4, 2)])
 all$TotalImpressions = all$TotalImpressions / max(all$TotalImpressions)
 all$Percent = all$Percent * ctrScale
 
-all = subset(all, TotalImpressions == max(all$TotalImpressions))
-0.3989058/0.4073882	
-(0.4073882 - 0.3989058)/0.4073882	
-  
+#all = subset(all, TotalImpressions == max(all$TotalImpressions))
+
 p2 = getCTRPlot(all, c(0,0.5), "Simulation Type:", "right") + 
   scale_color_brewer(palette="Paired", name="Algorithm:")+
   theme(legend.justification = c(1, 0), 
@@ -371,7 +369,6 @@ p2 = getCTRPlot(all, c(0,0.5), "Simulation Type:", "right") +
 p2
 
 ggsave(paste(imageLocation, "SimulationAlgoComparison.png", sep=""), plot=p2, width = 9, height = 10, units = "cm")
-
 
 
 ```
